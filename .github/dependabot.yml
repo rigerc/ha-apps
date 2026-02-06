@@ -17,7 +17,7 @@ updates:
       - "dependencies"
       - "docker"
     commit-message:
-      prefix: "docker"
+      prefix: "feat"
       include: "scope"
     groups:
       # Group minor and patch updates together to reduce PR noise
