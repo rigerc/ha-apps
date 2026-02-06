@@ -1,10 +1,12 @@
 {
   "separate-pull-requests": true,
   "pull-request-title-pattern": "chore(repo): 🚀 Release ${component} ${version}",
+  "pull-request-header": "I've created a release pull request!",
   "always-update": true,
   "force-tag-creation": true,
   "include-v-in-tag": false,
   "include-v-in-release-name": false,
+  "initial-version": "1.0.0",
   "extra-label": "release",
   "draft": true,
   "prerelease": false,
@@ -101,5 +103,6 @@
     {"type": "test", "section": "✅ Tests"},
     {"type": "build", "section": "🏗️ Build System"},
     {"type": "ci", "section": "👷 Continuous Integration"}
-  ]
+  ],
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
 }

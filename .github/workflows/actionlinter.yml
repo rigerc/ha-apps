@@ -1,5 +1,5 @@
 ---
-name: Action Linter
+name: Actionlinter
 
 # yamllint disable-line rule:truthy
 on:
