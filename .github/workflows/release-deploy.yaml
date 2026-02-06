@@ -73,8 +73,7 @@ jobs:
           if echo "$architectures" | jq -e --arg arch "${{ matrix.arch }}" 'index($arch) != null' > /dev/null; then
              echo "${{ matrix.arch }} is a supported arch for ${{ inputs.addon }}, starting build"
              echo "build_arch=true" >> "$GITHUB_OUTPUT"
-             # Strip quotes from image output if present
-             image=$(echo '${{ steps.info.outputs.image }}' | jq -r '.')
+             image=$(echo ${{ steps.info.outputs.image }} | cut -d'/' -f3)
              echo "image=$image" >> "$GITHUB_OUTPUT"
            else
              echo "${{ matrix.arch }} is not a valid arch for ${{ inputs.addon }}, skipping build"

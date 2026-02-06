@@ -112,12 +112,9 @@ jobs:
           done
 
       - name: 🚀 Add-on Linter
-        run: |
-          for addon in ${{ steps.setup.outputs.addons }}; do
-            echo "🚀 Add-on linting $addon..."
-            docker run --rm -v "$(pwd)/$addon:/data:ro" \
-              ghcr.io/home-assistant/amd64-addon-linter:latest
-          done
+        uses: frenck/action-addon-linter@v2
+        with:
+          path: "./${{ steps.setup.outputs.addons }}"
 
       - name: 🐳 Dockerfile Lint
         run: |
