@@ -16,7 +16,6 @@ updates:
     labels:
       - "dependencies"
       - "docker"
-      - "addons"
     commit-message:
       prefix: "docker"
       include: "scope"

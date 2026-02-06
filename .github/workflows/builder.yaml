@@ -7,19 +7,7 @@ env:
 # yamllint disable-line rule:truthy
 on:
   workflow_dispatch:
-    inputs:
-      validation_mode:
-        description: 'Run in validation mode (no push)'
-        required: false
-        type: boolean
-        default: false
   workflow_call:
-    inputs:
-      validation_mode:
-        description: 'Run in validation mode (no push)'
-        required: false
-        type: boolean
-        default: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -32,7 +20,6 @@ jobs:
     timeout-minutes: 10
     outputs:
       addons: ${{ steps.addon_filter.outputs.addons }}
-      validation_mode: ${{ steps.validation_check.outputs.validation_mode }}
     steps:
       - name: ⤵️ Check out the repository
         uses: actions/checkout@v4
@@ -73,16 +60,6 @@ jobs:
           changed=$(echo "${changed_addons[@]}" | rev | cut -c 2- | rev)
           echo "addons=[$changed]" >> "$GITHUB_OUTPUT"
           echo "Changed add-ons: [$changed]"
-      - name: 🔧 Set validation mode
-        id: validation_check
-        run: |
-          if [[ "${{ inputs.validation_mode }}" == "true" ]]; then
-            echo "validation_mode=true" >> "$GITHUB_OUTPUT"
-            echo "🔧 Validation mode enabled - running validation only (no push)"
-          else
-            echo "validation_mode=false" >> "$GITHUB_OUTPUT"
-            echo "🚀 Building and pushing images"
-          fi
 
   build:
     needs: init
@@ -125,7 +102,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-${{ matrix.addon }}-${{ matrix.arch }}-
             ${{ runner.os }}-buildx-${{ matrix.addon }}-
-      - name: 🔧 Build and validate
+      - name: 🔧 Build
         if: steps.check.outputs.build_arch == 'true'
         uses: home-assistant/builder@2025.11.0
         with:
