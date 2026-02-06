@@ -51,7 +51,11 @@ jobs:
             echo "addons=$addons" >> "$GITHUB_OUTPUT"
             if [[ -n "$addons" ]]; then
               result=$(echo "$addons" | jq -R 'split(",") | map(select(length > 0))')
-              echo "addons_list=$result" >> "$GITHUB_OUTPUT"
+              {
+                echo "addons_list<<EOF"
+                echo "$result"
+                echo "EOF"
+              } >> "$GITHUB_OUTPUT"
             else
               echo "addons_list=[]" >> "$GITHUB_OUTPUT"
             fi

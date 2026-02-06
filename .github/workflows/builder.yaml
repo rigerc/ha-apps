@@ -6,13 +6,17 @@ on:
   workflow_dispatch:
     inputs:
       addons:
-        description: 'Comma-separated list of add-on names to build (leave empty for all)'
+        description: 'Comma-separated list of add-on names to build (leave empty for changed add-ons)'
         required: false
         type: string
   workflow_call:
     inputs:
       addons:
-        description: 'Comma-separated list of add-on names to build (leave empty for all)'
+        description: 'Comma-separated list of add-on names to build (leave empty for changed add-ons)'
+        required: false
+        type: string
+      base_ref:
+        description: 'The base ref to compare against (for finding changed add-ons)'
         required: false
         type: string
 
@@ -30,9 +34,21 @@ jobs:
     steps:
       - name: ⤵️ Check out the repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: 🔍 Find changed add-ons
+        id: changed_addons
+        uses: ./.github/actions/find-changed-addons
+        if: |
+          ${{ github.event_name == 'workflow_call' ||
+          (github.event_name == 'workflow_dispatch' && '${{ inputs.addons }}' == '') }}
+        with:
+          base_ref: ${{ inputs.base_ref || github.base_ref || github.ref_name }}
+          ignore: ".gemini"
       - name: 🚀 Find add-on directories
         id: addons
         uses: ./.github/actions/find-addons
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.addons != '' }}
         with:
           ignore: ".gemini"
       - name: 🔍 Filter add-ons to build
@@ -61,9 +77,8 @@ jobs:
             done
 
             if [[ ${#selected_addons[@]} -eq 0 ]]; then
-              echo "No valid add-ons specified, building all add-ons"
-              # Build all add-ons as fallback
-              result="$all_addons"
+              echo "No valid add-ons specified, using changed add-ons"
+              result="${{ steps.changed_addons.outputs.addons }}"
             else
               result=$(echo "${selected_addons[@]}" | rev | cut -c 2- | rev)
               result="[$result]"
@@ -71,10 +86,16 @@ jobs:
 
             echo "addons=$result" >> "$GITHUB_OUTPUT"
             echo "Selected add-ons: $result"
+          elif [[ -n "${{ steps.changed_addons.outputs.addons }}" ]]; then
+            # Use changed add-ons from find-changed-addons
+            changed_addons="${{ steps.changed_addons.outputs.addons }}"
+            result=$(echo "$changed_addons" | jq -R 'split(",") | map(select(length > 0))')
+            echo "addons=$result" >> "$GITHUB_OUTPUT"
+            echo "Building changed add-ons: $result"
           else
-            # Build all add-ons
-            echo "addons=${{ steps.addons.outputs.addons }}" >> "$GITHUB_OUTPUT"
-            echo "Building all add-ons: ${{ steps.addons.outputs.addons }}"
+            # No changed add-ons found
+            echo "addons=[]" >> "$GITHUB_OUTPUT"
+            echo "No changed add-ons to build"
           fi
 
   build:

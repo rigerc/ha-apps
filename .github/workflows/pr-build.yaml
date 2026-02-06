@@ -5,6 +5,11 @@ on:
   pull_request:
     types: [labeled, unlabeled, opened, synchronize, reopened]
     branches: main
+    paths:
+      - "romm/**"
+      - "profilarr/**"
+      - "huntarr/**"
+      - "cleanuparr/**"
   workflow_dispatch:
 
 permissions:
@@ -16,45 +21,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  find-addons:
-    runs-on: ubuntu-latest
-    name: ⏳ Find add-ons
-    timeout-minutes: 10
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      contains(github.event.pull_request.labels.*.name, 'release') ||
-      (contains(github.event.pull_request.labels.*.name, 'dependencies') &&
-       contains(github.event.pull_request.labels.*.name, 'docker'))
-    outputs:
-      addons: ${{ steps.find.outputs.addons }}
-    steps:
-      - name: ⤵️ Check out repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: 🔍 Find changed add-ons
-        id: find
-        uses: ./.github/actions/find-changed-addons
-        with:
-          base_ref: ${{ github.event.pull_request.base.ref }}
-          ignore: ".gemini"
-
   lint:
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      contains(github.event.pull_request.labels.*.name, 'release') ||
-      (contains(github.event.pull_request.labels.*.name, 'dependencies') &&
-       contains(github.event.pull_request.labels.*.name, 'docker'))
     uses: ./.github/workflows/lint.yaml
 
   build:
-    needs: find-addons
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      contains(github.event.pull_request.labels.*.name, 'release') ||
-      (contains(github.event.pull_request.labels.*.name, 'dependencies') &&
-       contains(github.event.pull_request.labels.*.name, 'docker'))
     uses: ./.github/workflows/builder.yaml
     with:
-      addons: ${{ needs.find-addons.outputs.addons }}
+      base_ref: ${{ github.event.pull_request.base.ref }}
