@@ -1,10 +1,9 @@
 ---
 name: PR Build
 
-# Triggered when a pull request is labeled with 'release'
 on:
   pull_request:
-    types: [labeled, unlabeled, opened, synchronized, reopened]
+    types: [labeled, unlabeled, opened, synchronize, reopened]
   workflow_dispatch:
 
 permissions:
@@ -20,57 +19,67 @@ jobs:
     name: 🏷️ Check labels
     timeout-minutes: 5
     outputs:
-      should_build: ${{ steps.check.outputs.should_build }}
+      build_release: ${{ steps.check.outputs.build_release }}
+      build_deps: ${{ steps.check.outputs.build_deps }}
       addons: ${{ steps.check.outputs.addons }}
+      base_ref: ${{ steps.check.outputs.base_ref }}
     steps:
-      - name: 🔍 Check for 'release' and 'app:' labels
+      - name: 🔍 Check for trigger labels
         id: check
+        env:
+          LABELS_JSON: ${{ toJSON(github.event.pull_request.labels) }}
+          HAS_RELEASE: ${{ contains(github.event.pull_request.labels.*.name, 'release') }}
+          HAS_DEPENDENCIES: ${{ contains(github.event.pull_request.labels.*.name, 'dependencies') }}
+          HAS_DOCKER: ${{ contains(github.event.pull_request.labels.*.name, 'docker') }}
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "Manual dispatch, but requires addons input"
-            echo "should_build=false" >> "$GITHUB_OUTPUT"
-            echo "addons=" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          labels="${{ github.event.pull_request.labels.*.name }}"
-
-          # Check if 'release' label is present
-          has_release=false
-          if echo "$labels" | grep -q '"release"'; then
-            has_release=true
-          fi
-
-          # Extract addons from 'app:' labels
+          # Extract addons from 'app:' labels using jq
           addons=()
-          for label in $labels; do
-            # Remove quotes from label name
-            label_clean=$(echo "$label" | tr -d '"')
-            if [[ "$label_clean" =~ ^app:[[:space:]]*(.+)$ ]]; then
-              addon="${BASH_REMATCH[1]}"
-              addons+=("$addon")
-            fi
-          done
+          while IFS= read -r addon; do
+            [[ -n "$addon" ]] && addons+=("$addon")
+          done < <(echo "${LABELS_JSON}" | jq -r '.[] | select(.name | startswith("app:")) | .name | sub("^app:[[:space:]]*"; "")')
 
-          if [[ "$has_release" == true ]] && [[ ${#addons[@]} -gt 0 ]]; then
-            # Join addons with comma
-            addons_csv=$(IFS=','; echo "${addons[*]}")
-            echo "✅ 'release' label found and app labels: ${addons_csv}"
-            echo "should_build=true" >> "$GITHUB_OUTPUT"
-            echo "addons=${addons_csv}" >> "$GITHUB_OUTPUT"
-          elif [[ "$has_release" == true ]]; then
-            echo "⚠️ 'release' label found but no 'app:' labels present"
-            echo "should_build=false" >> "$GITHUB_OUTPUT"
-            echo "addons=" >> "$GITHUB_OUTPUT"
-          else
-            echo "ℹ️ 'release' label not found, skipping build"
-            echo "should_build=false" >> "$GITHUB_OUTPUT"
-            echo "addons=" >> "$GITHUB_OUTPUT"
-          fi
+          {
+            if [[ "${HAS_RELEASE}" == "true" ]] && [[ ${#addons[@]} -gt 0 ]]; then
+              addons_csv=$(IFS=','; echo "${addons[*]}")
+              echo "✅ Release mode with app labels: ${addons_csv}"
+              echo "build_release=true"
+              echo "build_deps=false"
+              echo "addons=${addons_csv}"
+              echo "base_ref="
+            elif [[ "${HAS_DEPENDENCIES}" == "true" ]] && [[ "${HAS_DOCKER}" == "true" ]]; then
+              echo "✅ Dependencies mode - will find changed addons"
+              echo "build_release=false"
+              echo "build_deps=true"
+              echo "addons="
+              echo "base_ref=${{ github.event.pull_request.base.ref }}"
+            else
+              echo "ℹ️ No matching label combinations"
+              echo "build_release=false"
+              echo "build_deps=false"
+              echo "addons="
+              echo "base_ref="
+            fi
+          } >> "$GITHUB_OUTPUT"
+
+  find-changed-addons:
+    runs-on: ubuntu-latest
+    name: ⏳ Find changed add-ons
+    timeout-minutes: 10
+    needs: check-labels
+    if: needs.check-labels.outputs.build_deps == 'true' && needs.check-labels.outputs.base_ref != ''
+    outputs:
+      addons: ${{ steps.find.outputs.addons }}
+    steps:
+      - name: 🔍 Find changed add-ons
+        id: find
+        uses: ./.github/actions/find-changed-addons
+        with:
+          base_ref: ${{ needs.check-labels.outputs.base_ref }}
+          ignore: ".gemini"
 
   build:
-    needs: check-labels
-    if: needs.check-labels.outputs.should_build == 'true'
+    needs: [check-labels, find-changed-addons]
+    if: needs.check-labels.outputs.build_release == 'true' || needs.check-labels.outputs.build_deps == 'true'
     uses: ./.github/workflows/builder.yaml
     with:
-      addons: ${{ needs.check-labels.outputs.addons }}
+      addons: ${{ needs.check-labels.outputs.build_release == 'true' && needs.check-labels.outputs.addons || needs.find-changed-addons.outputs.addons }}

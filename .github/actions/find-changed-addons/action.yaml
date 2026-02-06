@@ -1,0 +1,66 @@
+---
+name: 'Home Assistant helper: find-changed-addons'
+description: 'Find add-ons with changed monitored files in a pull request'
+
+inputs:
+  base_ref:
+    description: "The base ref to compare against (e.g. main, origin/main)"
+    required: true
+  monitored_files:
+    description: "Comma-separated list of files to monitor for changes"
+    required: false
+    default: "build.yaml,config.yaml,Dockerfile,rootfs,apparmor.txt"
+  ignore:
+    description: "Comma-separated list of folders to ignore (passed to find-addons)"
+    required: false
+    default: ""
+
+outputs:
+  addons:
+    description: Comma-separated list of changed add-ons
+    value: ${{ steps.changed_addons.outputs.addons }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: ⤵️ Check out repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: 🚀 Find all add-ons
+      id: addons
+      uses: ./.github/actions/find-addons
+      with:
+        ignore: ${{ inputs.ignore }}
+
+    - name: 🔍 Find changed add-ons
+      id: changed_addons
+      shell: bash
+      run: |
+        git fetch origin "${{ inputs.base_ref }}"
+        base_sha=$(git rev-parse "origin/${{ inputs.base_ref }}")
+        head_sha=$(git rev-parse HEAD)
+
+        IFS=',' read -ra MONITORED <<< "${{ inputs.monitored_files }}"
+        changed_addons=()
+
+        for addon in ${{ steps.addons.outputs.addons }}; do
+          for file in "${MONITORED[@]}"; do
+            if git diff --name-only "${base_sha}...${head_sha}" | grep -q "^${addon}/${file}"; then
+              if [[ ! " ${changed_addons[*]} " =~ " ${addon} " ]]; then
+                changed_addons+=("${addon}")
+              fi
+              break
+            fi
+          done
+        done
+
+        if [[ ${#changed_addons[@]} -eq 0 ]]; then
+          echo "No changed add-ons found with monitored files"
+          echo "addons=" >> "$GITHUB_OUTPUT"
+        else
+          changed=$(IFS=','; echo "${changed_addons[*]}")
+          echo "addons=${changed}" >> "$GITHUB_OUTPUT"
+          echo "Changed add-ons: ${changed}"
+        fi
