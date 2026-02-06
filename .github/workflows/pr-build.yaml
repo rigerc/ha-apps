@@ -16,44 +16,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check-labels:
+  find-addons:
     runs-on: ubuntu-latest
-    name: 🏷️ Check labels
-    timeout-minutes: 5
-    outputs:
-      should_build: ${{ steps.check.outputs.should_build }}
-      base_ref: ${{ steps.check.outputs.base_ref }}
-    steps:
-      - name: 🔍 Check for trigger labels
-        id: check
-        env:
-          HAS_RELEASE: ${{ contains(github.event.pull_request.labels.*.name, 'release') }}
-          HAS_DEPENDENCIES: ${{ contains(github.event.pull_request.labels.*.name, 'dependencies') }}
-          HAS_DOCKER: ${{ contains(github.event.pull_request.labels.*.name, 'docker') }}
-        run: |
-          should_build=false
-          if [[ "${HAS_RELEASE}" == "true" ]]; then
-            should_build=true
-          elif [[ "${HAS_DEPENDENCIES}" == "true" ]] && [[ "${HAS_DOCKER}" == "true" ]]; then
-            should_build=true
-          fi
-
-          if [[ "${should_build}" == "true" ]]; then
-            echo "✅ Build labels found"
-            echo "should_build=true" >> "$GITHUB_OUTPUT"
-            echo "base_ref=${{ github.event.pull_request.base.ref }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "ℹ️ Required labels not found"
-            echo "should_build=false" >> "$GITHUB_OUTPUT"
-            echo "base_ref=" >> "$GITHUB_OUTPUT"
-          fi
-
-  find-changed-addons:
-    runs-on: ubuntu-latest
-    name: ⏳ Find changed add-ons
+    name: ⏳ Find add-ons
     timeout-minutes: 10
-    needs: check-labels
-    if: needs.check-labels.outputs.should_build == 'true' && needs.check-labels.outputs.base_ref != ''
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.pull_request.labels.*.name, 'release') ||
+      (contains(github.event.pull_request.labels.*.name, 'dependencies') &&
+       contains(github.event.pull_request.labels.*.name, 'docker'))
     outputs:
       addons: ${{ steps.find.outputs.addons }}
     steps:
@@ -66,12 +37,24 @@ jobs:
         id: find
         uses: ./.github/actions/find-changed-addons
         with:
-          base_ref: ${{ needs.check-labels.outputs.base_ref }}
+          base_ref: ${{ github.event.pull_request.base.ref }}
           ignore: ".gemini"
 
+  lint:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.pull_request.labels.*.name, 'release') ||
+      (contains(github.event.pull_request.labels.*.name, 'dependencies') &&
+       contains(github.event.pull_request.labels.*.name, 'docker'))
+    uses: ./.github/workflows/lint.yaml
+
   build:
-    needs: [check-labels, find-changed-addons]
-    if: needs.check-labels.outputs.should_build == 'true'
+    needs: find-addons
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.pull_request.labels.*.name, 'release') ||
+      (contains(github.event.pull_request.labels.*.name, 'dependencies') &&
+       contains(github.event.pull_request.labels.*.name, 'docker'))
     uses: ./.github/workflows/builder.yaml
     with:
-      addons: ${{ needs.find-changed-addons.outputs.addons }}
+      addons: ${{ needs.find-addons.outputs.addons }}
