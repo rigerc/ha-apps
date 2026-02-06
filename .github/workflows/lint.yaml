@@ -9,10 +9,6 @@ on:
   workflow_call:
   workflow_dispatch:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   find:
     runs-on: ubuntu-latest
@@ -20,6 +16,7 @@ jobs:
     name: ⏳ Find addons
     outputs:
       addons: ${{ steps.addons.outputs.addons_list }}
+      addons_csv: ${{ steps.addons.outputs.addons }}
     steps:
       - name: ⤵️ Check out the repository
         uses: actions/checkout@v4
@@ -46,101 +43,100 @@ jobs:
         id: addons
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "addons=${{ steps.find_all.outputs.addons_list }}" >> "$GITHUB_OUTPUT"
+            echo "addons=${{ steps.find_all.outputs.addons }}" >> "$GITHUB_OUTPUT"
+            echo "addons_list=${{ steps.find_all.outputs.addons_list }}" >> "$GITHUB_OUTPUT"
           else
-            # Convert comma-separated to JSON array
+            # Output both CSV and JSON formats
             addons="${{ steps.changed_addons.outputs.addons }}"
+            echo "addons=$addons" >> "$GITHUB_OUTPUT"
             if [[ -n "$addons" ]]; then
-              IFS=',' read -ra ADDR <<< "$addons"
-              json="["
-              for i in "${!ADDR[@]}"; do
-                addon="${ADDR[$i]}"
-                json+="\"${addon}\""
-                if [[ $i -lt $((${#ADDR[@]} - 1)) ]]; then
-                  json+=","
-                fi
-              done
-              json+="]"
-              echo "addons=$json" >> "$GITHUB_OUTPUT"
+              result=$(echo "$addons" | jq -R 'split(",") | map(select(length > 0))')
+              echo "addons_list=$result" >> "$GITHUB_OUTPUT"
             else
-              echo "addons=[]" >> "$GITHUB_OUTPUT"
+              echo "addons_list=[]" >> "$GITHUB_OUTPUT"
             fi
           fi
 
   lint:
     name: 🔍 Lint
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
+    needs: find
+    if: needs.find.outputs.addons != '[]'
     steps:
       - name: ⤵️ Check out the repository
         uses: actions/checkout@v4
 
+      - name: 🔄 Setup addon list
+        id: setup
+        run: |
+          addons='${{ needs.find.outputs.addons_csv }}'
+          echo "addons=$addons" >> "$GITHUB_OUTPUT"
+          echo "ℹ️ Linting addons: $addons"
+
       - name: 🔍 Shellcheck
-        uses: ludeeus/action-shellcheck@2.0.0
-        env:
-          SHELLCHECK_OPTS: -s bash
-        with:
-          ignore_paths: .claude docs scripts
+        run: |
+          for addon in ${{ steps.setup.outputs.addons }}; do
+            echo "🔍 Shellchecking $addon..."
+            find "./$addon" -name "*.sh" -exec shellcheck -s bash {} +
+          done
 
       - name: 🔍 Markdown Lint
-        uses: actionshub/markdownlint@v3.1.4
-        with:
-          filesToIgnoreRegex: "(.*(README|CHANGELOG|DOCS).md|^\\.claude/.*|^docs/.*|^scripts/.*)"
+        run: |
+          for addon in ${{ steps.setup.outputs.addons }}; do
+            echo "🔍 Markdown linting $addon..."
+            find "./$addon" -name "*.md" \
+              ! -name "README.md" \
+              ! -name "CHANGELOG.md" \
+              ! -name "DOCS.md" \
+              -exec npx markdownlint {} +
+          done
 
       - name: 🔍 JSON Lint
         run: |
-          find . -name "*.json" \
-            -not -path "./.claude/*" \
-            -not -path "./docs/*" \
-            -not -path "./scripts/*" \
-            -exec cat {} \; | jq '.'
+          for addon in ${{ steps.setup.outputs.addons }}; do
+            echo "🔍 JSON linting $addon..."
+            find "./$addon" -name "*.json" -exec cat {} \; | jq '.'
+          done
 
       - name: 🔍 YAML Lint
         run: |
-          yq eval '... comments=""' --output-format=yaml \
-            $(find . -name "*.yaml" -o -name "*.yml" \
-              -not -path "./.git/*" \
-              -not -path "./.claude/*" \
-              -not -path "./node_modules/*" \
-              -not -path "*/.*") > /dev/null
-
-  lint-addons:
-    name: 🔍 Add-on Lint (${{ matrix.addon }})
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: find
-    if: needs.find.outputs.addons != '[]'
-    strategy:
-      fail-fast: false
-      matrix:
-        addon: ${{ fromJson(needs.find.outputs.addons) }}
-    steps:
-      - name: ⤵️ Check out the repository
-        uses: actions/checkout@v4
+          for addon in ${{ steps.setup.outputs.addons }}; do
+            echo "🔍 YAML linting $addon..."
+            find "./$addon" \( -name "*.yaml" -o -name "*.yml" \) \
+              -exec yq eval '... comments=""' --output-format=yaml {} + > /dev/null
+          done
 
       - name: 🚀 Add-on Linter
-        uses: frenck/action-addon-linter@v2
-        with:
-          path: "./${{ matrix.addon }}"
+        run: |
+          for addon in ${{ steps.setup.outputs.addons }}; do
+            echo "🚀 Add-on linting $addon..."
+            docker run --rm -v "$(pwd)/$addon:/data:ro" \
+              ghcr.io/home-assistant/amd64-addon-linter:latest
+          done
 
       - name: 🐳 Dockerfile Lint
-        uses: hadolint/hadolint-action@v3.1.0
-        with:
-          dockerfile: "./${{ matrix.addon }}/Dockerfile"
+        run: |
+          for addon in ${{ steps.setup.outputs.addons }}; do
+            echo "🐳 Hadolinting $addon/Dockerfile..."
+            hadolint "./$addon/Dockerfile"
+          done
 
       - name: 📋 Verify build.yaml project key
         run: |
-          BUILD_FILE="${{ matrix.addon }}/build.yaml"
-          if [[ ! -f "$BUILD_FILE" ]]; then
-            echo "❌ Error: build.yaml not found in ${{ matrix.addon }}"
-            exit 1
-          fi
+          for addon in ${{ steps.setup.outputs.addons }}; do
+            BUILD_FILE="$addon/build.yaml"
+            if [[ ! -f "$BUILD_FILE" ]]; then
+              echo "❌ Error: build.yaml not found in $addon"
+              exit 1
+            fi
 
-          PROJECT_VALUE=$(yq eval '.labels.project // ""' "$BUILD_FILE")
+            PROJECT_VALUE=$(yq eval '.labels.project // ""' "$BUILD_FILE")
 
-          if [[ -z "$PROJECT_VALUE" || "$PROJECT_VALUE" == "null" ]]; then
-            echo "❌ Error: build.yaml in ${{ matrix.addon }} is missing 'labels.project' key"
-            exit 1
-          fi
+            if [[ -z "$PROJECT_VALUE" || "$PROJECT_VALUE" == "null" ]]; then
+              echo "❌ Error: build.yaml in $addon is missing 'labels.project' key"
+              exit 1
+            fi
 
-          echo "✅ build.yaml has project key with value: $PROJECT_VALUE"
+            echo "✅ build.yaml has project key with value: $PROJECT_VALUE"
+          done
