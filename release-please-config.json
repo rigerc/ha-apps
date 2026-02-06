@@ -89,17 +89,52 @@
           "jsonpath": "$.labels['org.opencontainers.image.version']"
         }
       ]
+    },
+    ".": {
+      "changelog-path": "CHANGELOG.md",
+      "bump-minor-pre-major": false,
+      "bump-patch-for-minor-pre-major": false,
+      "draft": false,
+      "prerelease": false
     }
   },
   "changelog-sections": [
-    {"type": "feat", "section": "✨ Features"},
-    {"type": "fix", "section": "🐛 Bug Fixes"},
-    {"type": "chore", "section": "🧰 Maintenance"},
-    {"type": "docs", "section": "📚 Documentation"},
-    {"type": "refactor", "section": "♻️ Refactoring"},
-    {"type": "perf", "section": "⚡ Performance"},
-    {"type": "test", "section": "✅ Tests"},
-    {"type": "build", "section": "🏗️ Build System"},
-    {"type": "ci", "section": "👷 Continuous Integration"}
-  ]
+    {
+      "type": "feat",
+      "section": "✨ Features"
+    },
+    {
+      "type": "fix",
+      "section": "🐛 Bug Fixes"
+    },
+    {
+      "type": "chore",
+      "section": "🧰 Maintenance"
+    },
+    {
+      "type": "docs",
+      "section": "📚 Documentation"
+    },
+    {
+      "type": "refactor",
+      "section": "♻️ Refactoring"
+    },
+    {
+      "type": "perf",
+      "section": "⚡ Performance"
+    },
+    {
+      "type": "test",
+      "section": "✅ Tests"
+    },
+    {
+      "type": "build",
+      "section": "🏗️ Build System"
+    },
+    {
+      "type": "ci",
+      "section": "👷 Continuous Integration"
+    }
+  ],
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
 }
