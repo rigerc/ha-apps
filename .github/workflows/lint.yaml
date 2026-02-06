@@ -1,0 +1,140 @@
+---
+name: Lint
+
+env:
+  MONITORED_FILES: "build.yaml config.yaml Dockerfile rootfs apparmor.txt"
+
+# yamllint disable-line rule:truthy
+on:
+  workflow_call:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  find:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    name: ⏳ Find changed addons
+    outputs:
+      addons: ${{ steps.changed_addons.outputs.addons }}
+    steps:
+      - name: ⤵️ Check out the repository
+        uses: actions/checkout@v4
+      - name: 🔍 Find all add-ons
+        id: addons
+        uses: ./.github/actions/find-addons
+        with:
+          ignore: ".gemini"
+      - name: 🗝️ Get changed files
+        id: changed_files
+        uses: jitterbit/get-changed-files@v1
+        if: github.event_name != 'workflow_dispatch'
+      - name: 🦺 Get changed add-ons
+        id: changed_addons
+        run: |
+          # Find changed addons
+          changed_addons=()
+
+          for addon in ${{ steps.addons.outputs.addons }}; do
+            # Check if any monitored file in this addon directory changed
+            for file in ${{ env.MONITORED_FILES }}; do
+              # Use word boundaries to avoid partial matches (e.g., addonbackup/Dockerfile)
+              if [[ "${{ steps.changed_files.outputs.all }}" =~ (^| )${addon}/${file}($| ) ]]; then
+                # Check if addon already in array
+                already_added=0
+                for existing in "${changed_addons[@]}"; do
+                  if [[ "$existing" == "\"${addon}\"," ]]; then
+                    already_added=1
+                    break
+                  fi
+                done
+                if [[ $already_added -eq 0 ]]; then
+                  changed_addons+=("\"${addon}\",");
+                fi
+                break
+              fi
+            done
+          done
+
+          # Build JSON array
+          changed=$(echo "${changed_addons[@]}" | rev | cut -c 2- | rev)
+          echo "addons=[$changed]" >> "$GITHUB_OUTPUT"
+          echo "Changed add-ons: [$changed]"
+
+  # Global lints - single job
+  lint:
+    name: 🔍 Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: find
+    steps:
+      - name: ⤵️ Check out the repository
+        uses: actions/checkout@v4
+
+      - name: 🔍 Shellcheck
+        uses: ludeeus/action-shellcheck@2.0.0
+        env:
+          SHELLCHECK_OPTS: -s bash
+        with:
+          ignore_paths: .claude docs scripts
+
+      - name: 🔍 Markdown Lint
+        uses: actionshub/markdownlint@v3.1.4
+        with:
+          filesToIgnoreRegex: "(.*(README|CHANGELOG|DOCS).md|^\\.claude/.*|^docs/.*|^scripts/.*)"
+
+      - name: 🔍 JSON Lint
+        run: |
+          find . -name "*.json" \
+            -not -path "./.claude/*" \
+            -not -path "./docs/*" \
+            -not -path "./scripts/*" \
+            -exec cat {} \; | jq '.'
+
+      - name: 🔍 YAML Lint
+        uses: frenck/action-yamllint@v1
+
+  # Per-addon lints - single matrix job
+  lint-addons:
+    name: 🔍 Add-on Lint (${{ matrix.addon }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: find
+    if: needs.find.outputs.addons != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        addon: ${{ fromJson(needs.find.outputs.addons) }}
+    steps:
+      - name: ⤵️ Check out the repository
+        uses: actions/checkout@v4
+
+      - name: 🚀 Add-on Linter
+        uses: frenck/action-addon-linter@v2
+        with:
+          path: "./${{ matrix.addon }}"
+
+      - name: 🐳 Dockerfile Lint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: "./${{ matrix.addon }}/Dockerfile"
+
+      - name: 📋 Verify build.yaml project key
+        run: |
+          BUILD_FILE="${{ matrix.addon }}/build.yaml"
+          if [[ ! -f "$BUILD_FILE" ]]; then
+            echo "❌ Error: build.yaml not found in ${{ matrix.addon }}"
+            exit 1
+          fi
+
+          PROJECT_VALUE=$(yq -r '.labels.project // ""' "$BUILD_FILE")
+
+          if [[ -z "$PROJECT_VALUE" || "$PROJECT_VALUE" == "null" ]]; then
+            echo "❌ Error: build.yaml in ${{ matrix.addon }} is missing 'labels.project' key"
+            exit 1
+          fi
+
+          echo "✅ build.yaml has project key with value: $PROJECT_VALUE"

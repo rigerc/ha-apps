@@ -1,0 +1,61 @@
+---
+name: Action Linter
+
+# yamllint disable-line rule:truthy
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/**'
+      - '.github/actions/**'
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '.github/workflows/**'
+      - '.github/actions/**'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-metadata:
+    name: 📋 Check if GitHub Actions update
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: read
+    outputs:
+      is-actions-update: ${{ steps.check-ecosystem.outputs.is-actions }}
+      dependency-names: ${{ steps.metadata.outputs.dependency-names }}
+    steps:
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Check if GitHub Actions ecosystem
+        id: check-ecosystem
+        run: |
+          if [[ "${{ steps.metadata.outputs.package-ecosystem }}" == "github-actions" ]]; then
+            echo "is-actions=true" >> "$GITHUB_OUTPUT"
+            echo "✅ This is a GitHub Actions update - running validation"
+          else
+            echo "is-actions=false" >> "$GITHUB_OUTPUT"
+            echo "⏭️  Not a GitHub Actions update (ecosystem: ${{ steps.metadata.outputs.package-ecosystem }}), skipping validation"
+          fi
+
+  actionlint:
+    name: 🔍 Validate workflow syntax
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⤵️ Check out code
+        uses: actions/checkout@v4
+
+      - name: 🚀 Run actionlint
+        uses: raven-actions/actionlint@v2
+        with:
+          fail-on-error: true
+          version: latest

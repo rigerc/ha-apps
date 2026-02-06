@@ -1,0 +1,105 @@
+{
+  "separate-pull-requests": true,
+  "pull-request-title-pattern": "chore(repo): 🚀 Release ${component} ${version}",
+  "always-update": true,
+  "force-tag-creation": true,
+  "include-v-in-tag": false,
+  "include-v-in-release-name": false,
+  "extra-label": "release",
+  "draft": true,
+  "prerelease": false,
+  "release-search-depth": 100,
+  "commit-search-depth": 200,
+  "exclude-paths": [
+    "*/README.md",
+    "README.md",
+    ".github/README.md",
+    "manifest.json",
+    ".github/dependabot.yml"
+  ],
+  "packages": {
+    "romm": {
+      "release-type": "simple",
+      "package-name": "Romm",
+      "component": "romm",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "config.yaml",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "yaml",
+          "path": "build.yaml",
+          "jsonpath": "$.labels['org.opencontainers.image.version']"
+        }
+      ]
+    },
+    "profilarr": {
+      "release-type": "simple",
+      "package-name": "Profilarr",
+      "component": "profilarr",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "config.yaml",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "yaml",
+          "path": "build.yaml",
+          "jsonpath": "$.labels['org.opencontainers.image.version']"
+        }
+      ]
+    },
+    "cleanuparr": {
+      "release-type": "simple",
+      "package-name": "Cleanuparr",
+      "component": "cleanuparr",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "config.yaml",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "yaml",
+          "path": "build.yaml",
+          "jsonpath": "$.labels['org.opencontainers.image.version']"
+        }
+      ]
+    },
+    "huntarr": {
+      "release-type": "simple",
+      "package-name": "Huntarr",
+      "component": "huntarr",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "config.yaml",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "yaml",
+          "path": "build.yaml",
+          "jsonpath": "$.labels['org.opencontainers.image.version']"
+        }
+      ]
+    }
+  },
+  "changelog-sections": [
+    {"type": "feat", "section": "✨ Features"},
+    {"type": "fix", "section": "🐛 Bug Fixes"},
+    {"type": "chore", "section": "🧰 Maintenance"},
+    {"type": "docs", "section": "📚 Documentation"},
+    {"type": "refactor", "section": "♻️ Refactoring"},
+    {"type": "perf", "section": "⚡ Performance"},
+    {"type": "test", "section": "✅ Tests"},
+    {"type": "build", "section": "🏗️ Build System"},
+    {"type": "ci", "section": "👷 Continuous Integration"}
+  ]
+}

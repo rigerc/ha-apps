@@ -1,0 +1,18 @@
+#!/usr/bin/with-contenv bashio
+# shellcheck shell=bash
+
+bashio::log.info "Starting Romm web server..."
+
+cd /backend || bashio::exit.nok "Failed to change to /backend directory"
+
+exec gunicorn main:app \
+    --bind "unix:/tmp/gunicorn.sock" \
+    --worker-class uvicorn_worker.UvicornWorker \
+    --workers 1 \
+    --timeout 300 \
+    --keep-alive 2 \
+    --max-requests 1000 \
+    --max-requests-jitter 100 \
+    --worker-connections 1000 \
+    --error-logfile - \
+    --pid /tmp/gunicorn.pid

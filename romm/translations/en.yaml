@@ -1,0 +1,111 @@
+---
+configuration:
+  log_level:
+    name: "Log Level"
+    description: "Logging verbosity level. Use 'info' for normal operation, 'debug' for troubleshooting."
+
+  database:
+    name: "Database Configuration"
+    description: "MariaDB/MySQL database connection settings. ROMM requires an external database."
+
+  database.host:
+    name: "Database Host"
+    description: "Hostname or IP address of your MariaDB/MySQL server (e.g., 'core-mariadb' for HA add-on)."
+
+  database.port:
+    name: "Database Port"
+    description: "Database server port (default: 3306 for MariaDB/MySQL)."
+
+  database.name:
+    name: "Database Name"
+    description: "Name of the database to use for ROMM data."
+
+  database.user:
+    name: "Database User"
+    description: "Username for database authentication."
+
+  database.password:
+    name: "Database Password"
+    description: "Password for database authentication. **Required** - must not be empty."
+
+  auth_secret_key:
+    name: "Authentication Secret Key"
+    description: "Secret key for session authentication. **Required** - Generate with: openssl rand -hex 32"
+
+  metadata_providers:
+    name: "Metadata Providers"
+    description: >-
+      API credentials for game metadata sources. Configure providers to fetch
+      game info, artwork, and achievements.
+
+  metadata_providers.screenscraper_user:
+    name: "ScreenScraper Username"
+    description: "ScreenScraper.fr account username. Register at https://www.screenscraper.fr/"
+
+  metadata_providers.screenscraper_password:
+    name: "ScreenScraper Password"
+    description: "ScreenScraper.fr account password."
+
+  metadata_providers.retroachievements_api_key:
+    name: "RetroAchievements API Key"
+    description: "RetroAchievements API key. Get yours at https://retroachievements.org/"
+
+  metadata_providers.steamgriddb_api_key:
+    name: "SteamGridDB API Key"
+    description: "SteamGridDB API key for custom artwork. Get yours at https://www.steamgriddb.com/"
+
+  metadata_providers.igdb_client_id:
+    name: "IGDB Client ID"
+    description: "Internet Game Database (IGDB) client ID. Register at https://api-docs.igdb.com/"
+
+  metadata_providers.igdb_client_secret:
+    name: "IGDB Client Secret"
+    description: "Internet Game Database (IGDB) client secret. Required for some metadata features."
+
+  metadata_providers.mobygames_api_key:
+    name: "MobyGames API Key"
+    description: "MobyGames API key for additional game metadata."
+
+  metadata_providers.hasheous_enabled:
+    name: "Enable Hasheous"
+    description: "Enable Hasheous metadata provider for ROM identification."
+
+  metadata_providers.playmatch_enabled:
+    name: "Enable Playmatch"
+    description: "Enable Playmatch metadata provider."
+
+  metadata_providers.launchbox_enabled:
+    name: "Enable LaunchBox"
+    description: "Enable LaunchBox metadata provider for game information."
+
+  library_path:
+    name: "Library Path"
+    description: "Path to your ROM collection directory (default: /share/roms). Organize ROMs by platform subfolder."
+
+  env_vars:
+    name: "Environment Variables"
+    description: "Optional additional environment variables to pass to ROMM. Format: KEY=VALUE"
+
+  scheduled_tasks:
+    name: "Scheduled Tasks"
+    description: "Configure automatic background maintenance tasks."
+
+  scheduled_tasks.enable_rescan:
+    name: "Enable Scheduled Rescan"
+    description: "Automatically rescan library for new ROMs daily at 3 AM."
+
+  scheduled_tasks.enable_switch_titledb:
+    name: "Enable Switch TitleDB Updates"
+    description: "Update Nintendo Switch title database daily at 4 AM."
+
+  scheduled_tasks.enable_launchbox_metadata:
+    name: "Enable LaunchBox Metadata Updates"
+    description: "Update LaunchBox metadata daily at 4 AM."
+
+  scheduled_tasks.enable_image_conversion:
+    name: "Enable Image Conversion"
+    description: "Convert images to WebP format for better performance daily at 4 AM."
+
+  scheduled_tasks.enable_retroachievements_sync:
+    name: "Enable RetroAchievements Sync"
+    description: "Sync RetroAchievements progress daily at 4 AM."

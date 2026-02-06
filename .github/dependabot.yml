@@ -1,0 +1,49 @@
+version: 2
+updates:
+  # Docker images for Home Assistant add-ons
+  - package-ecosystem: "docker"
+    directories:
+      - "/romm"
+      - "/profilarr"
+      - "/huntarr"
+      - "/cleanuparr"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "05:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 15
+    labels:
+      - "dependencies"
+      - "docker"
+      - "addons"
+    commit-message:
+      prefix: "docker"
+      include: "scope"
+    groups:
+      # Group minor and patch updates together to reduce PR noise
+      docker-non-major:
+        update-types:
+          - "minor"
+          - "patch"
+  - package-ecosystem: "github-actions"
+    # GitHub Actions workflows
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "05:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "ci"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    groups:
+      # Group minor and patch updates together to reduce PR noise
+      actions-non-major:
+        update-types:
+          - "minor"
+          - "patch"

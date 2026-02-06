@@ -1,0 +1,138 @@
+---
+name: Builder
+
+env:
+  MONITORED_FILES: "build.yaml config.yaml Dockerfile rootfs apparmor.txt"
+
+# yamllint disable-line rule:truthy
+on:
+  workflow_dispatch:
+    inputs:
+      validation_mode:
+        description: 'Run in validation mode (no push)'
+        required: false
+        type: boolean
+        default: false
+  workflow_call:
+    inputs:
+      validation_mode:
+        description: 'Run in validation mode (no push)'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  init:
+    runs-on: ubuntu-latest
+    name: ⏳ Initialize builds
+    timeout-minutes: 10
+    outputs:
+      addons: ${{ steps.addon_filter.outputs.addons }}
+      validation_mode: ${{ steps.validation_check.outputs.validation_mode }}
+    steps:
+      - name: ⤵️ Check out the repository
+        uses: actions/checkout@v4
+      - name: 🗝️ Get changed files
+        id: changed_files
+        uses: jitterbit/get-changed-files@v1
+        if: github.event_name != 'workflow_dispatch'
+      - name: 🚀 Find add-on directories
+        id: addons
+        uses: ./.github/actions/find-addons
+        with:
+          ignore: ".gemini"
+      - name: 🔍 Filter add-ons to build
+        id: addon_filter
+        run: |
+          # Find changed addons
+          changed_addons=()
+          for addon in ${{ steps.addons.outputs.addons }}; do
+            for file in ${{ env.MONITORED_FILES }}; do
+              # Use word boundaries to avoid partial matches (e.g., addonbackup/Dockerfile)
+              if [[ "${{ steps.changed_files.outputs.all }}" =~ (^| )${addon}/${file}($| ) ]]; then
+                # Check if addon already in array
+                already_added=0
+                for existing in "${changed_addons[@]}"; do
+                  if [[ "$existing" == "\"${addon}\"," ]]; then
+                    already_added=1
+                    break
+                  fi
+                done
+                if [[ $already_added -eq 0 ]]; then
+                  changed_addons+=("\"${addon}\",");
+                fi
+                break
+              fi
+            done
+          done
+
+          changed=$(echo "${changed_addons[@]}" | rev | cut -c 2- | rev)
+          echo "addons=[$changed]" >> "$GITHUB_OUTPUT"
+          echo "Changed add-ons: [$changed]"
+      - name: 🔧 Set validation mode
+        id: validation_check
+        run: |
+          if [[ "${{ inputs.validation_mode }}" == "true" ]]; then
+            echo "validation_mode=true" >> "$GITHUB_OUTPUT"
+            echo "🔧 Validation mode enabled - running validation only (no push)"
+          else
+            echo "validation_mode=false" >> "$GITHUB_OUTPUT"
+            echo "🚀 Building and pushing images"
+          fi
+
+  build:
+    needs: init
+    runs-on: ubuntu-latest
+    if: needs.init.outputs.addons != '[]'
+    name: 👷‍♂️ Build ${{ matrix.addon }} for ${{ matrix.arch }}
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        addon: ${{ fromJson(needs.init.outputs.addons) }}
+        arch: ["aarch64", "amd64"]
+    steps:
+      - name: ⤵️ Check out repository
+        uses: actions/checkout@v4
+      - name: ℹ️ Get information
+        id: info
+        uses: home-assistant/actions/helpers/info@master
+        with:
+          path: "./${{ matrix.addon }}"
+      - name: 🦺 Check if add-on should be built
+        id: check
+        run: |
+          if [[ "${{ steps.info.outputs.architectures }}" =~ ${{ matrix.arch }} ]]; then
+             echo "${{ matrix.arch }} is a supported arch for ${{ matrix.addon }}, starting build"
+             echo "build_arch=true" >> "$GITHUB_OUTPUT"
+             echo "image=${{ steps.info.outputs.image }}" >> "$GITHUB_OUTPUT"
+           else
+             echo "${{ matrix.arch }} is not a valid arch for ${{ matrix.addon }}, skipping build"
+             echo "build_arch=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: 💾 Cache Docker layers
+        if: steps.check.outputs.build_arch == 'true'
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ matrix.addon }}-${{ matrix.arch }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-${{ matrix.addon }}-${{ matrix.arch }}-
+            ${{ runner.os }}-buildx-${{ matrix.addon }}-
+      - name: 🔧 Build and validate
+        if: steps.check.outputs.build_arch == 'true'
+        uses: home-assistant/builder@2025.11.0
+        with:
+          args: |
+            --test \
+            --${{ matrix.arch }} \
+            --target /data/${{ matrix.addon }} \
+            --image "${{ steps.check.outputs.image }}" \
+            --docker-hub "ghcr.io/${{ github.repository_owner }}" \
+            --addon

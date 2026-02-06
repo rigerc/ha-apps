@@ -1,0 +1,43 @@
+---
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  actions: write
+  packages: write
+  id-token: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      releases_created: ${{ steps.release.outputs.releases_created }}
+      paths_released: ${{ steps.release.outputs.paths_released }}
+      all_outputs: ${{ toJSON(steps.release.outputs) }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.PAT }}
+          manifest-file: .release-please-manifest.json
+          config-file: release-please-config.json
+
+  trigger-build:
+    needs: release-please
+    if: needs.release-please.outputs.releases_created == 'true'
+    strategy:
+      matrix:
+        path: ${{ fromJSON(needs.release-please.outputs.paths_released) }}
+    uses: ./.github/workflows/release-deploy.yaml
+    with:
+      addon: ${{ matrix.path }}
+      version: ${{ fromJSON(needs.release-please.outputs.all_outputs)[format('{0}--version', matrix.path)] }}
+      tag: ${{ fromJSON(needs.release-please.outputs.all_outputs)[format('{0}--tag_name', matrix.path)] }}
+    secrets: inherit

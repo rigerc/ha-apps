@@ -1,0 +1,31 @@
+name: Profilarr
+version: 1.0.0
+slug: profilarr
+description: |
+  Profile manager for Radarr and Sonarr instances.
+  Centrally manage quality profiles, custom formats, and
+  release profiles with Git-backed configuration storage!
+url: https://github.com/rigerc/ha-apps
+arch:
+  - aarch64
+  - amd64
+init: false
+startup: services
+boot: manual
+ingress: true
+ingress_port: 8019
+panel_icon: mdi:cog-transfer
+map:
+  - share:rw
+  - addon_config:rw
+options:
+  auth_mode: 'on'
+  log_level: info
+  git_user_name: Profilarr
+  git_user_email: profilarr@homeassistant.local
+schema:
+  auth_mode: list(on|local|oidc|off)
+  log_level: list(trace|debug|info|warning|error)
+  git_user_name: str?
+  git_user_email: str?
+image: ghcr.io/rigerc/ha-apps-profilarr-{arch}

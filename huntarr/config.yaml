@@ -1,0 +1,29 @@
+name: Huntarr
+version: 1.0.0
+slug: huntarr
+description: >-
+  Automation utility that continuously searches media libraries for missing
+  content and quality upgrades
+arch:
+  - amd64
+  - aarch64
+url: https://github.com/rigerc/ha-apps
+image: ghcr.io/rigerc/ha-apps-huntarr-{arch}
+startup: services
+boot: manual
+init: false
+ports:
+  9705/tcp: 9705
+ports_description:
+  9705/tcp: Web interface
+ingress: true
+ingress_port: 9705
+panel_icon: mdi:magnify
+map:
+  - addon_config:rw
+options:
+  log_level: info
+  timezone: UTC
+schema:
+  log_level: list(trace|debug|info|warning|error)
+  timezone: str

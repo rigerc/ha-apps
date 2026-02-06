@@ -1,0 +1,70 @@
+name: Addon Metadata
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: addon-metadata-${{ github.repository }}-main
+  cancel-in-progress: true
+
+jobs:
+  # Job 1: Generate manifest and metadata files
+  generate-manifest:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.PAT != '' && secrets.PAT || github.token }}
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+          # Install mikefarah/yq v4 (not the python yq package) - pinned version
+          wget https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64 -O /usr/local/bin/yq
+          chmod +x /usr/local/bin/yq
+          # Install gomplate
+          curl -o /usr/local/bin/gomplate -sSL https://github.com/hairyhenderson/gomplate/releases/download/v4.3.0/gomplate_linux-amd64
+          chmod +x /usr/local/bin/gomplate
+          gomplate --version
+
+      - name: Sync with remote main
+        run: |
+          git fetch origin main
+          git reset --hard origin/main
+
+      - name: Generate manifest
+        run: |
+          ./scripts/manifest.sh
+        continue-on-error: true
+
+      - name: Update dependabot
+        run: |
+          ./scripts/manifest.sh -d
+        continue-on-error: true
+
+      - name: Update release-please manifest
+        run: |
+          ./scripts/manifest.sh -r
+        continue-on-error: true
+
+      - name: Generate READMEs
+        run: |
+          ./scripts/manifest.sh -g
+        continue-on-error: true
+
+      - name: Commit manifest and config changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          # Note: Modified files (READMEs, manifest.json, dependabot.yml) are excluded
+          # in release-please-config.json to prevent triggering new release PRs.
+          # [skip ci] prevents other CI workflows from running unnecessarily.
+          commit_message: "chore: update manifest and configs [skip ci]"
+          skip_checkout: true
