@@ -1,8 +1,8 @@
 name: Repository Maintenance
 
 on:
-  schedule:
-    - cron: "0 0 * * *" # Everday at midnight
+#  schedule:
+#    - cron: "0 0 * * *" # Everday at midnight
   workflow_dispatch:
 
 permissions:
@@ -31,5 +31,5 @@ jobs:
             delete-partial-images: true
             delete-orphaned-images: true
             expand-packages: true
-            packages: ha-addons-*
+            packages: ha-apps-*
             token: ${{ secrets.PAT }}

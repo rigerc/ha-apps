@@ -117,11 +117,9 @@ jobs:
           path: "./${{ steps.setup.outputs.addons }}"
 
       - name: 🐳 Dockerfile Lint
-        run: |
-          for addon in ${{ steps.setup.outputs.addons }}; do
-            echo "🐳 Hadolinting $addon/Dockerfile..."
-            hadolint "./$addon/Dockerfile"
-          done
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: "./${{ steps.setup.outputs.addons }}/Dockerfile"
 
       - name: 📋 Verify build.yaml project key
         run: |
