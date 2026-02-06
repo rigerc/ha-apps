@@ -2,7 +2,7 @@
 name: Lint
 
 env:
-  MONITORED_FILES: "build.yaml config.yaml Dockerfile rootfs apparmor.txt"
+  MONITORED_FILES: "build.yaml,config.yaml,Dockerfile,rootfs,apparmor.txt"
 
 # yamllint disable-line rule:truthy
 on:
@@ -16,60 +16,61 @@ concurrency:
 jobs:
   find:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    name: ⏳ Find changed addons
+    timeout-minutes: 5
+    name: ⏳ Find addons
     outputs:
-      addons: ${{ steps.changed_addons.outputs.addons }}
+      addons: ${{ steps.addons.outputs.addons_list }}
     steps:
       - name: ⤵️ Check out the repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔍 Find changed add-ons
+        id: changed_addons
+        uses: ./.github/actions/find-changed-addons
+        if: github.event_name != 'workflow_dispatch'
+        with:
+          base_ref: ${{ github.base_ref || github.ref_name }}
+          monitored_files: ${{ env.MONITORED_FILES }}
+          ignore: ".gemini"
+
       - name: 🔍 Find all add-ons
-        id: addons
+        id: find_all
         uses: ./.github/actions/find-addons
+        if: github.event_name == 'workflow_dispatch'
         with:
           ignore: ".gemini"
-      - name: 🗝️ Get changed files
-        id: changed_files
-        uses: jitterbit/get-changed-files@v1
-        if: github.event_name != 'workflow_dispatch'
-      - name: 🦺 Get changed add-ons
-        id: changed_addons
+
+      - name: 📋 Build addons list
+        id: addons
         run: |
-          # Find changed addons
-          changed_addons=()
-
-          for addon in ${{ steps.addons.outputs.addons }}; do
-            # Check if any monitored file in this addon directory changed
-            for file in ${{ env.MONITORED_FILES }}; do
-              # Use word boundaries to avoid partial matches (e.g., addonbackup/Dockerfile)
-              if [[ "${{ steps.changed_files.outputs.all }}" =~ (^| )${addon}/${file}($| ) ]]; then
-                # Check if addon already in array
-                already_added=0
-                for existing in "${changed_addons[@]}"; do
-                  if [[ "$existing" == "\"${addon}\"," ]]; then
-                    already_added=1
-                    break
-                  fi
-                done
-                if [[ $already_added -eq 0 ]]; then
-                  changed_addons+=("\"${addon}\",");
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "addons=${{ steps.find_all.outputs.addons_list }}" >> "$GITHUB_OUTPUT"
+          else
+            # Convert comma-separated to JSON array
+            addons="${{ steps.changed_addons.outputs.addons }}"
+            if [[ -n "$addons" ]]; then
+              IFS=',' read -ra ADDR <<< "$addons"
+              json="["
+              for i in "${!ADDR[@]}"; do
+                addon="${ADDR[$i]}"
+                json+="\"${addon}\""
+                if [[ $i -lt $((${#ADDR[@]} - 1)) ]]; then
+                  json+=","
                 fi
-                break
-              fi
-            done
-          done
+              done
+              json+="]"
+              echo "addons=$json" >> "$GITHUB_OUTPUT"
+            else
+              echo "addons=[]" >> "$GITHUB_OUTPUT"
+            fi
+          fi
 
-          # Build JSON array
-          changed=$(echo "${changed_addons[@]}" | rev | cut -c 2- | rev)
-          echo "addons=[$changed]" >> "$GITHUB_OUTPUT"
-          echo "Changed add-ons: [$changed]"
-
-  # Global lints - single job
   lint:
     name: 🔍 Lint
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: find
+    timeout-minutes: 10
     steps:
       - name: ⤵️ Check out the repository
         uses: actions/checkout@v4
@@ -95,13 +96,18 @@ jobs:
             -exec cat {} \; | jq '.'
 
       - name: 🔍 YAML Lint
-        uses: frenck/action-yamllint@v1
+        run: |
+          yq eval '... comments=""' --output-format=yaml \
+            $(find . -name "*.yaml" -o -name "*.yml" \
+              -not -path "./.git/*" \
+              -not -path "./.claude/*" \
+              -not -path "./node_modules/*" \
+              -not -path "*/.*") > /dev/null
 
-  # Per-addon lints - single matrix job
   lint-addons:
     name: 🔍 Add-on Lint (${{ matrix.addon }})
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     needs: find
     if: needs.find.outputs.addons != '[]'
     strategy:
@@ -130,7 +136,7 @@ jobs:
             exit 1
           fi
 
-          PROJECT_VALUE=$(yq -r '.labels.project // ""' "$BUILD_FILE")
+          PROJECT_VALUE=$(yq eval '.labels.project // ""' "$BUILD_FILE")
 
           if [[ -z "$PROJECT_VALUE" || "$PROJECT_VALUE" == "null" ]]; then
             echo "❌ Error: build.yaml in ${{ matrix.addon }} is missing 'labels.project' key"

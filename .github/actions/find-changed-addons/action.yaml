@@ -23,11 +23,6 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: ⤵️ Check out repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-
     - name: 🚀 Find all add-ons
       id: addons
       uses: ./.github/actions/find-addons
