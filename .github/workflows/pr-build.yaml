@@ -38,17 +38,15 @@ jobs:
             should_build=true
           fi
 
-          {
-            if [[ "${should_build}" == "true" ]]; then
-              echo "✅ Build labels found"
-              echo "should_build=true"
-              echo "base_ref=${{ github.event.pull_request.base.ref }}"
-            else
-              echo "ℹ️ Required labels not found"
-              echo "should_build=false"
-              echo "base_ref="
-            fi
-          } >> "$GITHUB_OUTPUT"
+          if [[ "${should_build}" == "true" ]]; then
+            echo "✅ Build labels found"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            echo "base_ref=${{ github.event.pull_request.base.ref }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ℹ️ Required labels not found"
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+            echo "base_ref=" >> "$GITHUB_OUTPUT"
+          fi
 
   find-changed-addons:
     runs-on: ubuntu-latest
