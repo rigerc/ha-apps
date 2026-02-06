@@ -25,6 +25,17 @@ updates:
         update-types:
           - "minor"
           - "patch"
+        apply-labels:
+          - "dependencies"
+          - "docker"
+          - "minor"
+      docker-major:
+        update-types:
+          - "major"
+        apply-labels:
+          - "dependencies"
+          - "docker"
+          - "major"
   - package-ecosystem: "github-actions"
     # GitHub Actions workflows
     directory: "/"
@@ -46,3 +57,14 @@ updates:
         update-types:
           - "minor"
           - "patch"
+        apply-labels:
+          - "dependencies"
+          - "ci"
+          - "minor"
+      actions-major:
+        update-types:
+          - "major"
+        apply-labels:
+          - "dependencies"
+          - "ci"
+          - "major"
