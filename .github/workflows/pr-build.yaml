@@ -1,0 +1,76 @@
+---
+name: PR Build
+
+# Triggered when a pull request is labeled with 'release'
+on:
+  pull_request:
+    types: [labeled, unlabeled, opened, synchronized, reopened]
+  workflow_dispatch:
+
+permissions:
+  actions: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-labels:
+    runs-on: ubuntu-latest
+    name: 🏷️ Check labels
+    timeout-minutes: 5
+    outputs:
+      should_build: ${{ steps.check.outputs.should_build }}
+      addons: ${{ steps.check.outputs.addons }}
+    steps:
+      - name: 🔍 Check for 'release' and 'app:' labels
+        id: check
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "Manual dispatch, but requires addons input"
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+            echo "addons=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          labels="${{ github.event.pull_request.labels.*.name }}"
+
+          # Check if 'release' label is present
+          has_release=false
+          if echo "$labels" | grep -q '"release"'; then
+            has_release=true
+          fi
+
+          # Extract addons from 'app:' labels
+          addons=()
+          for label in $labels; do
+            # Remove quotes from label name
+            label_clean=$(echo "$label" | tr -d '"')
+            if [[ "$label_clean" =~ ^app:[[:space:]]*(.+)$ ]]; then
+              addon="${BASH_REMATCH[1]}"
+              addons+=("$addon")
+            fi
+          done
+
+          if [[ "$has_release" == true ]] && [[ ${#addons[@]} -gt 0 ]]; then
+            # Join addons with comma
+            addons_csv=$(IFS=','; echo "${addons[*]}")
+            echo "✅ 'release' label found and app labels: ${addons_csv}"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            echo "addons=${addons_csv}" >> "$GITHUB_OUTPUT"
+          elif [[ "$has_release" == true ]]; then
+            echo "⚠️ 'release' label found but no 'app:' labels present"
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+            echo "addons=" >> "$GITHUB_OUTPUT"
+          else
+            echo "ℹ️ 'release' label not found, skipping build"
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+            echo "addons=" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    needs: check-labels
+    if: needs.check-labels.outputs.should_build == 'true'
+    uses: ./.github/workflows/builder.yaml
+    with:
+      addons: ${{ needs.check-labels.outputs.addons }}
