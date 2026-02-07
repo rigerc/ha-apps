@@ -29,7 +29,7 @@ Click on the above button or follow the steps below:
 ###  <img src="https://raw.githubusercontent.com/rigerc/ha-apps/main/cleanuparr/icon.png" width="16" height="16" style="margin-right: 4px;">[Cleanuparr](./cleanuparr/)
 App for [Cleanuparr project](https://github.com/Cleanuparr/Cleanuparr).
 
-[![Version](https://img.shields.io/badge/ha%20app%20version-1.0.0-blue?style=flat-square&logo=homeassistant&logoColor=white)](https://github.com/rigerc/ha-apps/tree/main/cleanuparr)
+[![Version](https://img.shields.io/badge/ha%20app%20version-1.1.0-blue?style=flat-square&logo=homeassistant&logoColor=white)](https://github.com/rigerc/ha-apps/tree/main/cleanuparr)
 &nbsp; [![Current](https://img.shields.io/badge/image%20version-2.5.1-blue?style=flat-square&logo=docker&logoColor=white)](https://github.com/Cleanuparr/Cleanuparr)&nbsp; [![Up to Date](https://img.shields.io/badge/upstream-up%20to%20date-green?style=flat-square)](https://github.com/Cleanuparr/Cleanuparr)
 &nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational?style=flat-square&logo=linux&logoColor=white)]()
 &nbsp; [![amd64](https://img.shields.io/badge/platform-amd64-informational?style=flat-square&logo=linux&logoColor=white)]()

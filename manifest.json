@@ -1,7 +1,7 @@
 [
   {
     "slug": "cleanuparr",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "name": "Cleanuparr",
     "description": "Automated cleanup tool for Sonarr, Radarr, Lidarr, Readarr, and Whisparr\nplus qBittorrent, Transmission, Deluge, and µTorrent. Removes unwanted or\nblocked files, manages stalled downloads, enforces blacklists/whitelists,\nincludes malware detection for *.lnk and *.zipx files, and automatically\ntriggers searches to replace removed content. Features strike system and\nnotification support.",
     "arch": [
