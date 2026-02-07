@@ -1,0 +1,30 @@
+{{- /* Shared partials for HA add-on README templates */ -}}
+
+{{- define "badges" -}}
+[![Version](https://img.shields.io/badge/ha%20app%20version-{{ .addon.version }}-blue)](https://github.com/{{ .repo }}/tree/main/{{ .addon.slug }})
+{{- if ne .addon.tag "" }}
+&nbsp; [![Current](https://img.shields.io/badge/image%20version-{{ .addon.tag }}-blue)]({{ .addon.project }})
+{{- if eq .addon.is_up_to_date true -}}
+&nbsp; [![Up to Date](https://img.shields.io/badge/upstream-up%20to%20date-green)]({{ .addon.project }})
+{{- else if eq .addon.is_up_to_date false -}}
+&nbsp; [![Out of Date](https://img.shields.io/badge/upstream-out%20of%20date-yellow)]({{ .addon.project }})
+{{- else if and (ne .addon.latest_tag "") (ne .addon.latest_tag "null") -}}
+&nbsp; [![Latest](https://img.shields.io/badge/latest-{{ .addon.latest_tag }}-blue)]({{ .addon.project }})
+{{- end }}
+{{- end }}
+{{- range .addon.arch }}
+&nbsp; [![{{ . }}](https://img.shields.io/badge/platform-{{ . }}-informational)]()
+{{- end }}
+{{- if .addon.ingress }}
+&nbsp; [![Ingress](https://img.shields.io/badge/ingress-enabled-green)]()
+{{- end }}
+{{- end -}}
+
+{{- define "icon" -}}
+{{- $size := .size | default "16" -}}
+{{- if .addon.has_icon }} <img src="./icon.png" width="{{ $size }}" height="{{ $size }}" style="margin-right: 4px;">{{- end }}
+{{- end -}}
+
+{{- define "project-link" -}}
+App for [{{ .addon.name }} project]({{ .addon.project }}).
+{{- end -}}

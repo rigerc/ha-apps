@@ -228,6 +228,7 @@ generate_root_readme() {
        AUTHOR_NAME="${repo_slug%%/*}" \
        gomplate \
          --datasource addons="${MANIFEST_OUTPUT}" \
+         --template partials="${PROJECT_ROOT}/.github/templates/partials" \
          --file="${template_file}" \
          --out="${output_file}"; then
     err "Error: Failed to generate README.md"
@@ -298,6 +299,7 @@ generate_addon_readmes() {
          ADDON_SLUG="${slug}" \
          gomplate \
            --datasource addons="${MANIFEST_OUTPUT}" \
+           --template partials="${PROJECT_ROOT}/.github/templates/partials" \
            --file="${template_file}" \
            --out="${output_file}"; then
       err "Error: Failed to generate README for ${slug}"

@@ -26,7 +26,7 @@ Click on the above button or follow the steps below:
 1. Click on the "INSTALL" button
 
 ## Available Add-ons
-### <img src="./cleanuparr/icon.png" width="24" height="24" style="margin-right: 4px;"> [Cleanuparr](./cleanuparr/)
+###  <img src="./icon.png" width="16" height="16" style="margin-right: 4px;">[Cleanuparr](./cleanuparr/)
 App for [Cleanuparr project](https://github.com/Cleanuparr/Cleanuparr).
 
 [![Version](https://img.shields.io/badge/ha%20app%20version-1.0.0-blue)](https://github.com/rigerc/ha-apps/tree/main/cleanuparr)
@@ -38,7 +38,7 @@ Automated cleanup tool for Sonarr, Radarr, and download clients.
 Removes unwanted or blocked files, manages stalled downloads, and
 enforces blacklists/whitelists. Includes malware detection and
 automatic search triggers for removed content...
-### <img src="./huntarr/icon.png" width="24" height="24" style="margin-right: 4px;"> [Huntarr](./huntarr/)
+###  <img src="./icon.png" width="16" height="16" style="margin-right: 4px;">[Huntarr](./huntarr/)
 App for [Huntarr project](https://github.com/plexguide/Huntarr.io).
 
 [![Version](https://img.shields.io/badge/ha%20app%20version-1.0.0-blue)](https://github.com/rigerc/ha-apps/tree/main/huntarr)
@@ -48,7 +48,7 @@ App for [Huntarr project](https://github.com/plexguide/Huntarr.io).
 &nbsp; [![Ingress](https://img.shields.io/badge/ingress-enabled-green)]()
 
 Automation utility that continuously searches media libraries for missing content and quality upgrades
-### <img src="./profilarr/icon.png" width="24" height="24" style="margin-right: 4px;"> [Profilarr](./profilarr/)
+###  <img src="./icon.png" width="16" height="16" style="margin-right: 4px;">[Profilarr](./profilarr/)
 App for [Profilarr project](https://github.com/Dictionarry-Hub/profilarr).
 
 [![Version](https://img.shields.io/badge/ha%20app%20version-1.0.0-blue)](https://github.com/rigerc/ha-apps/tree/main/profilarr)
@@ -60,7 +60,7 @@ App for [Profilarr project](https://github.com/Dictionarry-Hub/profilarr).
 Profile manager for Radarr and Sonarr instances.
 Centrally manage quality profiles, custom formats, and
 release profiles with Git-backed configuration storage!
-### <img src="./romm/icon.png" width="24" height="24" style="margin-right: 4px;"> [Romm](./romm/)
+###  <img src="./icon.png" width="16" height="16" style="margin-right: 4px;">[Romm](./romm/)
 App for [Romm project](https://github.com/rommapp/romm).
 
 [![Version](https://img.shields.io/badge/ha%20app%20version-1.0.0-blue)](https://github.com/rigerc/ha-apps/tree/main/romm)

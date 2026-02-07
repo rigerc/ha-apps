@@ -34,6 +34,7 @@ if REPOSITORY="test/repo" \
    AUTHOR_NAME="test" \
    gomplate \
      --datasource addons="${temp_manifest}" \
+     --template partials="${PROJECT_ROOT}/.github/templates/partials" \
      --file="${PROJECT_ROOT}/.github/templates/.README.tmpl" \
      --out=/dev/null; then
   echo "✓ Root README template is valid"
@@ -64,6 +65,7 @@ if REPOSITORY="test/repo" \
    ADDON_SLUG="test-addon" \
    gomplate \
      --datasource addons="${temp_manifest}" \
+     --template partials="${PROJECT_ROOT}/.github/templates/partials" \
      --file="${PROJECT_ROOT}/.github/templates/.README_ADDON.tmpl" \
      --out=/dev/null; then
   echo "✓ Addon README template is valid"

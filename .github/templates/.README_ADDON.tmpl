@@ -4,26 +4,9 @@
 {{- $addons := ds "addons" -}}
 {{- range $addons }}
 {{- if eq .slug $slug }}
-# {{- if .has_icon }} <img src="./icon.png" width="16" height="16" style="margin-right: 4px;">{{- end }} {{ .name }}
+# {{ template "icon" (dict "addon" . "size" "24") }} {{ .name }}
 
-[![Version](https://img.shields.io/badge/ha%20app%20version-{{ .version }}-blue)](https://github.com/{{ $repo }}/tree/main/{{ .slug }})
-{{- if ne .tag "" }}
-&nbsp; [![Current](https://img.shields.io/badge/image%20version-{{ .tag }}-blue)]({{ .project }})
-{{- /* Show conditional up-to-date badge based on registry check */ -}}
-{{- if eq .is_up_to_date true -}}
-&nbsp; [![Up to Date](https://img.shields.io/badge/upstream-up%20to%20date-green)]({{ .project }})
-{{- else if eq .is_up_to_date false -}}
-&nbsp; [![Out of Date](https://img.shields.io/badge/upstream-out%20of%20date-yellow)]({{ .project }})
-{{- else if and (ne .latest_tag "") (ne .latest_tag "null") -}}
-&nbsp; [![Latest](https://img.shields.io/badge/latest-{{ .latest_tag }}-blue)]({{ .project }})
-{{- end }}
-{{- end }}
-{{- range .arch }}
-&nbsp; [![{{ . }}](https://img.shields.io/badge/platform-{{ . }}-informational)]()
-{{- end }}
-{{- if .ingress }}
-&nbsp; [![Ingress](https://img.shields.io/badge/ingress-enabled-green)]()
-{{- end }}
+{{ template "badges" (dict "addon" . "repo" $repo) }}
 
 {{ .description }}
 {{- $translations_path := printf "%s/translations/en.yaml" .slug }}
