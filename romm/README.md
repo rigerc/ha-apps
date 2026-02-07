@@ -17,6 +17,10 @@ manuals, and sharing with friends.
 
 For full documentation, see [DOCS.md](./DOCS.md).
 
+## Changelog
+
+For version history and release notes, see [CHANGELOG.md](./CHANGELOG.md).
+
 ## Configuration
 
 This add-on provides the following configuration options:

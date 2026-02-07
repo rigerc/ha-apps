@@ -58,9 +58,9 @@ jobs:
           ./.github/scripts/manifest.sh -g
         continue-on-error: true
 
-      - name: Update dependabot.yml and release-please.yaml
+      - name: Update dependabot.yml, release-please.yaml, and ci.yaml
         run: |
-          ./.github/scripts/manifest.sh -d -r
+          ./.github/scripts/manifest.sh -d -r -c
         continue-on-error: true
 
       - name: Commit manifest and config changes

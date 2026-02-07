@@ -17,5 +17,9 @@ notification support.
 
 For full documentation, see [DOCS.md](./DOCS.md).
 
+## Changelog
+
+For version history and release notes, see [CHANGELOG.md](./CHANGELOG.md).
+
 ## Project
 This add-on is a wrapper for the [Cleanuparr project](https://github.com/Cleanuparr/Cleanuparr).
