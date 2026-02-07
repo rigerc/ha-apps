@@ -1,21 +1,35 @@
-{{- $repo := .Env.REPOSITORY -}}
-{{- $repo_url := .Env.REPOSITORY_URL -}}
-{{- $slug := .Env.ADDON_SLUG -}}
-{{- $addons := .Env.ADDONS_DATA | jsonArray -}}
+{{- $repo := env.Getenv "REPOSITORY" -}}
+{{- $repo_url := env.Getenv "REPOSITORY_URL" -}}
+{{- $slug := env.Getenv "ADDON_SLUG" -}}
+{{- $addons := ds "addons" -}}
 {{- range $addons }}
 {{- if eq .slug $slug }}
-# {{ .name }}
+# {{ template "icon" (dict "addon" . "size" "24" "icon_path" "./icon.png") }} {{ .name }}
 
-[![Version](https://img.shields.io/badge/app%20version-{{ .version }}-blue)](https://github.com/{{ $repo }}/tree/main/{{ .slug }})
-{{- range .arch }}
-&nbsp; [![{{ . }}](https://img.shields.io/badge/platform-{{ . }}-informational)]()
-{{- end }}
+{{ template "badges" (dict "addon" . "repo" $repo) }}
 
 {{ .description }}
+{{- $translations_path := printf "%s/translations/en.yaml" .slug }}
+{{- $translations_content := "" }}
+{{- if file.Exists $translations_path }}
+{{- $translations_content = file.Read $translations_path | data.YAML }}
+{{- end }}
 
 ## Documentation
 
 For full documentation, see [DOCS.md](./DOCS.md).
+{{- if and $translations_content (has $translations_content "configuration") }}
+
+## Configuration
+
+This add-on provides the following configuration options:
+
+| Option | Description |
+|--------|-------------|
+{{- range $key, $option := $translations_content.configuration }}
+| **{{ $option.name }}** | {{ $option.description }} |
+{{- end }}
+{{- end }}
 
 ## Project
 
