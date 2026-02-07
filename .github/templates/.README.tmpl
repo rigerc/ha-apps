@@ -1,7 +1,7 @@
-{{- $repo := .Env.REPOSITORY -}}
-{{- $repo_url := .Env.REPOSITORY_URL -}}
-{{- $author_name := .Env.AUTHOR_NAME | default "rig" -}}
-{{- $addons := .Env.ADDONS_DATA | jsonArray -}}
+{{- $repo := env.Getenv "REPOSITORY" -}}
+{{- $repo_url := env.Getenv "REPOSITORY_URL" -}}
+{{- $author_name := env.Getenv "AUTHOR_NAME" | default "rig" -}}
+{{- $addons := ds "addons" -}}
 # Home Assistant Add-ons
 
 [![Add Repository with my.home-assistant.io][add-repository-image]][add-repository-button]
@@ -32,7 +32,7 @@ Click on the above button or follow the steps below:
 ## Available Add-ons
 
 {{- range $addons }}
-### [{{ .name }}](./{{ .slug }}/)
+### {{- if .has_icon }} <img src="./{{ .slug }}/icon.png" width="16" height="16" style="margin-right: 8px;">{{- end }} [{{ .name }}](./{{ .slug }}/)
 App for [{{ .name }} project]({{ .project }}).
 
 [![Version](https://img.shields.io/badge/app%20version-{{ .version }}-blue)](https://github.com/{{ $repo }}/tree/main/{{ .slug }})

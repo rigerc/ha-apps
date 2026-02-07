@@ -1,6 +1,5 @@
 # Home Assistant Add-ons
 
-
 [![Add Repository with my.home-assistant.io][add-repository-image]][add-repository-button]
 
 [add-repository-image]: https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg
@@ -27,38 +26,10 @@ Click on the above button or follow the steps below:
 1. Click on the "INSTALL" button
 
 ## Available Add-ons
-### [Romm](./romm/)
-App for [Romm project](https://github.com/rommapp/romm).
-
-[![Version](https://img.shields.io/badge/app%20version-0.3.0-blue)](https://github.com/rigerc/ha-apps/tree/main/romm)
-&nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational)]()
-&nbsp; [![amd64](https://img.shields.io/badge/platform-amd64-informational)]()
-
-Self-hosted ROM collection manager and emulator launcher.
-Scan, organize, and manage game collections across 400+ platforms with
-automatic metadata fetching and in-browser gameplay.
-### [Profilarr](./profilarr/)
-App for [Profilarr project](https://github.com/Dictionarry-Hub/profilarr).
-
-[![Version](https://img.shields.io/badge/app%20version-1.11.0-blue)](https://github.com/rigerc/ha-apps/tree/main/profilarr)
-&nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational)]()
-&nbsp; [![amd64](https://img.shields.io/badge/platform-amd64-informational)]()
-
-Profile manager for Radarr and Sonarr instances.
-Centrally manage quality profiles, custom formats, and
-release profiles with Git-backed configuration storage!
-### [Huntarr](./huntarr/)
-App for [Huntarr project](https://github.com/plexguide/Huntarr.io).
-
-[![Version](https://img.shields.io/badge/app%20version-0.4.0-blue)](https://github.com/rigerc/ha-apps/tree/main/huntarr)
-&nbsp; [![amd64](https://img.shields.io/badge/platform-amd64-informational)]()
-&nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational)]()
-
-Automation utility that continuously searches media libraries for missing content and quality upgrades
-### [Cleanuparr](./cleanuparr/)
+### <img src="./cleanuparr/icon.png" width="16" height="16" style="margin-right: 8px;"> [Cleanuparr](./cleanuparr/)
 App for [Cleanuparr project](https://github.com/Cleanuparr/Cleanuparr).
 
-[![Version](https://img.shields.io/badge/app%20version-0.4.1-blue)](https://github.com/rigerc/ha-apps/tree/main/cleanuparr)
+[![Version](https://img.shields.io/badge/app%20version-1.0.0-blue)](https://github.com/rigerc/ha-apps/tree/main/cleanuparr)
 &nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational)]()
 &nbsp; [![amd64](https://img.shields.io/badge/platform-amd64-informational)]()
 
@@ -66,3 +37,31 @@ Automated cleanup tool for Sonarr, Radarr, and download clients.
 Removes unwanted or blocked files, manages stalled downloads, and
 enforces blacklists/whitelists. Includes malware detection and
 automatic search triggers for removed content...
+### <img src="./huntarr/icon.png" width="16" height="16" style="margin-right: 8px;"> [Huntarr](./huntarr/)
+App for [Huntarr project](https://github.com/plexguide/Huntarr.io).
+
+[![Version](https://img.shields.io/badge/app%20version-1.0.0-blue)](https://github.com/rigerc/ha-apps/tree/main/huntarr)
+&nbsp; [![amd64](https://img.shields.io/badge/platform-amd64-informational)]()
+&nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational)]()
+
+Automation utility that continuously searches media libraries for missing content and quality upgrades
+### <img src="./profilarr/icon.png" width="16" height="16" style="margin-right: 8px;"> [Profilarr](./profilarr/)
+App for [Profilarr project](https://github.com/Dictionarry-Hub/profilarr).
+
+[![Version](https://img.shields.io/badge/app%20version-1.0.0-blue)](https://github.com/rigerc/ha-apps/tree/main/profilarr)
+&nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational)]()
+&nbsp; [![amd64](https://img.shields.io/badge/platform-amd64-informational)]()
+
+Profile manager for Radarr and Sonarr instances.
+Centrally manage quality profiles, custom formats, and
+release profiles with Git-backed configuration storage!
+### <img src="./romm/icon.png" width="16" height="16" style="margin-right: 8px;"> [Romm](./romm/)
+App for [Romm project](https://github.com/rommapp/romm).
+
+[![Version](https://img.shields.io/badge/app%20version-1.0.0-blue)](https://github.com/rigerc/ha-apps/tree/main/romm)
+&nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational)]()
+&nbsp; [![amd64](https://img.shields.io/badge/platform-amd64-informational)]()
+
+Self-hosted ROM collection manager and emulator launcher.
+Scan, organize, and manage game collections across 400+ platforms with
+automatic metadata fetching and in-browser gameplay.

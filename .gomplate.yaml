@@ -1,0 +1,15 @@
+# .gomplate.yaml - Gomplate configuration for README generation
+
+# Input/output not configured here - handled by script invocation
+
+# Datasources available to all templates
+datasources:
+  addons:
+    url: ./manifest.json
+
+# Plugin configuration (if needed in future)
+plugins: {}
+
+# Template delimiter settings (use defaults)
+# leftDelim: "{{"
+# rightDelim: "}}"

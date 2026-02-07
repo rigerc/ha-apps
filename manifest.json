@@ -10,7 +10,8 @@
     ],
     "image": "ghcr.io/cleanuparr/cleanuparr",
     "tag": "2.5.1",
-    "project": "https://github.com/Cleanuparr/Cleanuparr"
+    "project": "https://github.com/Cleanuparr/Cleanuparr",
+    "has_icon": true
   },
   {
     "slug": "huntarr",
@@ -23,7 +24,8 @@
     ],
     "image": "ghcr.io/plexguide/huntarr",
     "tag": "9.1.1",
-    "project": "https://github.com/plexguide/Huntarr.io"
+    "project": "https://github.com/plexguide/Huntarr.io",
+    "has_icon": true
   },
   {
     "slug": "profilarr",
@@ -36,7 +38,8 @@
     ],
     "image": "santiagosayshey/profilarr",
     "tag": "v1.1.3",
-    "project": "https://github.com/Dictionarry-Hub/profilarr"
+    "project": "https://github.com/Dictionarry-Hub/profilarr",
+    "has_icon": true
   },
   {
     "slug": "romm",
@@ -49,6 +52,7 @@
     ],
     "image": "rommapp/romm",
     "tag": "4.6.0",
-    "project": "https://github.com/rommapp/romm"
+    "project": "https://github.com/rommapp/romm",
+    "has_icon": true
   }
 ]

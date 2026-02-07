@@ -40,7 +40,7 @@ check_gomplate() {
   if ! command -v gomplate &>/dev/null; then
     err "Error: gomplate is required but not installed"
     err "Install from: https://github.com/hairyhenderson/gomplate/releases"
-    err "Or run: curl -o /usr/local/bin/gomplate -sSL https://github.com/hairyhenderson/gomplate/releases/download/v4.3.0/gomplate_linux-amd64 && chmod +x /usr/local/bin/gomplate"
+    err "Or run: curl -o /usr/local/bin/gomplate -sSL https://github.com/hairyhenderson/gomplate/releases/download/v4.5.0/gomplate_linux-amd64 && chmod +x /usr/local/bin/gomplate"
     return 1
   fi
   return 0
@@ -73,43 +73,10 @@ get_repo_info() {
 }
 
 #######################################
-# Setup environment variables for gomplate
-# Globals:
-#   MANIFEST_OUTPUT
-# Arguments:
-#   None
-# Returns:
-#   0 on success, 1 if manifest.json missing
-#######################################
-setup_gomplate_env() {
-  local repo_slug
-  repo_slug="$(get_repo_info)"
-
-  # Fallback if git remote not available
-  if [[ -z "${repo_slug}" ]]; then
-    repo_slug="rigerc/ha-apps"  # Default fallback
-  fi
-
-  # Check manifest exists
-  if [[ ! -f "${MANIFEST_OUTPUT}" ]]; then
-    err "Error: manifest.json not found. Generate it first."
-    return 1
-  fi
-
-  export REPOSITORY="${repo_slug}"
-  export REPOSITORY_URL="https://github.com/${repo_slug}"
-  export AUTHOR_NAME="${repo_slug%%/*}"  # Extract owner (before first /)
-  local addons_data
-  addons_data="$(jq -c '.' "${MANIFEST_OUTPUT}")"
-  export ADDONS_DATA="${addons_data}"
-
-  return 0
-}
-
-#######################################
 # Generate root README.md from template
 # Globals:
 #   PROJECT_ROOT
+#   MANIFEST_OUTPUT
 # Arguments:
 #   None
 # Returns:
@@ -118,6 +85,10 @@ setup_gomplate_env() {
 generate_root_readme() {
   local template_file="${PROJECT_ROOT}/.github/templates/.README.tmpl"
   local output_file="${PROJECT_ROOT}/README.md"
+  local repo_slug
+  repo_slug="$(get_repo_info)"
+
+  [[ -z "${repo_slug}" ]] && repo_slug="rigerc/ha-apps"
 
   # Check template exists
   if [[ ! -f "${template_file}" ]]; then
@@ -125,14 +96,21 @@ generate_root_readme() {
     return 1
   fi
 
-  # Setup environment variables
-  if ! setup_gomplate_env; then
+  # Check manifest exists
+  if [[ ! -f "${MANIFEST_OUTPUT}" ]]; then
+    err "Error: manifest.json not found. Generate it first."
     return 1
   fi
 
-  # Generate README
+  # Generate README using datasources instead of env vars
   echo "Generating root README.md..." >&2
-  if ! gomplate --file="${template_file}" --out="${output_file}"; then
+  if ! REPOSITORY="${repo_slug}" \
+       REPOSITORY_URL="https://github.com/${repo_slug}" \
+       AUTHOR_NAME="${repo_slug%%/*}" \
+       gomplate \
+         --datasource addons="${MANIFEST_OUTPUT}" \
+         --file="${template_file}" \
+         --out="${output_file}"; then
     err "Error: Failed to generate README.md"
     return 1
   fi
@@ -155,6 +133,10 @@ generate_root_readme() {
 generate_addon_readmes() {
   local -a specific_slugs=("$@")
   local template_file="${PROJECT_ROOT}/.github/templates/.README_ADDON.tmpl"
+  local repo_slug
+  repo_slug="$(get_repo_info)"
+
+  [[ -z "${repo_slug}" ]] && repo_slug="rigerc/ha-apps"
 
   # Check template exists
   if [[ ! -f "${template_file}" ]]; then
@@ -162,8 +144,9 @@ generate_addon_readmes() {
     return 1
   fi
 
-  # Setup environment variables
-  if ! setup_gomplate_env; then
+  # Check manifest exists
+  if [[ ! -f "${MANIFEST_OUTPUT}" ]]; then
+    err "Error: manifest.json not found. Generate it first."
     return 1
   fi
 
@@ -190,9 +173,14 @@ generate_addon_readmes() {
     fi
 
     echo "Generating README for ${slug}..." >&2
-    export ADDON_SLUG="${slug}"
 
-    if ! gomplate --file="${template_file}" --out="${output_file}"; then
+    if ! REPOSITORY="${repo_slug}" \
+         REPOSITORY_URL="https://github.com/${repo_slug}" \
+         ADDON_SLUG="${slug}" \
+         gomplate \
+           --datasource addons="${MANIFEST_OUTPUT}" \
+           --file="${template_file}" \
+           --out="${output_file}"; then
       err "Error: Failed to generate README for ${slug}"
       continue
     fi
@@ -293,6 +281,7 @@ extract_addon_info() {
   local dir
   local dockerfile
   local build_yaml
+  local icon_file
   local slug
   local version
   local name
@@ -303,10 +292,12 @@ extract_addon_info() {
   local image_tag
   local image
   local tag
+  local has_icon
 
   dir="$(dirname "${config_file}")"
   dockerfile="${dir}/Dockerfile"
   build_yaml="${dir}/build.yaml"
+  icon_file="${dir}/icon.png"
 
   # Dockerfile must exist
   [[ -f "${dockerfile}" ]] || return 1
@@ -322,6 +313,12 @@ extract_addon_info() {
   project=""
   if [[ -f "${build_yaml}" ]]; then
     project="$(yq -r '.labels.project // ""' "${build_yaml}")"
+  fi
+
+  # Check if icon.png exists
+  has_icon="false"
+  if [[ -f "${icon_file}" ]]; then
+    has_icon="true"
   fi
 
   # Validate required fields
@@ -345,6 +342,7 @@ extract_addon_info() {
     --arg image "${image}" \
     --arg tag "${tag}" \
     --arg project "${project}" \
+    --argjson has_icon "${has_icon}" \
     '{
       slug: $slug,
       version: $version,
@@ -353,7 +351,8 @@ extract_addon_info() {
       arch: $architectures,
       image: $image,
       tag: $tag,
-      project: $project
+      project: $project,
+      has_icon: $has_icon
     }'
 }
 

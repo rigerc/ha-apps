@@ -1,7 +1,7 @@
 
-# Cleanuparr
+# <img src="./icon.png" width="16" height="16" style="margin-right: 8px;"> Cleanuparr
 
-[![Version](https://img.shields.io/badge/app%20version-0.4.1-blue)](https://github.com/rigerc/ha-apps/tree/main/cleanuparr)
+[![Version](https://img.shields.io/badge/app%20version-1.0.0-blue)](https://github.com/rigerc/ha-apps/tree/main/cleanuparr)
 &nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational)]()
 &nbsp; [![amd64](https://img.shields.io/badge/platform-amd64-informational)]()
 

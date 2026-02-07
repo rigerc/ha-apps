@@ -1,7 +1,7 @@
 
-# Profilarr
+# <img src="./icon.png" width="16" height="16" style="margin-right: 8px;"> Profilarr
 
-[![Version](https://img.shields.io/badge/app%20version-1.11.0-blue)](https://github.com/rigerc/ha-apps/tree/main/profilarr)
+[![Version](https://img.shields.io/badge/app%20version-1.0.0-blue)](https://github.com/rigerc/ha-apps/tree/main/profilarr)
 &nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational)]()
 &nbsp; [![amd64](https://img.shields.io/badge/platform-amd64-informational)]()
 
@@ -12,6 +12,17 @@ release profiles with Git-backed configuration storage!
 ## Documentation
 
 For full documentation, see [DOCS.md](./DOCS.md).
+
+## Configuration
+
+This add-on provides the following configuration options:
+
+| Option | Description |
+|--------|-------------|
+| **Authentication Mode** | Authentication mode for Profilarr: 'on' (full auth), 'local' (no auth on local network), 'oidc' (OpenID Connect), 'off' (no authentication). |
+| **Git User Email** | Email used for Git commits. Default is 'profilarr@homeassistant.local'. |
+| **Git User Name** | Name used for Git commits. Default is 'Profilarr'. |
+| **Log Level** | Controls the verbosity of log output. Use 'info' for normal operation, 'debug' for troubleshooting. |
 
 ## Project
 This add-on is a wrapper for the [Profilarr project](https://github.com/Dictionarry-Hub/profilarr).
