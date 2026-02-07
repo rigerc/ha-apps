@@ -3,6 +3,29 @@ name: Addon Metadata
 on:
   workflow_dispatch:
 
+  push:
+    branches:
+      - main
+    paths:
+      - "*/config.yaml"
+      - "*/build.yaml"
+      - "*/Dockerfile"
+      - ".github/templates/**"
+      - ".github/scripts/manifest.sh"
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "*/config.yaml"
+      - "*/build.yaml"
+      - "*/Dockerfile"
+      - ".github/templates/**"
+      - ".github/scripts/manifest.sh"
+
+  schedule:
+    - cron: '0 6 * * 2'  # Tuesdays at 06:00 UTC
+
 permissions:
   contents: write
 
@@ -45,7 +68,24 @@ jobs:
           ./.github/scripts/manifest.sh -g
         continue-on-error: true
 
+      - name: Upload manifest artifact (PR preview)
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: manifest-preview
+          path: manifest.json
+          retention-days: 7
+
+      - name: Upload README artifacts (PR preview)
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: readme-previews
+          path: '**/README.md'
+          retention-days: 7
+
       - name: Commit manifest and config changes
+        if: github.event_name != 'pull_request'
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           # Note: Modified files (READMEs, manifest.json, dependabot.yml) are excluded
