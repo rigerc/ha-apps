@@ -9,9 +9,7 @@
 set -euo pipefail
 
 # Constants
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly SCRIPT_DIR
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+PROJECT_ROOT="$(git rev-parse --show-toplevel)"
 readonly PROJECT_ROOT
 readonly MANIFEST_OUTPUT="${PROJECT_ROOT}/manifest.json"
 readonly DEPENDABOT_CONFIG="${PROJECT_ROOT}/.github/dependabot.yml"
