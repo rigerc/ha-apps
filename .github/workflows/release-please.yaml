@@ -2,7 +2,7 @@
 name: Create Release Pull Request
 on:
   push:
-    branches: [main, 'dev/**']
+    branches: [main]
     paths:
       - "cleanuparr/**"
       - "huntarr/**"
@@ -30,9 +30,7 @@ jobs:
           token: ${{ secrets.PAT }}
           manifest-file: .github/.release-please-manifest.json
           config-file: .github/release-please-config.json
-          # Empty = default (target the branch that was pushed)
-          # 'main' = always target main
-          target-branch: ${{ github.ref_name == 'refs/heads/main' && '' || 'main' }}
+
   trigger-build:
     needs: release-please
     if: needs.release-please.outputs.releases_created == 'true'
