@@ -94,3 +94,5 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /romm
 EXPOSE 5999
+
+LABEL org.opencontainers.image.source="https://github.com/rommapp/romm"
