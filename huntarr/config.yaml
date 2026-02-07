@@ -1,7 +1,7 @@
 name: Huntarr
 version: 1.0.0
 slug: huntarr
-description: >-
+description: |
   Automatic missing content hunter for Sonarr, Radarr, Lidarr, Readarr, and
   Whisparr. Continuously searches your media libraries for missing content
   and quality upgrades below your cutoff. Runs continuously while being gentle
