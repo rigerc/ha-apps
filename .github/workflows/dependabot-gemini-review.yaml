@@ -34,7 +34,7 @@ jobs:
         id: pr_details
         if: github.event_name == 'workflow_dispatch'
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.PAT || github.token }}
           PR_NUMBER: ${{ inputs.pr_number }}
         run: |
           # Fetch PR details using gh CLI
@@ -63,6 +63,8 @@ jobs:
         env:
           BRANCH_NAME: ${{ github.event_name == 'workflow_dispatch' && steps.pr_details.outputs.branch_name || github.head_ref }}
           IMAGE_NAME: ${{ steps.metadata.outputs.dependency-names }}
+          GH_TOKEN: ${{ secrets.PAT || github.token }}
+          PR_NUMBER: ${{ github.event_name == 'workflow_dispatch' && inputs.pr_number || github.event.pull_request.number }}
         run: |
           # Validate branch is a Dependabot Docker update
           if [[ ! "$BRANCH_NAME" =~ ^dependabot/docker/ ]]; then
@@ -76,12 +78,10 @@ jobs:
           ADDON_SLUG=$(echo "$BRANCH_NAME" | cut -d'/' -f3)
           echo "slug=$ADDON_SLUG" >> "$GITHUB_OUTPUT"
 
-          # For manual triggers, extract image name and versions from branch
+          # For manual triggers, extract image name and versions from PR diff
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            # Parse versions from branch name pattern
-            # Branch format: dependabot/docker/addon-slug/image-parts/old-version-to-new-version
-            # Or: dependabot/docker/addon-slug/image-parts-old-version
-            BRANCH_PARTS=$(echo "$BRANCH_NAME" | cut -d'/' -f4-)
+            # Get PR diff to extract version changes
+            PR_DIFF=$(gh pr diff "$PR_NUMBER")
 
             # Try to extract image name from manifest.json based on addon
             ADDON_CONFIG=$(jq -r ".[] | select(.slug==\"$ADDON_SLUG\")" manifest.json)
@@ -92,22 +92,32 @@ jobs:
               fi
             fi
 
-            # Parse versions from branch name
-            # Look for pattern: something-X.Y.Z or something-vX.Y.Z
-            if [[ "$BRANCH_PARTS" =~ ([0-9]+\.[0-9]+\.[0-9]+[^-]*)-to-([0-9]+\.[0-9]+\.[0-9]+) ]]; then
-              OLD_VERSION="${BASH_REMATCH[1]}"
-              NEW_VERSION="${BASH_REMATCH[2]}"
-            elif [[ "$BRANCH_PARTS" =~ ([v]?[0-9]+\.[0-9]+\.[0-9]+[^-]*) ]]; then
-              # Single version in branch - likely the new version
-              NEW_VERSION="${BASH_REMATCH[1]}"
-              # Get old version from current config.yaml
-              if [ -d "$ADDON_SLUG" ] && [ -f "$ADDON_SLUG/config.yaml" ]; then
-                OLD_VERSION=$(grep '^version:' "$ADDON_SLUG/config.yaml" | awk '{print $2}' | tr -d '"')
-              fi
+            # Parse versions from Dockerfile changes (look for FROM ... AS lines)
+            # Example diff:
+            # -FROM ghcr.io/rommapp/romm:1.0.0 AS base
+            # +FROM ghcr.io/rommapp/romm:2.0.0 AS base
+            OLD_FROM=$(echo "$PR_DIFF" | grep -E "^-FROM .* AS" | head -n1 | sed -E 's/.*[:/]([^:/ ]+) AS.*/\1/')
+            NEW_FROM=$(echo "$PR_DIFF" | grep -E "^\+FROM .* AS" | head -n1 | sed -E 's/.*[:/]([^:/ ]+) AS.*/\1/')
+
+            # If FROM parsing didn't work, try parsing from config.yaml version field
+            if [ -z "$OLD_FROM" ] || [ -z "$NEW_FROM" ]; then
+              OLD_VERSION=$(echo "$PR_DIFF" | grep -A2 "^--- a/$ADDON_SLUG/config.yaml" | grep "^-version:" | sed -E 's/^-version: *"?([^"]+)"?.*/\1/')
+              NEW_VERSION=$(echo "$PR_DIFF" | grep -A2 "^--- a/$ADDON_SLUG/config.yaml" | grep "^\+version:" | sed -E 's/^\+version: *"?([^"]+)"?.*/\1/')
+            else
+              OLD_VERSION="$OLD_FROM"
+              NEW_VERSION="$NEW_FROM"
+            fi
+
+            # If still empty, try build.yaml labels
+            if [ -z "$OLD_VERSION" ] || [ -z "$NEW_VERSION" ]; then
+              OLD_VERSION=$(echo "$PR_DIFF" | grep -A2 "^--- a/$ADDON_SLUG/build.yaml" | grep "^-.*org.opencontainers.image.version=" | sed -E 's/.*version=([^ ]+).*/\1/' | tr -d '"')
+              NEW_VERSION=$(echo "$PR_DIFF" | grep -A2 "^--- a/$ADDON_SLUG/build.yaml" | grep "^\+.*org.opencontainers.image.version=" | sed -E 's/.*version=([^ ]+).*/\1/' | tr -d '"')
             fi
 
             echo "old_version=$OLD_VERSION" >> "$GITHUB_OUTPUT"
             echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+
+            echo "Detected versions: $OLD_VERSION -> $NEW_VERSION"
           fi
 
           # Get project URL from manifest.json
@@ -199,7 +209,7 @@ jobs:
       - name: Post Gemini review request comment
         if: steps.addon.outputs.skip != 'true' && steps.diff.outputs.skip != 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.PAT || github.token }}
           ADDON_SLUG: ${{ steps.addon.outputs.slug }}
           IMAGE_NAME: ${{ github.event_name == 'workflow_dispatch' && steps.addon.outputs.image_name || steps.metadata.outputs.dependency-names }}
           OLD_VERSION: ${{ github.event_name == 'workflow_dispatch' && steps.addon.outputs.old_version || steps.metadata.outputs.previous-version }}
