@@ -41,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.PAT != '' && secrets.PAT || github.token }}
           fetch-depth: 0
@@ -75,7 +75,7 @@ jobs:
 
       - name: Upload manifest artifact (PR preview)
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: manifest-preview
           path: manifest.json
@@ -83,7 +83,7 @@ jobs:
 
       - name: Upload README artifacts (PR preview)
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: readme-previews
           path: '**/README.md'
@@ -91,7 +91,7 @@ jobs:
 
       - name: Commit manifest and config changes
         if: github.event_name != 'pull_request'
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v7
         with:
           # Note: Modified files (READMEs, manifest.json, dependabot.yml) are excluded
           # in release-please-config.json to prevent triggering new release PRs.
