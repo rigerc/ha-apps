@@ -4,7 +4,7 @@
 {{- $addons := ds "addons" -}}
 {{- range $addons }}
 {{- if eq .slug $slug }}
-# {{ template "icon" (dict "addon" . "size" "24") }} {{ .name }}
+# {{ template "icon" (dict "addon" . "size" "24" "icon_path" "./icon.png") }} {{ .name }}
 
 {{ template "badges" (dict "addon" . "repo" $repo) }}
 
