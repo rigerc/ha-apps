@@ -1,6 +1,5 @@
----
 name: Romm
-version: 1.0.0
+version: 1.1.0
 slug: romm
 description: |
   A beautiful, powerful, self-hosted ROM manager and player.
