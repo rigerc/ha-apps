@@ -1,0 +1,162 @@
+# Complete .gomplate.yaml Configuration Example
+# This demonstrates all major configuration options
+
+# Input/Output Configuration
+inputDir: templates/
+outputDir: rendered/
+
+# Exclude patterns (uses .gitignore syntax)
+excludes:
+  - '*.md'           # Exclude all markdown files
+  - 'draft/*'        # Exclude draft directory
+  - '_*'             # Exclude files starting with underscore
+  - '!important.md'  # But include important.md (negative pattern)
+
+# Files to copy without processing
+excludeProcessing:
+  - '*.jpg'
+  - '*.png'
+  - 'static/**'
+
+# Output filename mapping
+# Context: .in (input filename), .ctx (original context)
+outputMap: |
+  {{ $base := filepath.Base .in }}
+  {{ $name := $base | strings.TrimSuffix ".tmpl" }}
+  config/{{ $name }}
+
+# File permissions (octal)
+chmod: 0644
+
+# Template Delimiters
+# Uncomment to override defaults
+# leftDelim: '{{'
+# rightDelim: '}}'
+
+# Missing Key Behavior
+# Options: error (default), default, zero
+missingKey: error
+
+# Datasources (lazy-loaded when accessed in template)
+datasources:
+  # File-based datasources
+  appConfig:
+    url: file:///etc/app/config.yaml
+
+  localSettings:
+    url: ./settings.json
+
+  # HTTP/HTTPS datasources with headers
+  api:
+    url: https://api.example.com/config
+    header:
+      Authorization:
+        - "Bearer {{ env.Getenv \"API_TOKEN\" }}"
+      Accept:
+        - application/json
+
+  # Vault secrets
+  secrets:
+    url: vault:///secret/myapp
+
+  # AWS Systems Manager
+  awsParams:
+    url: aws+smp:///myapp/production/
+
+  # Merged datasources (left overrides right)
+  merged:
+    url: merge:production.yaml|defaults.yaml
+
+  # Environment variable
+  buildInfo:
+    url: env:BUILD_INFO?type=application/json
+
+# Context (immediately loaded before rendering)
+context:
+  # User data from API
+  user:
+    url: https://api.example.com/user
+    header:
+      Authorization:
+        - "Bearer {{ env.Getenv \"USER_TOKEN\" }}"
+
+  # Override entire context with this datasource
+  # .:
+  #   url: context.json
+
+# Nested Templates
+templates:
+  # Single template file
+  header:
+    url: file://./templates/partials/header.tmpl
+
+  footer:
+    url: file://./templates/partials/footer.tmpl
+
+  # Directory of templates (all files available as templatedir/filename)
+  helpers:
+    url: file://./templates/helpers/
+
+  # Remote template
+  remote:
+    url: https://example.com/templates/common.tmpl
+    header:
+      Authorization:
+        - "Bearer token123"
+
+# Custom Functions (Plugins)
+plugins:
+  # Simple form: just the command
+  envsubst: /usr/bin/envsubst
+
+  # Full form with options
+  figlet:
+    cmd: /usr/local/bin/figlet
+    pipe: true              # Pipe last arg to stdin
+    timeout: 2s             # Command timeout
+    args:                   # Always pass these args
+      - -f
+      - banner
+
+  jq:
+    cmd: /usr/bin/jq
+    pipe: true
+    timeout: 5s
+    args:
+      - -r
+
+# Global plugin timeout (default: 5s)
+pluginTimeout: 10s
+
+# Post-Template Execution
+# Command to run after successful rendering
+postExec:
+  - bash
+  - -c
+  - echo "Templates rendered successfully"
+
+# Pipe output to postExec stdin (overrides outputFiles)
+execPipe: false
+
+# Experimental Features
+# Enable functions marked as "(experimental)"
+experimental: false
+
+# Example Usage:
+#
+# 1. Use default config (.gomplate.yaml):
+#    gomplate
+#
+# 2. Use specific config file:
+#    gomplate --config production.gomplate.yaml
+#
+# 3. Override config with command-line args:
+#    gomplate --input-dir src/ --output-dir dist/
+#
+# 4. Disable config file:
+#    gomplate --config="" -f template.tmpl -o output.txt
+
+# Environment Variables Referenced:
+# - API_TOKEN: API authentication token
+# - USER_TOKEN: User API token
+# - BUILD_INFO: Build information (JSON format)

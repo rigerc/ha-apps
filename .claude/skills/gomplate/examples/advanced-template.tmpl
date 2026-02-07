@@ -1,0 +1,98 @@
+# Advanced Gomplate Template Example
+# Demonstrates datasources, complex logic, and data transformation
+
+{{- $config := ds "config" -}}
+{{- $env := env.Getenv "ENV" | default "development" -}}
+
+# Application Configuration
+# Generated: {{ time.Now | time.Format "2006-01-02 15:04:05 MST" }}
+# Environment: {{ $env | strings.ToUpper }}
+
+## Database Configuration
+{{- if has $config "database" }}
+[database]
+{{-   $db := $config.database }}
+host = {{ $db.host }}
+port = {{ $db.port | default 5432 }}
+name = {{ $db.name }}
+{{-   if eq $env "production" }}
+ssl_mode = require
+pool_size = {{ $db.pool_size | default 20 }}
+{{-   else }}
+ssl_mode = disable
+pool_size = {{ $db.pool_size | default 5 }}
+{{-   end }}
+{{- end }}
+
+## Service Configuration
+{{- if has $config "services" }}
+{{-   range $name, $svc := $config.services }}
+
+[service.{{ $name }}]
+enabled = {{ $svc.enabled | default true }}
+{{-     if has $svc "port" }}
+port = {{ $svc.port }}
+{{-     end }}
+{{-     if has $svc "replicas" }}
+replicas = {{ $svc.replicas }}
+{{-     end }}
+{{-     if has $svc "timeout" }}
+timeout = {{ $svc.timeout }}s
+{{-     end }}
+{{-   end }}
+{{- end }}
+
+## Feature Flags
+{{- $features := $config.features | default (coll.Dict) }}
+[features]
+{{- range $key, $value := $features }}
+{{ $key }} = {{ $value }}
+{{- end }}
+
+## Environment Variables
+{{- if has $config "env_vars" }}
+# Export these before running the application
+{{-   range $key, $value := $config.env_vars }}
+export {{ $key }}="{{ $value }}"
+{{-   end }}
+{{- end }}
+
+# Usage Examples:
+#
+# 1. With JSON config:
+#    gomplate -d config=config.json -f advanced-template.tmpl -o app.conf
+#
+# 2. With YAML config:
+#    gomplate -d config=config.yaml -f advanced-template.tmpl -o app.conf
+#
+# 3. With environment override:
+#    ENV=production gomplate -d config=config.yaml -f advanced-template.tmpl -o app.conf
+#
+# 4. With merge (env-specific + defaults):
+#    gomplate -d config=merge:prod.yaml|defaults.yaml -f advanced-template.tmpl -o app.conf
+
+# Example config.yaml:
+# database:
+#   host: localhost
+#   port: 5432
+#   name: myapp
+#   pool_size: 10
+#
+# services:
+#   web:
+#     enabled: true
+#     port: 8080
+#     replicas: 3
+#   api:
+#     enabled: true
+#     port: 8081
+#     replicas: 2
+#     timeout: 30
+#
+# features:
+#   experimental: false
+#   beta_ui: true
+#
+# env_vars:
+#   LOG_LEVEL: INFO
+#   METRICS_ENABLED: "true"

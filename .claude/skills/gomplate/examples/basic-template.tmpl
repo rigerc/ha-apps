@@ -1,0 +1,41 @@
+# Basic Gomplate Template Example
+
+# Environment-based configuration
+Environment: {{ env.Getenv "ENV" | default "development" }}
+User: {{ env.Getenv "USER" }}
+Timestamp: {{ time.Now | time.Format "2006-01-02 15:04:05" }}
+
+# Conditional logic
+{{- if eq (env.Getenv "ENV") "production" }}
+Mode: Production
+Debug: false
+{{- else }}
+Mode: Development
+Debug: true
+{{- end }}
+
+# Loops with arrays
+Servers:
+{{- range $idx, $server := coll.Slice "web1" "web2" "web3" }}
+  - Server {{ add $idx 1 }}: {{ $server }}.example.com
+{{- end }}
+
+# String manipulation
+{{- $appName := "my-application" }}
+App Name (upper): {{ $appName | strings.ToUpper }}
+App Name (title): {{ $appName | strings.Title }}
+App Name (replaced): {{ $appName | strings.ReplaceAll "-" "_" }}
+
+# Math operations
+Port Base: 8000
+{{- range $i := coll.Slice 0 1 2 }}
+Port {{ $i }}: {{ add 8000 $i }}
+{{- end }}
+
+# Default values
+Timeout: {{ env.Getenv "TIMEOUT" | default "30" }}
+Max Connections: {{ env.Getenv "MAX_CONN" | default "100" }}
+
+# Usage:
+# gomplate -f basic-template.tmpl -o output.txt
+# ENV=production gomplate -f basic-template.tmpl -o output.txt
