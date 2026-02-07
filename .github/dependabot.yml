@@ -3,7 +3,7 @@ updates:
   # Docker images for Home Assistant add-ons
   - package-ecosystem: "docker"
     directories:
-      - "**/*
+      - "**/*"
     schedule:
       interval: "weekly"
       day: "monday"
