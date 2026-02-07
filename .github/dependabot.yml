@@ -3,10 +3,10 @@ updates:
   # Docker images for Home Assistant add-ons
   - package-ecosystem: "docker"
     directories:
-      - "/cleanuparr"
-      - "/huntarr"
-      - "/profilarr"
       - "/romm"
+      - "/profilarr"
+      - "/huntarr"
+      - "/cleanuparr"
     schedule:
       interval: "weekly"
       day: "monday"
