@@ -2,10 +2,12 @@ name: Cleanuparr
 version: 1.0.0
 slug: cleanuparr
 description: |
-  Automated cleanup tool for Sonarr, Radarr, and download clients.
-  Removes unwanted or blocked files, manages stalled downloads, and
-  enforces blacklists/whitelists. Includes malware detection and
-  automatic search triggers for removed content...
+  Automated cleanup tool for Sonarr, Radarr, Lidarr, Readarr, and Whisparr
+  plus qBittorrent, Transmission, Deluge, and µTorrent. Removes unwanted or
+  blocked files, manages stalled downloads, enforces blacklists/whitelists,
+  includes malware detection for *.lnk and *.zipx files, and automatically
+  triggers searches to replace removed content. Features strike system and
+  notification support.
 url: https://github.com/Cleanuparr/Cleanuparr
 arch:
   - aarch64

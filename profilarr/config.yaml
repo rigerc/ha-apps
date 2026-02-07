@@ -2,9 +2,10 @@ name: Profilarr
 version: 1.0.0
 slug: profilarr
 description: |
-  Profile manager for Radarr and Sonarr instances.
-  Centrally manage quality profiles, custom formats, and
-  release profiles with Git-backed configuration storage!
+  Import, export, sync and delete quality profiles and custom formats
+  via Radarr and Sonarr API. Centrally manage your *arr configurations,
+  sync master instances with multiple servers, and backup/restore profiles
+  with Git-backed configuration storage.
 url: https://github.com/rigerc/ha-apps
 arch:
   - aarch64

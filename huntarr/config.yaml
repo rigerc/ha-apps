@@ -2,8 +2,11 @@ name: Huntarr
 version: 1.0.0
 slug: huntarr
 description: >-
-  Automation utility that continuously searches media libraries for missing
-  content and quality upgrades
+  Automatic missing content hunter for Sonarr, Radarr, Lidarr, Readarr, and
+  Whisparr. Continuously searches your media libraries for missing content
+  and quality upgrades below your cutoff. Runs continuously while being gentle
+  on your indexers, filling the gap that *arr apps don't cover by finding
+  content not actively searched through RSS feeds.
 arch:
   - amd64
   - aarch64
