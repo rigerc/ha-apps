@@ -1,10 +1,16 @@
 ---
-name: Release Please
+name: Create Release Pull Request
 
 on:
   push:
     branches:
       - main
+    paths:
+      - 'romm/**'
+      - 'profilarr/**'
+      - 'huntarr/**'
+      - 'cleanuparrarr/**'
+      - '.github/release-please-config.json'
 
 permissions:
   contents: write
@@ -26,8 +32,8 @@ jobs:
         id: release
         with:
           token: ${{ secrets.PAT }}
-          manifest-file: .release-please-manifest.json
-          config-file: release-please-config.json
+          manifest-file: .github/.release-please-manifest.json
+          config-file: .github/release-please-config.json
 
   trigger-build:
     needs: release-please
@@ -35,7 +41,7 @@ jobs:
     strategy:
       matrix:
         path: ${{ fromJSON(needs.release-please.outputs.paths_released) }}
-    uses: ./.github/workflows/release-deploy.yaml
+    uses: ./.github/workflows/deploy.yaml
     with:
       addon: ${{ matrix.path }}
       version: ${{ fromJSON(needs.release-please.outputs.all_outputs)[format('{0}--version', matrix.path)] }}

@@ -1,5 +1,5 @@
 ---
-name: Release Deploy
+name: Build and release
 
 # Triggered by:
 # 1. workflow_call from release-please workflow (automatic)

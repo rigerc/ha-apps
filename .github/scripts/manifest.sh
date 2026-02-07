@@ -118,7 +118,7 @@ setup_gomplate_env() {
 #   0 on success, 1 on error
 #######################################
 generate_root_readme() {
-  local template_file="${PROJECT_ROOT}/.README.tmpl"
+  local template_file="${PROJECT_ROOT}/.github/templates/.README.tmpl"
   local output_file="${PROJECT_ROOT}/README.md"
 
   # Check template exists
@@ -156,7 +156,7 @@ generate_root_readme() {
 # shellcheck disable=SC2120
 generate_addon_readmes() {
   local -a specific_slugs=("$@")
-  local template_file="${PROJECT_ROOT}/.README_ADDON.tmpl"
+  local template_file="${PROJECT_ROOT}/.github/templates/.README_ADDON.tmpl"
 
   # Check template exists
   if [[ ! -f "${template_file}" ]]; then

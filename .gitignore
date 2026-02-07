@@ -4,3 +4,5 @@ repository.yaml
 .opencode/
 node_modules/
 .sisyphus/
+.vscode/
+.husky/

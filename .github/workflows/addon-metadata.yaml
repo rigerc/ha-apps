@@ -37,22 +37,12 @@ jobs:
 
       - name: Generate manifest
         run: |
-          ./scripts/manifest.sh
-        continue-on-error: true
-
-      - name: Update dependabot
-        run: |
-          ./scripts/manifest.sh -d
-        continue-on-error: true
-
-      - name: Update release-please manifest
-        run: |
-          ./scripts/manifest.sh -r
+          ./.github/scripts/manifest.sh
         continue-on-error: true
 
       - name: Generate READMEs
         run: |
-          ./scripts/manifest.sh -g
+          ./.github/scripts/manifest.sh -g
         continue-on-error: true
 
       - name: Commit manifest and config changes

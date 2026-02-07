@@ -1,0 +1,73 @@
+---
+name: Fix Permissions
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**/*.sh"
+      - "*/rootfs/**"
+
+permissions:
+  contents: write
+
+jobs:
+  fix-permissions:
+    name: 🔧 Fix .sh permissions
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: ⤵️ Check out the repository
+        uses: actions/checkout@v4
+
+      - name: 🔍 Find non-executable .sh files
+        id: check
+        run: |
+          files=""
+          while IFS= read -r -d '' file; do
+            if [[ ! -x "$file" ]]; then
+              chmod +x "$file"
+              files="$files $file"
+            fi
+          done < <(find . -name '*.sh' -not -path './.git/*' -print0)
+
+          files="${files# }"
+          if [[ -n "$files" ]]; then
+            echo "fixed=true" >> "$GITHUB_OUTPUT"
+            echo "📝 Made executable: $files"
+          else
+            echo "fixed=false" >> "$GITHUB_OUTPUT"
+            echo "✅ All .sh files are already executable"
+          fi
+
+      - name: 🔍 Find non-executable rootfs files
+        id: check-rootfs
+        run: |
+          files=""
+          for dir in */rootfs; do
+            [[ -d "$dir" ]] || continue
+            while IFS= read -r -d '' file; do
+              if [[ ! -x "$file" ]]; then
+                chmod +x "$file"
+                files="$files $file"
+              fi
+            done < <(find "$dir" -type f -print0)
+          done
+
+          files="${files# }"
+          if [[ -n "$files" ]]; then
+            echo "fixed=true" >> "$GITHUB_OUTPUT"
+            echo "📝 Made executable: $files"
+          else
+            echo "fixed=false" >> "$GITHUB_OUTPUT"
+            echo "✅ All rootfs files are already executable"
+          fi
+
+      - name: 📤 Commit permission changes
+        if: steps.check.outputs.fixed == 'true' || steps.check-rootfs.outputs.fixed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -u
+          git commit -m "fix: make shell scripts executable"
+          git push

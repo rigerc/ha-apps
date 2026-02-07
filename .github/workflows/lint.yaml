@@ -61,33 +61,69 @@ jobs:
             fi
           fi
 
-  lint:
-    name: 🔍 Lint
+  permissions:
+    name: 🔒 Rootfs permissions
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
     needs: find
-    if: needs.find.outputs.addons != '[]'
+    if: needs.find.outputs.addons_csv != ''
     steps:
       - name: ⤵️ Check out the repository
         uses: actions/checkout@v4
 
-      - name: 🔄 Setup addon list
-        id: setup
+      - name: 🔒 Check rootfs file permissions
         run: |
-          addons='${{ needs.find.outputs.addons_csv }}'
-          echo "addons=$addons" >> "$GITHUB_OUTPUT"
-          echo "ℹ️ Linting addons: $addons"
+          failed=false
+          for addon in ${{ needs.find.outputs.addons_csv }}; do
+            rootfs="./$addon/rootfs"
+            if [[ ! -d "$rootfs" ]]; then
+              echo "ℹ️ No rootfs directory in $addon, skipping"
+              continue
+            fi
+            echo "🔒 Checking executable permissions in $rootfs..."
+            while IFS= read -r -d '' file; do
+              if [[ ! -x "$file" ]]; then
+                echo "❌ Not executable: $file"
+                failed=true
+              fi
+            done < <(find "$rootfs" -type f -print0)
+          done
+          if [[ "$failed" == "true" ]]; then
+            echo "❌ Some rootfs files are not executable. Run the fix-permissions workflow or chmod +x them."
+            exit 1
+          fi
+          echo "✅ All rootfs files are executable"
+
+  shellcheck:
+    name: 🔍 Shellcheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: find
+    if: needs.find.outputs.addons_csv != ''
+    steps:
+      - name: ⤵️ Check out the repository
+        uses: actions/checkout@v4
 
       - name: 🔍 Shellcheck
         run: |
-          for addon in ${{ steps.setup.outputs.addons }}; do
+          for addon in ${{ needs.find.outputs.addons_csv }}; do
             echo "🔍 Shellchecking $addon..."
             find "./$addon" -name "*.sh" -exec shellcheck -s bash {} +
           done
 
+  markdown:
+    name: 🔍 Markdown Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: find
+    if: needs.find.outputs.addons_csv != ''
+    steps:
+      - name: ⤵️ Check out the repository
+        uses: actions/checkout@v4
+
       - name: 🔍 Markdown Lint
         run: |
-          for addon in ${{ steps.setup.outputs.addons }}; do
+          for addon in ${{ needs.find.outputs.addons_csv }}; do
             echo "🔍 Markdown linting $addon..."
             find "./$addon" -name "*.md" \
               ! -name "README.md" \
@@ -96,34 +132,85 @@ jobs:
               -exec npx markdownlint {} +
           done
 
+  json:
+    name: 🔍 JSON Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: find
+    if: needs.find.outputs.addons_csv != ''
+    steps:
+      - name: ⤵️ Check out the repository
+        uses: actions/checkout@v4
+
       - name: 🔍 JSON Lint
         run: |
-          for addon in ${{ steps.setup.outputs.addons }}; do
+          for addon in ${{ needs.find.outputs.addons_csv }}; do
             echo "🔍 JSON linting $addon..."
             find "./$addon" -name "*.json" -exec cat {} \; | jq '.'
           done
 
+  yaml:
+    name: 🔍 YAML Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: find
+    if: needs.find.outputs.addons_csv != ''
+    steps:
+      - name: ⤵️ Check out the repository
+        uses: actions/checkout@v4
+
       - name: 🔍 YAML Lint
         run: |
-          for addon in ${{ steps.setup.outputs.addons }}; do
+          for addon in ${{ needs.find.outputs.addons_csv }}; do
             echo "🔍 YAML linting $addon..."
             find "./$addon" \( -name "*.yaml" -o -name "*.yml" \) \
               -exec yq eval '... comments=""' --output-format=yaml {} + > /dev/null
           done
 
+  addon-linter:
+    name: 🚀 Add-on Linter
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: find
+    if: needs.find.outputs.addons_csv != ''
+    steps:
+      - name: ⤵️ Check out the repository
+        uses: actions/checkout@v4
+
       - name: 🚀 Add-on Linter
         uses: frenck/action-addon-linter@v2
         with:
-          path: "./${{ steps.setup.outputs.addons }}"
+          path: "./${{ needs.find.outputs.addons_csv }}"
+
+  dockerfile:
+    name: 🐳 Dockerfile Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: find
+    if: needs.find.outputs.addons_csv != ''
+    steps:
+      - name: ⤵️ Check out the repository
+        uses: actions/checkout@v4
 
       - name: 🐳 Dockerfile Lint
         uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: "./${{ steps.setup.outputs.addons }}/Dockerfile"
+          dockerfile: "./${{ needs.find.outputs.addons_csv }}/Dockerfile"
+          config: './.github/.hadolint.yaml'
+
+  build-yaml:
+    name: 📋 Verify build.yaml
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: find
+    if: needs.find.outputs.addons_csv != ''
+    steps:
+      - name: ⤵️ Check out the repository
+        uses: actions/checkout@v4
 
       - name: 📋 Verify build.yaml project key
         run: |
-          for addon in ${{ steps.setup.outputs.addons }}; do
+          for addon in ${{ needs.find.outputs.addons_csv }}; do
             BUILD_FILE="$addon/build.yaml"
             if [[ ! -f "$BUILD_FILE" ]]; then
               echo "❌ Error: build.yaml not found in $addon"
