@@ -1,4 +1,4 @@
-name: Dependabot Gemini Review Request
+name: Review dependency changes
 
 on:
   pull_request:
@@ -21,8 +21,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  request-gemini-review:
-    name: Request Gemini Code Review
+  request-coderabbit-review:
+    name: Request coderabbit Code Review
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' || github.actor == 'dependabot[bot]'
 
@@ -206,7 +206,7 @@ jobs:
 
           echo "diff_file=$DIFF_FILE" >> "$GITHUB_OUTPUT"
 
-      - name: Post Gemini review request comment
+      - name: Post coderabbit review request comment
         if: steps.addon.outputs.skip != 'true' && steps.diff.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ secrets.PAT || github.token }}
@@ -221,7 +221,7 @@ jobs:
         run: |
           # Create comment body using heredoc with variable substitution
           cat > comment.md << EOF
-          /gemini review
+          @coderabbit
 
           Please review this Dependabot Docker image update for the **${ADDON_SLUG}** addon.
 
@@ -252,7 +252,7 @@ jobs:
           </details>
 
           ---
-          *Automated request via \`dependabot-gemini-review\` workflow*
+          *Automated request via \`dependabot-coderabbit-review\` workflow*
           EOF
 
           # Post comment
