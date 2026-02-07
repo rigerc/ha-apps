@@ -54,8 +54,9 @@ jobs:
 
       - name: Fetch Dependabot metadata
         id: metadata
-        if: github.actor == 'dependabot[bot]'
+        if: github.event_name != 'workflow_dispatch'
         uses: dependabot/fetch-metadata@v2
+        continue-on-error: true
 
       - name: Extract addon slug and metadata
         id: addon
@@ -208,20 +209,17 @@ jobs:
           DIFF_FILE: ${{ steps.diff.outputs.diff_file }}
           PR_NUMBER: ${{ github.event_name == 'workflow_dispatch' && inputs.pr_number || github.event.pull_request.number }}
         run: |
-          # Read diff content
-          DIFF_CONTENT=$(cat "$DIFF_FILE")
-
-          # Create comment body
-          cat << 'EOF' > comment.md
+          # Create comment body using heredoc with variable substitution
+          cat > comment.md << EOF
           /gemini review
 
-          Please review this Dependabot Docker image update for the **ADDON_SLUG** addon.
+          Please review this Dependabot Docker image update for the **${ADDON_SLUG}** addon.
 
           ### Update Summary
-          - **Addon**: ADDON_SLUG
-          - **Image**: IMAGE_NAME
-          - **Version Change**: OLD_VERSION → NEW_VERSION
-          - **Update Type**: UPDATE_TYPE
+          - **Addon**: ${ADDON_SLUG}
+          - **Image**: ${IMAGE_NAME}
+          - **Version Change**: ${OLD_VERSION} → ${NEW_VERSION}
+          - **Update Type**: ${UPDATE_TYPE}
 
           ### Review Instructions
           1. Analyze the upstream changes in the diff below
@@ -232,32 +230,20 @@ jobs:
 
           ### Upstream Changes
 
-          Full comparison: COMPARE_URL
+          Full comparison: ${COMPARE_URL}
 
           <details>
-          <summary>Upstream Diff (OLD_VERSION...NEW_VERSION)</summary>
+          <summary>Upstream Diff (${OLD_VERSION}...${NEW_VERSION})</summary>
 
-          ```diff
-          DIFF_CONTENT_PLACEHOLDER
-          ```
+          \`\`\`diff
+          $(cat "$DIFF_FILE")
+          \`\`\`
 
           </details>
 
           ---
-          *Automated request via `dependabot-gemini-review` workflow*
+          *Automated request via \`dependabot-gemini-review\` workflow*
           EOF
-
-          # Replace placeholders
-          sed -i "s|ADDON_SLUG|$ADDON_SLUG|g" comment.md
-          sed -i "s|IMAGE_NAME|$IMAGE_NAME|g" comment.md
-          sed -i "s|OLD_VERSION|$OLD_VERSION|g" comment.md
-          sed -i "s|NEW_VERSION|$NEW_VERSION|g" comment.md
-          sed -i "s|UPDATE_TYPE|$UPDATE_TYPE|g" comment.md
-          sed -i "s|COMPARE_URL|$COMPARE_URL|g" comment.md
-
-          # Insert diff content (escape special characters for sed)
-          DIFF_ESCAPED=$(echo "$DIFF_CONTENT" | sed 's/\\/\\\\/g' | sed 's/&/\\\&/g')
-          sed -i "s|DIFF_CONTENT_PLACEHOLDER|$DIFF_ESCAPED|g" comment.md
 
           # Post comment
           gh pr comment "$PR_NUMBER" --body-file comment.md
