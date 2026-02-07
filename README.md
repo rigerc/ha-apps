@@ -49,7 +49,11 @@ App for [Huntarr project](https://github.com/plexguide/Huntarr.io).
 &nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational?style=flat-square&logo=linux&logoColor=white)]()
 &nbsp; [![Ingress](https://img.shields.io/badge/ingress-enabled-green?style=flat-square&logo=homeassistant&logoColor=white)]()
 
-Automatic missing content hunter for Sonarr, Radarr, Lidarr, Readarr, and Whisparr. Continuously searches your media libraries for missing content and quality upgrades below your cutoff. Runs continuously while being gentle on your indexers, filling the gap that *arr apps don't cover by finding content not actively searched through RSS feeds.
+Automatic missing content hunter for Sonarr, Radarr, Lidarr, Readarr, and
+Whisparr. Continuously searches your media libraries for missing content
+and quality upgrades below your cutoff. Runs continuously while being gentle
+on your indexers, filling the gap that *arr apps don't cover by finding
+content not actively searched through RSS feeds.
 ###  <img src="./profilarr/icon.png" width="16" height="16" style="margin-right: 4px;">[Profilarr](./profilarr/)
 App for [Profilarr project](https://github.com/Dictionarry-Hub/profilarr).
 
