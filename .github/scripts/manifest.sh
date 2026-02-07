@@ -28,6 +28,125 @@ err() {
 }
 
 #######################################
+# Get latest version from Docker Hub registry
+# Globals:
+#   None
+# Arguments:
+#   image - Docker image name (e.g., "rommapp/romm")
+# Returns:
+#   Latest version tag, or empty string on failure
+#######################################
+get_docker_hub_latest() {
+  local image="$1"
+  local latest_version=""
+
+  # Query Docker Hub API - get tags that start with digit or 'v' followed by digit
+  latest_version="$(curl -s "https://registry.hub.docker.com/v2/repositories/${image}/tags?page_size=100" \
+    | jq -r '.results | map(select(.name | test("^v?[0-9]"))) | map(.name) | sort | reverse | .[0]' 2>/dev/null || echo "")"
+
+  # Handle null result
+  if [[ "${latest_version}" == "null" ]]; then
+    latest_version=""
+  fi
+
+  echo "${latest_version}"
+}
+
+#######################################
+# Get latest version from GHCR registry
+# Globals:
+#   None
+# Arguments:
+#   image - Full GHCR image name (e.g., "ghcr.io/owner/repo")
+# Returns:
+#   Latest version tag, or empty string on failure
+#######################################
+get_ghcr_latest() {
+  local image="$1"
+  local repo_path="${image#ghcr.io/}"
+  local latest_version=""
+
+  # Try to get tags from GHCR (may require auth, so we'll handle failures gracefully)
+  latest_version="$(curl -s "https://ghcr.io/v2/${repo_path}/tags/list" \
+    | jq -r '.tags | map(select(. | test("^v?[0-9]"))) | sort | reverse | .[0]' 2>/dev/null || echo "")"
+
+  # Handle null result
+  if [[ "${latest_version}" == "null" ]]; then
+    latest_version=""
+  fi
+
+  echo "${latest_version}"
+}
+
+#######################################
+# Get latest release tag from GitHub API
+# Globals:
+#   None
+# Arguments:
+#   project_url - GitHub project URL (e.g., "https://github.com/owner/repo")
+# Returns:
+#   Latest release tag, or empty string on failure
+#######################################
+get_github_release_latest() {
+  local project_url="$1"
+  local latest_version=""
+  local owner_repo=""
+
+  # Parse owner/repo from GitHub URL
+  # Handles: https://github.com/owner/repo, http://github.com/owner/repo, github.com/owner/repo
+  owner_repo="${project_url#*://github.com/}"
+  owner_repo="${owner_repo#*github.com/}"
+  owner_repo="${owner_repo%.git}"
+
+  # Validate we got owner/repo format
+  if [[ ! "${owner_repo}" =~ ^[^/]+/[^/]+$ ]]; then
+    return 1
+  fi
+
+  # Query GitHub Releases API for latest release
+  latest_version="$(curl -s "https://api.github.com/repos/${owner_repo}/releases/latest" \
+    | jq -r '.tag_name // ""' 2>/dev/null || echo "")"
+
+  echo "${latest_version}"
+}
+
+#######################################
+# Get latest version from registry based on image prefix
+# Globals:
+#   None
+# Arguments:
+#   image - Docker image name
+#   project_url - Optional GitHub project URL for release API fallback
+# Returns:
+#   Latest version tag, or empty string on failure
+#######################################
+get_latest_version() {
+  local image="$1"
+  local project_url="${2:-}"
+  local latest=""
+
+  # Prefer GitHub Release API when project URL is available
+  if [[ -n "${project_url}" && "${project_url}" == *github.com/* ]]; then
+    latest="$(get_github_release_latest "${project_url}")"
+  fi
+
+  # Fall back to registry APIs if GitHub API didn't return a version
+  if [[ -z "${latest}" ]]; then
+    if [[ "${image}" == ghcr.io/* ]]; then
+      latest="$(get_ghcr_latest "${image}")"
+    elif [[ "${image}" == docker.io/* ]]; then
+      # Remove docker.io/ prefix for Docker Hub
+      latest="$(get_docker_hub_latest "${image#docker.io/}")"
+    else
+      # Assume Docker Hub (default registry)
+      latest="$(get_docker_hub_latest "${image}")"
+    fi
+  fi
+
+  echo "${latest}"
+}
+
+#######################################
 # Check if gomplate is installed
 # Globals:
 #   None
@@ -321,6 +440,15 @@ extract_addon_info() {
     has_icon="true"
   fi
 
+  # Check ingress support (convert null to false for JSON)
+  ingress="false"
+  if [[ -f "${config_file}" ]]; then
+    ingress_value="$(yq -r '.ingress // "null"' "${config_file}" 2>/dev/null)"
+    if [[ "${ingress_value}" == "true" ]]; then
+      ingress="true"
+    fi
+  fi
+
   # Validate required fields
   [[ -n "${slug}" && -n "${version}" ]] || return 1
 
@@ -332,6 +460,30 @@ extract_addon_info() {
   image="${image_tag%%:*}"
   tag="${image_tag#*:}"
 
+  # Get latest version from registry and compare
+  latest_tag=""
+  is_up_to_date="null"
+
+  if [[ -n "${image}" && -n "${tag}" ]]; then
+    echo "Checking latest version for ${image}..." >&2
+    latest_tag="$(get_latest_version "${image}" "${project}")"
+
+    if [[ -n "${latest_tag}" ]]; then
+      # Remove 'v' prefix if present for comparison
+      current_clean="${tag#v}"
+      latest_clean="${latest_tag#v}"
+
+      if [[ "${current_clean}" == "${latest_clean}" ]]; then
+        is_up_to_date="true"
+      else
+        is_up_to_date="false"
+      fi
+      echo "  Current: ${tag}, Latest: ${latest_tag}, Up to date: ${is_up_to_date}" >&2
+    else
+      echo "  Could not fetch latest version from registry" >&2
+    fi
+  fi
+
   # Output JSON object for this addon
   jq -n \
     --arg slug "${slug}" \
@@ -341,8 +493,11 @@ extract_addon_info() {
     --argjson architectures "${architectures}" \
     --arg image "${image}" \
     --arg tag "${tag}" \
+    --arg latest_tag "${latest_tag}" \
     --arg project "${project}" \
     --argjson has_icon "${has_icon}" \
+    --argjson ingress "${ingress}" \
+    --argjson is_up_to_date "${is_up_to_date}" \
     '{
       slug: $slug,
       version: $version,
@@ -351,8 +506,11 @@ extract_addon_info() {
       arch: $architectures,
       image: $image,
       tag: $tag,
+      latest_tag: $latest_tag,
       project: $project,
-      has_icon: $has_icon
+      has_icon: $has_icon,
+      ingress: $ingress,
+      is_up_to_date: $is_up_to_date
     }'
 }
 

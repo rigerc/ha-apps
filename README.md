@@ -26,10 +26,11 @@ Click on the above button or follow the steps below:
 1. Click on the "INSTALL" button
 
 ## Available Add-ons
-### <img src="./cleanuparr/icon.png" width="16" height="16" style="margin-right: 8px;"> [Cleanuparr](./cleanuparr/)
+### <img src="./cleanuparr/icon.png" width="24" height="24" style="margin-right: 4px;"> [Cleanuparr](./cleanuparr/)
 App for [Cleanuparr project](https://github.com/Cleanuparr/Cleanuparr).
 
-[![Version](https://img.shields.io/badge/app%20version-1.0.0-blue)](https://github.com/rigerc/ha-apps/tree/main/cleanuparr)
+[![Version](https://img.shields.io/badge/ha%20app%20version-1.0.0-blue)](https://github.com/rigerc/ha-apps/tree/main/cleanuparr)
+&nbsp; [![Current](https://img.shields.io/badge/image%20version-2.5.1-blue)](https://github.com/Cleanuparr/Cleanuparr)&nbsp; [![Up to Date](https://img.shields.io/badge/upstream-up%20to%20date-green)](https://github.com/Cleanuparr/Cleanuparr)
 &nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational)]()
 &nbsp; [![amd64](https://img.shields.io/badge/platform-amd64-informational)]()
 
@@ -37,28 +38,33 @@ Automated cleanup tool for Sonarr, Radarr, and download clients.
 Removes unwanted or blocked files, manages stalled downloads, and
 enforces blacklists/whitelists. Includes malware detection and
 automatic search triggers for removed content...
-### <img src="./huntarr/icon.png" width="16" height="16" style="margin-right: 8px;"> [Huntarr](./huntarr/)
+### <img src="./huntarr/icon.png" width="24" height="24" style="margin-right: 4px;"> [Huntarr](./huntarr/)
 App for [Huntarr project](https://github.com/plexguide/Huntarr.io).
 
-[![Version](https://img.shields.io/badge/app%20version-1.0.0-blue)](https://github.com/rigerc/ha-apps/tree/main/huntarr)
+[![Version](https://img.shields.io/badge/ha%20app%20version-1.0.0-blue)](https://github.com/rigerc/ha-apps/tree/main/huntarr)
+&nbsp; [![Current](https://img.shields.io/badge/image%20version-9.1.1-blue)](https://github.com/plexguide/Huntarr.io)&nbsp; [![Out of Date](https://img.shields.io/badge/upstream-out%20of%20date-yellow)](https://github.com/plexguide/Huntarr.io)
 &nbsp; [![amd64](https://img.shields.io/badge/platform-amd64-informational)]()
 &nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational)]()
+&nbsp; [![Ingress](https://img.shields.io/badge/ingress-enabled-green)]()
 
 Automation utility that continuously searches media libraries for missing content and quality upgrades
-### <img src="./profilarr/icon.png" width="16" height="16" style="margin-right: 8px;"> [Profilarr](./profilarr/)
+### <img src="./profilarr/icon.png" width="24" height="24" style="margin-right: 4px;"> [Profilarr](./profilarr/)
 App for [Profilarr project](https://github.com/Dictionarry-Hub/profilarr).
 
-[![Version](https://img.shields.io/badge/app%20version-1.0.0-blue)](https://github.com/rigerc/ha-apps/tree/main/profilarr)
+[![Version](https://img.shields.io/badge/ha%20app%20version-1.0.0-blue)](https://github.com/rigerc/ha-apps/tree/main/profilarr)
+&nbsp; [![Current](https://img.shields.io/badge/image%20version-v1.1.3-blue)](https://github.com/Dictionarry-Hub/profilarr)&nbsp; [![Out of Date](https://img.shields.io/badge/upstream-out%20of%20date-yellow)](https://github.com/Dictionarry-Hub/profilarr)
 &nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational)]()
 &nbsp; [![amd64](https://img.shields.io/badge/platform-amd64-informational)]()
+&nbsp; [![Ingress](https://img.shields.io/badge/ingress-enabled-green)]()
 
 Profile manager for Radarr and Sonarr instances.
 Centrally manage quality profiles, custom formats, and
 release profiles with Git-backed configuration storage!
-### <img src="./romm/icon.png" width="16" height="16" style="margin-right: 8px;"> [Romm](./romm/)
+### <img src="./romm/icon.png" width="24" height="24" style="margin-right: 4px;"> [Romm](./romm/)
 App for [Romm project](https://github.com/rommapp/romm).
 
-[![Version](https://img.shields.io/badge/app%20version-1.0.0-blue)](https://github.com/rigerc/ha-apps/tree/main/romm)
+[![Version](https://img.shields.io/badge/ha%20app%20version-1.0.0-blue)](https://github.com/rigerc/ha-apps/tree/main/romm)
+&nbsp; [![Current](https://img.shields.io/badge/image%20version-4.6.0-blue)](https://github.com/rommapp/romm)&nbsp; [![Out of Date](https://img.shields.io/badge/upstream-out%20of%20date-yellow)](https://github.com/rommapp/romm)
 &nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational)]()
 &nbsp; [![amd64](https://img.shields.io/badge/platform-amd64-informational)]()
 

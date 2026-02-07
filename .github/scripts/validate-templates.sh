@@ -16,8 +16,11 @@ SAMPLE_MANIFEST='[
     "arch": ["amd64", "aarch64"],
     "image": "test/image",
     "tag": "latest",
+    "latest_tag": "latest",
     "project": "https://github.com/test/project",
-    "has_icon": true
+    "has_icon": true,
+    "ingress": false,
+    "is_up_to_date": true
   }
 ]'
 

@@ -1,9 +1,11 @@
 
-# <img src="./icon.png" width="16" height="16" style="margin-right: 8px;"> Huntarr
+# <img src="./icon.png" width="24" height="24" style="margin-right: 4px;"> Huntarr
 
-[![Version](https://img.shields.io/badge/app%20version-1.0.0-blue)](https://github.com/rigerc/ha-apps/tree/main/huntarr)
+[![Version](https://img.shields.io/badge/ha%20app%20version-1.0.0-blue)](https://github.com/rigerc/ha-apps/tree/main/huntarr)
+&nbsp; [![Current](https://img.shields.io/badge/image%20version-9.1.1-blue)](https://github.com/plexguide/Huntarr.io)&nbsp; [![Out of Date](https://img.shields.io/badge/upstream-out%20of%20date-yellow)](https://github.com/plexguide/Huntarr.io)
 &nbsp; [![amd64](https://img.shields.io/badge/platform-amd64-informational)]()
 &nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational)]()
+&nbsp; [![Ingress](https://img.shields.io/badge/ingress-enabled-green)]()
 
 Automation utility that continuously searches media libraries for missing content and quality upgrades
 
