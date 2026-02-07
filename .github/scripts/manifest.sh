@@ -15,6 +15,7 @@ readonly MANIFEST_OUTPUT="${PROJECT_ROOT}/manifest.json"
 # Options
 GENERATE_README=false
 UPDATE_DEPENDABOT=false
+UPDATE_RELEASE_PLEASE=false
 
 # Error handling
 err() {
@@ -321,14 +322,17 @@ Usage: $(basename "${BASH_SOURCE[0]}") [OPTIONS]
 Generate manifest.json for Home Assistant addons.
 
 OPTIONS:
-  -g, --generate-readme       Generate README.md files using gomplate templates
-  -d, --update-dependabot     Update .github/dependabot.yml with all found slugs
-  -h, --help                  Display this help message
+  -g, --generate-readme         Generate README.md files using gomplate templates
+  -d, --update-dependabot       Update .github/dependabot.yml with all found slugs
+  -r, --update-release-please   Update .github/workflows/release-please.yaml with all found slugs
+  -h, --help                    Display this help message
 
 EXAMPLES:
   $(basename "${BASH_SOURCE[0]}")                      # Generate manifest.json only
   $(basename "${BASH_SOURCE[0]}") -g                  # Generate manifest.json and README files
   $(basename "${BASH_SOURCE[0]}") -d                  # Generate manifest.json and update dependabot.yml
+  $(basename "${BASH_SOURCE[0]}") -r                  # Generate manifest.json and update release-please.yaml
+  $(basename "${BASH_SOURCE[0]}") -d -r               # Update both dependabot.yml and release-please.yaml
 
 EOF
 }
@@ -338,6 +342,7 @@ EOF
 # Globals:
 #   GENERATE_README
 #   UPDATE_DEPENDABOT
+#   UPDATE_RELEASE_PLEASE
 # Arguments:
 #   All script arguments
 # Returns:
@@ -352,6 +357,10 @@ parse_args() {
         ;;
       -d|--update-dependabot)
         UPDATE_DEPENDABOT=true
+        shift
+        ;;
+      -r|--update-release-please)
+        UPDATE_RELEASE_PLEASE=true
         shift
         ;;
       -h|--help)
@@ -565,6 +574,79 @@ update_dependabot() {
 }
 
 #######################################
+# Update release-please.yaml with all found slugs
+# Globals:
+#   PROJECT_ROOT
+#   MANIFEST_OUTPUT
+# Arguments:
+#   None
+# Returns:
+#   0 on success, 1 on error
+#######################################
+update_release_please() {
+  local release_please_file="${PROJECT_ROOT}/.github/workflows/release-please.yaml"
+
+  # Check release-please.yaml exists
+  if [[ ! -f "${release_please_file}" ]]; then
+    err "Error: release-please.yaml not found: ${release_please_file}"
+    return 1
+  fi
+
+  # Check manifest exists
+  if [[ ! -f "${MANIFEST_OUTPUT}" ]]; then
+    err "Error: manifest.json not found. Generate it first."
+    return 1
+  fi
+
+  # Check yq is available
+  if ! command -v yq &>/dev/null; then
+    err "Error: yq is required but not installed"
+    err "Install from: https://github.com/mikefarah/yq"
+    return 1
+  fi
+
+  # Extract all slugs from manifest and format as "slug/**"
+  local -a paths=()
+  while IFS= read -r slug; do
+    paths+=("${slug}/**")
+  done < <(jq -r '.[].slug' "${MANIFEST_OUTPUT}")
+
+  if [[ ${#paths[@]} -eq 0 ]]; then
+    err "Error: No slugs found in manifest"
+    return 1
+  fi
+
+  echo "Updating release-please.yaml with ${#paths[@]} addon paths..." >&2
+
+  # Build the paths array as JSON for yq, sorted alphabetically
+  local paths_json="["
+  local first=true
+  while IFS= read -r path; do
+    if [[ "${first}" == "true" ]]; then
+      paths_json+="\"${path}\""
+      first=false
+    else
+      paths_json+=", \"${path}\""
+    fi
+  done < <(printf '%s\n' "${paths[@]}" | sort)
+  paths_json+="]"
+
+  # Append the release-please-config.json path
+  paths_json="${paths_json%]}"
+  paths_json+=", \".github/release-please-config.json\"]"
+
+  # Apply the update using yq with double-quoted style
+  # Need to use .\"on\" because 'on' is a reserved keyword in yq
+  if ! yq eval ".\"on\".push.paths = ${paths_json} | .\"on\".push.paths[] style=\"double\"" -i "${release_please_file}"; then
+    err "Error: Failed to update release-please.yaml"
+    return 1
+  fi
+
+  echo "Updated ${release_please_file}" >&2
+  return 0
+}
+
+#######################################
 # Generate manifest.json from addon directories
 # Globals:
 #   PROJECT_ROOT
@@ -597,6 +679,7 @@ generate_manifest() {
 # Globals:
 #   GENERATE_README
 #   UPDATE_DEPENDABOT
+#   UPDATE_RELEASE_PLEASE
 # Arguments:
 #   All script arguments
 # Returns:
@@ -611,6 +694,13 @@ main() {
   # Update dependabot.yml if requested
   if [[ "${UPDATE_DEPENDABOT}" == "true" ]]; then
     if ! update_dependabot; then
+      exit 1
+    fi
+  fi
+
+  # Update release-please.yaml if requested
+  if [[ "${UPDATE_RELEASE_PLEASE}" == "true" ]]; then
+    if ! update_release_please; then
       exit 1
     fi
   fi

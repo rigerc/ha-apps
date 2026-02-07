@@ -1,17 +1,15 @@
 ---
 name: Create Release Pull Request
-
 on:
   push:
     branches:
       - main
     paths:
-      - 'romm/**'
-      - 'profilarr/**'
-      - 'huntarr/**'
-      - 'cleanuparr/**'
-      - '.github/release-please-config.json'
-
+      - "cleanuparr/**"
+      - "huntarr/**"
+      - "profilarr/**"
+      - "romm/**"
+      - ".github/release-please-config.json"
 permissions:
   contents: write
   issues: write
@@ -19,7 +17,6 @@ permissions:
   actions: write
   packages: write
   id-token: write
-
 jobs:
   release-please:
     runs-on: ubuntu-latest
@@ -34,7 +31,6 @@ jobs:
           token: ${{ secrets.PAT }}
           manifest-file: .github/.release-please-manifest.json
           config-file: .github/release-please-config.json
-
   trigger-build:
     needs: release-please
     if: needs.release-please.outputs.releases_created == 'true'

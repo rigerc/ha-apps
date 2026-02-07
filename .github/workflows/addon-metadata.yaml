@@ -68,6 +68,11 @@ jobs:
           ./.github/scripts/manifest.sh -g
         continue-on-error: true
 
+      - name: Update dependabot.yml and release-please.yaml
+        run: |
+          ./.github/scripts/manifest.sh -d -r
+        continue-on-error: true
+
       - name: Upload manifest artifact (PR preview)
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
