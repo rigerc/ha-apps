@@ -1,6 +1,5 @@
 version: 2
 updates:
-  # Docker images for Home Assistant add-ons
   - package-ecosystem: "docker"
     directories:
       - "/cleanuparr"
