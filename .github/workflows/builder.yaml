@@ -58,8 +58,8 @@ jobs:
             # Get all available addons as JSON array
             all_addons="${{ steps.addons.outputs.addons_list }}"
 
-            # Process input and filter to only valid addons
-            result=$(echo "${{ inputs.addons }}" | jq -R --argjson all "$all_addons" '
+            # Process input and filter to only valid addons (compact output)
+            result=$(echo "${{ inputs.addons }}" | jq -Rc --argjson all "$all_addons" '
               split(",") |
               map(select(length > 0)) |
               map(ltrimstr(" ") | rtrimstr(" ")) |
@@ -72,7 +72,7 @@ jobs:
               echo "No valid add-ons specified, using changed add-ons"
               changed_addons="${{ steps.changed_addons.outputs.addons }}"
               if [[ -n "$changed_addons" ]]; then
-                result=$(echo "$changed_addons" | jq -R 'split(",") | map(select(length > 0))')
+                result=$(echo "$changed_addons" | jq -Rc 'split(",") | map(select(length > 0))')
               else
                 result="[]"
               fi
@@ -81,7 +81,7 @@ jobs:
             # Use changed add-ons from find-changed-addons
             changed_addons="${{ steps.changed_addons.outputs.addons }}"
             if [[ -n "$changed_addons" ]]; then
-              result=$(echo "$changed_addons" | jq -R 'split(",") | map(select(length > 0))')
+              result=$(echo "$changed_addons" | jq -Rc 'split(",") | map(select(length > 0))')
             else
               result="[]"
             fi
