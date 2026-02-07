@@ -19,7 +19,7 @@ jobs:
       addons_csv: ${{ steps.addons.outputs.addons }}
     steps:
       - name: ⤵️ Check out the repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -69,7 +69,7 @@ jobs:
     if: needs.find.outputs.addons_csv != ''
     steps:
       - name: ⤵️ Check out the repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: 🔒 Check rootfs file permissions
         run: |
@@ -102,7 +102,7 @@ jobs:
     if: needs.find.outputs.addons_csv != ''
     steps:
       - name: ⤵️ Check out the repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: 🔍 Shellcheck
         run: |
@@ -119,7 +119,7 @@ jobs:
     if: needs.find.outputs.addons_csv != ''
     steps:
       - name: ⤵️ Check out the repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: 🔍 Markdown Lint
         run: |
@@ -140,7 +140,7 @@ jobs:
     if: needs.find.outputs.addons_csv != ''
     steps:
       - name: ⤵️ Check out the repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: 🔍 JSON Lint
         run: |
@@ -157,7 +157,7 @@ jobs:
     if: needs.find.outputs.addons_csv != ''
     steps:
       - name: ⤵️ Check out the repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: 🔍 YAML Lint
         run: |
@@ -179,7 +179,7 @@ jobs:
         addon: ${{ fromJSON(needs.find.outputs.addons) }}
     steps:
       - name: ⤵️ Check out the repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: 🚀 Add-on Linter
         uses: frenck/action-addon-linter@v2
@@ -198,7 +198,7 @@ jobs:
         addon: ${{ fromJSON(needs.find.outputs.addons) }}
     steps:
       - name: ⤵️ Check out the repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: 🐳 Dockerfile Lint
         uses: hadolint/hadolint-action@v3.1.0
@@ -214,7 +214,7 @@ jobs:
     if: needs.find.outputs.addons_csv != ''
     steps:
       - name: ⤵️ Check out the repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: 📋 Verify build.yaml project key
         run: |
