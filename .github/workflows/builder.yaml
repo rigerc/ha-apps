@@ -37,28 +37,19 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: ℹ️ Debug workflow context
-        if: ${{ github.event_name == 'workflow_call' || (github.event_name == 'workflow_dispatch' && inputs.addons == '') }}
-        run: |
-          echo "Event name: ${{ github.event_name }}"
-          echo "Base ref input: '${{ inputs.base_ref }}'"
-          echo "GitHub base_ref: '${{ github.base_ref }}'"
-          echo "GitHub ref_name: '${{ github.ref_name }}'"
-          echo "Resolved base_ref: '${{ inputs.base_ref || github.base_ref || github.ref_name }}'"
+      - name: 🚀 Find all add-on directories
+        id: addons
+        uses: ./.github/actions/find-addons
+        with:
+          ignore: ".gemini"
 
       - name: 🔍 Find changed add-ons
         id: changed_addons
         uses: ./.github/actions/find-changed-addons
-        if: ${{ github.event_name == 'workflow_call' || (github.event_name == 'workflow_dispatch' && inputs.addons == '') }}
         with:
           base_ref: ${{ inputs.base_ref || github.base_ref || github.ref_name }}
           ignore: ".gemini"
-      - name: 🚀 Find add-on directories
-        id: addons
-        uses: ./.github/actions/find-addons
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.addons != '' }}
-        with:
-          ignore: ".gemini"
+
       - name: 🔍 Filter add-ons to build
         id: addon_filter
         run: |
@@ -94,16 +85,17 @@ jobs:
 
             echo "addons=$result" >> "$GITHUB_OUTPUT"
             echo "Selected add-ons: $result"
-          elif [[ -n "${{ steps.changed_addons.outputs.addons }}" ]]; then
+          else
             # Use changed add-ons from find-changed-addons
             changed_addons="${{ steps.changed_addons.outputs.addons }}"
-            result=$(echo "$changed_addons" | jq -R 'split(",") | map(select(length > 0))')
-            echo "addons=$result" >> "$GITHUB_OUTPUT"
-            echo "Building changed add-ons: $result"
-          else
-            # No changed add-ons found
-            echo "addons=[]" >> "$GITHUB_OUTPUT"
-            echo "No changed add-ons to build"
+            if [[ -n "$changed_addons" ]]; then
+              result=$(echo "$changed_addons" | jq -R 'split(",") | map(select(length > 0))')
+              echo "addons=$result" >> "$GITHUB_OUTPUT"
+              echo "Building changed add-ons: $result"
+            else
+              echo "addons=[]" >> "$GITHUB_OUTPUT"
+              echo "No changed add-ons to build"
+            fi
           fi
 
   build:
