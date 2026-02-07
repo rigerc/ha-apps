@@ -70,7 +70,7 @@ with Git-backed configuration storage.
 ###  <img src="./romm/icon.png" width="16" height="16" style="margin-right: 4px;">[Romm](./romm/)
 App for [Romm project](https://github.com/rommapp/romm).
 
-[![Version](https://img.shields.io/badge/ha%20app%20version-1.0.0-blue?style=flat-square&logo=homeassistant&logoColor=white)](https://github.com/rigerc/ha-apps/tree/main/romm)
+[![Version](https://img.shields.io/badge/ha%20app%20version-1.1.0-blue?style=flat-square&logo=homeassistant&logoColor=white)](https://github.com/rigerc/ha-apps/tree/main/romm)
 &nbsp; [![Current](https://img.shields.io/badge/image%20version-4.6.0-blue?style=flat-square&logo=docker&logoColor=white)](https://github.com/rommapp/romm)&nbsp; [![Out of Date](https://img.shields.io/badge/upstream-out%20of%20date-yellow?style=flat-square)](https://github.com/rommapp/romm)
 &nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational?style=flat-square&logo=linux&logoColor=white)]()
 &nbsp; [![amd64](https://img.shields.io/badge/platform-amd64-informational?style=flat-square&logo=linux&logoColor=white)]()

@@ -52,7 +52,7 @@
   },
   {
     "slug": "romm",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "name": "Romm",
     "description": "A beautiful, powerful, self-hosted ROM manager and player.\nScan, enrich, browse and play your game collection with metadata from\nIGDB, Screenscraper, and MobyGames. Features custom artwork from SteamGridDB,\nRetroAchievements display, in-browser gameplay via EmulatorJS and RuffleRS,\nsupport for 400+ platforms, multi-disk games, DLCs, mods, hacks, patches,\nmanuals, and sharing with friends.",
     "arch": [
