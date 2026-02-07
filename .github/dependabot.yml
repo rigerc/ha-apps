@@ -17,15 +17,14 @@ updates:
       - "dependencies"
       - "docker"
     commit-message:
-      prefix: "feat"
-      include: "scope"
+      prefix: "feat(deps)"
     groups:
       # Group minor and patch updates together to reduce PR noise
-      docker-non-major:
+      docker-minor-patches:
         update-types:
           - "minor"
           - "patch"
-      docker-major:
+      docker-major-updates:
         update-types:
           - "major"
   - package-ecosystem: "github-actions"
@@ -41,14 +40,13 @@ updates:
       - "dependencies"
       - "ci"
     commit-message:
-      prefix: "ci"
-      include: "scope"
+      prefix: "ci(deps)"
     groups:
       # Group minor and patch updates together to reduce PR noise
-      actions-non-major:
+      action-minor-patches:
         update-types:
           - "minor"
           - "patch"
-      actions-major:
+      action-major-updates:
         update-types:
           - "major"
