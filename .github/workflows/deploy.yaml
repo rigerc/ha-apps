@@ -57,7 +57,7 @@ jobs:
         arch: [aarch64, amd64]
     steps:
       - name: ⤵️ Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: ℹ️ Get addon info
         id: info
@@ -265,7 +265,7 @@ jobs:
       actions: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Trigger addon-metadata workflow
         env:
