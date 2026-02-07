@@ -55,32 +55,27 @@ jobs:
         run: |
           # Check if specific add-ons were requested
           if [[ -n "${{ inputs.addons }}" ]]; then
-            # Process comma-separated input
+            # Process comma-separated input and build JSON array with jq
             input_addons="${{ inputs.addons }}"
-            # Remove spaces and convert to array
-            IFS=',' read -ra addon_array <<< "${input_addons// /}"
-
-            # Convert to JSON array format
-            selected_addons=()
             all_addons="${{ steps.addons.outputs.addons }}"
 
-            for requested_addon in "${addon_array[@]}"; do
-              # Trim any remaining whitespace
-              requested_addon=$(echo "$requested_addon" | xargs)
-              # Check if the requested add-on exists in the repository
-              if echo "$all_addons" | grep -q "$requested_addon"; then
-                selected_addons+=("\"${requested_addon}\",")
-              else
-                echo "Warning: Add-on '$requested_addon' not found, skipping"
-              fi
-            done
+            # Split by comma, trim whitespace, and filter valid addons
+            result=$(echo "$input_addons" | jq -R 'split(",") | map(select(length > 0)) | map(ltrimstr(" ") | rtrimstr(" "))')
 
-            if [[ ${#selected_addons[@]} -eq 0 ]]; then
+            # Filter out any addons that don't exist in the repository
+            valid_addons=$(echo "$result" | jq -r --argjson all "$all_addons" '[.[] | select(. as $item | $all | index($item))]')
+            result="$valid_addons"
+
+            # Check if any valid addons remain
+            addon_count=$(echo "$result" | jq 'length')
+            if [[ "$addon_count" -eq 0 ]]; then
               echo "No valid add-ons specified, using changed add-ons"
-              result="${{ steps.changed_addons.outputs.addons }}"
-            else
-              result=$(echo "${selected_addons[@]}" | rev | cut -c 2- | rev)
-              result="[$result]"
+              changed_addons="${{ steps.changed_addons.outputs.addons }}"
+              if [[ -n "$changed_addons" ]]; then
+                result=$(echo "$changed_addons" | jq -R 'split(",") | map(select(length > 0))')
+              else
+                result="[]"
+              fi
             fi
 
             echo "addons=$result" >> "$GITHUB_OUTPUT"
