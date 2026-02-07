@@ -86,7 +86,7 @@ jobs:
 
       - name: Commit manifest and config changes
         if: github.event_name != 'pull_request'
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v7
         with:
           # Note: Modified files (READMEs, manifest.json, dependabot.yml) are excluded
           # in release-please-config.json to prevent triggering new release PRs.
