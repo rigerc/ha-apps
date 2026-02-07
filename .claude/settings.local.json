@@ -30,7 +30,8 @@
       "mcp__github__list_releases",
       "mcp__github__list_tags",
       "mcp__github__list_commits",
-      "Bash(gh workflow run:*)"
+      "Bash(gh workflow run:*)",
+      "Bash(.github/scripts/manifest.sh:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
