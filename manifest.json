@@ -3,7 +3,7 @@
     "slug": "cleanuparr",
     "version": "1.0.0",
     "name": "Cleanuparr",
-    "description": "Automated cleanup tool for Sonarr, Radarr, and download clients.\nRemoves unwanted or blocked files, manages stalled downloads, and\nenforces blacklists/whitelists. Includes malware detection and\nautomatic search triggers for removed content...",
+    "description": "Automated cleanup tool for Sonarr, Radarr, Lidarr, Readarr, and Whisparr\nplus qBittorrent, Transmission, Deluge, and µTorrent. Removes unwanted or\nblocked files, manages stalled downloads, enforces blacklists/whitelists,\nincludes malware detection for *.lnk and *.zipx files, and automatically\ntriggers searches to replace removed content. Features strike system and\nnotification support.",
     "arch": [
       "aarch64",
       "amd64"
@@ -20,7 +20,7 @@
     "slug": "huntarr",
     "version": "1.0.0",
     "name": "Huntarr",
-    "description": "Automation utility that continuously searches media libraries for missing content and quality upgrades",
+    "description": "Automatic missing content hunter for Sonarr, Radarr, Lidarr, Readarr, and Whisparr. Continuously searches your media libraries for missing content and quality upgrades below your cutoff. Runs continuously while being gentle on your indexers, filling the gap that *arr apps don't cover by finding content not actively searched through RSS feeds.",
     "arch": [
       "amd64",
       "aarch64"
@@ -54,7 +54,7 @@
     "slug": "romm",
     "version": "1.0.0",
     "name": "Romm",
-    "description": "Self-hosted ROM collection manager and emulator launcher.\nScan, organize, and manage game collections across 400+ platforms with\nautomatic metadata fetching and in-browser gameplay.",
+    "description": "A beautiful, powerful, self-hosted ROM manager and player.\nScan, enrich, browse and play your game collection with metadata from\nIGDB, Screenscraper, and MobyGames. Features custom artwork from SteamGridDB,\nRetroAchievements display, in-browser gameplay via EmulatorJS and RuffleRS,\nsupport for 400+ platforms, multi-disk games, DLCs, mods, hacks, patches,\nmanuals, and sharing with friends.",
     "arch": [
       "aarch64",
       "amd64"

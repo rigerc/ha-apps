@@ -34,10 +34,12 @@ App for [Cleanuparr project](https://github.com/Cleanuparr/Cleanuparr).
 &nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational?style=flat-square&logo=linux&logoColor=white)]()
 &nbsp; [![amd64](https://img.shields.io/badge/platform-amd64-informational?style=flat-square&logo=linux&logoColor=white)]()
 
-Automated cleanup tool for Sonarr, Radarr, and download clients.
-Removes unwanted or blocked files, manages stalled downloads, and
-enforces blacklists/whitelists. Includes malware detection and
-automatic search triggers for removed content...
+Automated cleanup tool for Sonarr, Radarr, Lidarr, Readarr, and Whisparr
+plus qBittorrent, Transmission, Deluge, and µTorrent. Removes unwanted or
+blocked files, manages stalled downloads, enforces blacklists/whitelists,
+includes malware detection for *.lnk and *.zipx files, and automatically
+triggers searches to replace removed content. Features strike system and
+notification support.
 ###  <img src="./huntarr/icon.png" width="16" height="16" style="margin-right: 4px;">[Huntarr](./huntarr/)
 App for [Huntarr project](https://github.com/plexguide/Huntarr.io).
 
@@ -47,7 +49,7 @@ App for [Huntarr project](https://github.com/plexguide/Huntarr.io).
 &nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational?style=flat-square&logo=linux&logoColor=white)]()
 &nbsp; [![Ingress](https://img.shields.io/badge/ingress-enabled-green?style=flat-square&logo=homeassistant&logoColor=white)]()
 
-Automation utility that continuously searches media libraries for missing content and quality upgrades
+Automatic missing content hunter for Sonarr, Radarr, Lidarr, Readarr, and Whisparr. Continuously searches your media libraries for missing content and quality upgrades below your cutoff. Runs continuously while being gentle on your indexers, filling the gap that *arr apps don't cover by finding content not actively searched through RSS feeds.
 ###  <img src="./profilarr/icon.png" width="16" height="16" style="margin-right: 4px;">[Profilarr](./profilarr/)
 App for [Profilarr project](https://github.com/Dictionarry-Hub/profilarr).
 
@@ -57,9 +59,10 @@ App for [Profilarr project](https://github.com/Dictionarry-Hub/profilarr).
 &nbsp; [![amd64](https://img.shields.io/badge/platform-amd64-informational?style=flat-square&logo=linux&logoColor=white)]()
 &nbsp; [![Ingress](https://img.shields.io/badge/ingress-enabled-green?style=flat-square&logo=homeassistant&logoColor=white)]()
 
-Profile manager for Radarr and Sonarr instances.
-Centrally manage quality profiles, custom formats, and
-release profiles with Git-backed configuration storage!
+Import, export, sync and delete quality profiles and custom formats
+via Radarr and Sonarr API. Centrally manage your *arr configurations,
+sync master instances with multiple servers, and backup/restore profiles
+with Git-backed configuration storage.
 ###  <img src="./romm/icon.png" width="16" height="16" style="margin-right: 4px;">[Romm](./romm/)
 App for [Romm project](https://github.com/rommapp/romm).
 
@@ -68,6 +71,9 @@ App for [Romm project](https://github.com/rommapp/romm).
 &nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational?style=flat-square&logo=linux&logoColor=white)]()
 &nbsp; [![amd64](https://img.shields.io/badge/platform-amd64-informational?style=flat-square&logo=linux&logoColor=white)]()
 
-Self-hosted ROM collection manager and emulator launcher.
-Scan, organize, and manage game collections across 400+ platforms with
-automatic metadata fetching and in-browser gameplay.
+A beautiful, powerful, self-hosted ROM manager and player.
+Scan, enrich, browse and play your game collection with metadata from
+IGDB, Screenscraper, and MobyGames. Features custom artwork from SteamGridDB,
+RetroAchievements display, in-browser gameplay via EmulatorJS and RuffleRS,
+support for 400+ platforms, multi-disk games, DLCs, mods, hacks, patches,
+manuals, and sharing with friends.

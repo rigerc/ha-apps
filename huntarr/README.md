@@ -7,7 +7,7 @@
 &nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational?style=flat-square&logo=linux&logoColor=white)]()
 &nbsp; [![Ingress](https://img.shields.io/badge/ingress-enabled-green?style=flat-square&logo=homeassistant&logoColor=white)]()
 
-Automation utility that continuously searches media libraries for missing content and quality upgrades
+Automatic missing content hunter for Sonarr, Radarr, Lidarr, Readarr, and Whisparr. Continuously searches your media libraries for missing content and quality upgrades below your cutoff. Runs continuously while being gentle on your indexers, filling the gap that *arr apps don't cover by finding content not actively searched through RSS feeds.
 
 ## Documentation
 

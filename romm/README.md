@@ -6,9 +6,12 @@
 &nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational?style=flat-square&logo=linux&logoColor=white)]()
 &nbsp; [![amd64](https://img.shields.io/badge/platform-amd64-informational?style=flat-square&logo=linux&logoColor=white)]()
 
-Self-hosted ROM collection manager and emulator launcher.
-Scan, organize, and manage game collections across 400+ platforms with
-automatic metadata fetching and in-browser gameplay.
+A beautiful, powerful, self-hosted ROM manager and player.
+Scan, enrich, browse and play your game collection with metadata from
+IGDB, Screenscraper, and MobyGames. Features custom artwork from SteamGridDB,
+RetroAchievements display, in-browser gameplay via EmulatorJS and RuffleRS,
+support for 400+ platforms, multi-disk games, DLCs, mods, hacks, patches,
+manuals, and sharing with friends.
 
 ## Documentation
 

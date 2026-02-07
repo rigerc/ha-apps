@@ -7,9 +7,10 @@
 &nbsp; [![amd64](https://img.shields.io/badge/platform-amd64-informational?style=flat-square&logo=linux&logoColor=white)]()
 &nbsp; [![Ingress](https://img.shields.io/badge/ingress-enabled-green?style=flat-square&logo=homeassistant&logoColor=white)]()
 
-Profile manager for Radarr and Sonarr instances.
-Centrally manage quality profiles, custom formats, and
-release profiles with Git-backed configuration storage!
+Import, export, sync and delete quality profiles and custom formats
+via Radarr and Sonarr API. Centrally manage your *arr configurations,
+sync master instances with multiple servers, and backup/restore profiles
+with Git-backed configuration storage.
 
 ## Documentation
 
