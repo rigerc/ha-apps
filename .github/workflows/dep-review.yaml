@@ -2,7 +2,7 @@ name: Review dependency changes
 
 on:
   pull_request:
-    types: [opened, reopened]
+    types: [opened, reopened, synchronize]
     branches:
       - 'dependabot/docker/*'
   workflow_dispatch:
@@ -98,6 +98,9 @@ jobs:
             # +FROM ghcr.io/rommapp/romm:2.0.0 AS base
             OLD_FROM=$(echo "$PR_DIFF" | grep -iE "^-FROM .* [Aa][Ss]" | head -n1 | sed -E 's/.*[:/]([^:/ ]+) [Aa][Ss].*/\1/')
             NEW_FROM=$(echo "$PR_DIFF" | grep -iE "^\+FROM .* [Aa][Ss]" | head -n1 | sed -E 's/.*[:/]([^:/ ]+) [Aa][Ss].*/\1/')
+
+            OLD_VERSION="$OLD_FROM"
+            NEW_VERSION="$NEW_FROM"
 
             echo "old_version=$OLD_VERSION" >> "$GITHUB_OUTPUT"
             echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
