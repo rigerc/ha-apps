@@ -23,7 +23,9 @@ jobs:
   validate-metadata:
     name: 📋 Check if GitHub Actions update
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: |
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.user.login == 'dependabot[bot]'
     permissions:
       pull-requests: read
     outputs:
