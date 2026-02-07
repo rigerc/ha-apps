@@ -14,6 +14,7 @@ readonly MANIFEST_OUTPUT="${PROJECT_ROOT}/manifest.json"
 
 # Options
 GENERATE_README=false
+UPDATE_DEPENDABOT=false
 
 # Error handling
 err() {
@@ -321,11 +322,13 @@ Generate manifest.json for Home Assistant addons.
 
 OPTIONS:
   -g, --generate-readme       Generate README.md files using gomplate templates
+  -d, --update-dependabot     Update .github/dependabot.yml with all found slugs
   -h, --help                  Display this help message
 
 EXAMPLES:
   $(basename "${BASH_SOURCE[0]}")                      # Generate manifest.json only
   $(basename "${BASH_SOURCE[0]}") -g                  # Generate manifest.json and README files
+  $(basename "${BASH_SOURCE[0]}") -d                  # Generate manifest.json and update dependabot.yml
 
 EOF
 }
@@ -334,6 +337,7 @@ EOF
 # Parse command line arguments
 # Globals:
 #   GENERATE_README
+#   UPDATE_DEPENDABOT
 # Arguments:
 #   All script arguments
 # Returns:
@@ -344,6 +348,10 @@ parse_args() {
     case "$1" in
       -g|--generate-readme)
         GENERATE_README=true
+        shift
+        ;;
+      -d|--update-dependabot)
+        UPDATE_DEPENDABOT=true
         shift
         ;;
       -h|--help)
@@ -488,6 +496,75 @@ extract_addon_info() {
 }
 
 #######################################
+# Update dependabot.yml with all found slugs
+# Globals:
+#   PROJECT_ROOT
+#   MANIFEST_OUTPUT
+# Arguments:
+#   None
+# Returns:
+#   0 on success, 1 on error
+#######################################
+update_dependabot() {
+  local dependabot_file="${PROJECT_ROOT}/.github/dependabot.yml"
+
+  # Check dependabot.yml exists
+  if [[ ! -f "${dependabot_file}" ]]; then
+    err "Error: dependabot.yml not found: ${dependabot_file}"
+    return 1
+  fi
+
+  # Check manifest exists
+  if [[ ! -f "${MANIFEST_OUTPUT}" ]]; then
+    err "Error: manifest.json not found. Generate it first."
+    return 1
+  fi
+
+  # Check yq is available
+  if ! command -v yq &>/dev/null; then
+    err "Error: yq is required but not installed"
+    err "Install from: https://github.com/mikefarah/yq"
+    return 1
+  fi
+
+  # Extract all slugs from manifest and format as "/slug"
+  local -a directories=()
+  while IFS= read -r slug; do
+    directories+=("/${slug}")
+  done < <(jq -r '.[].slug' "${MANIFEST_OUTPUT}")
+
+  if [[ ${#directories[@]} -eq 0 ]]; then
+    err "Error: No slugs found in manifest"
+    return 1
+  fi
+
+  echo "Updating dependabot.yml with ${#directories[@]} directories..." >&2
+
+  # Build the directories array as JSON for yq
+  local dirs_json="["
+  local first=true
+  for dir in "${directories[@]}"; do
+    if [[ "${first}" == "true" ]]; then
+      dirs_json+="\"${dir}\""
+      first=false
+    else
+      dirs_json+=", \"${dir}\""
+    fi
+  done
+  dirs_json+="]"
+
+  # Apply the update using yq with double-quoted style
+  # The | .updates[0].directories[] style="double" forces quoted output
+  if ! yq eval ".updates[0].directories = ${dirs_json} | .updates[0].directories[] style=\"double\"" -i "${dependabot_file}"; then
+    err "Error: Failed to update dependabot.yml"
+    return 1
+  fi
+
+  echo "Updated ${dependabot_file}" >&2
+  return 0
+}
+
+#######################################
 # Generate manifest.json from addon directories
 # Globals:
 #   PROJECT_ROOT
@@ -519,6 +596,7 @@ generate_manifest() {
 # Main script logic
 # Globals:
 #   GENERATE_README
+#   UPDATE_DEPENDABOT
 # Arguments:
 #   All script arguments
 # Returns:
@@ -529,6 +607,13 @@ main() {
 
   # Generate manifest
   generate_manifest
+
+  # Update dependabot.yml if requested
+  if [[ "${UPDATE_DEPENDABOT}" == "true" ]]; then
+    if ! update_dependabot; then
+      exit 1
+    fi
+  fi
 
   # Generate README files if requested
   if [[ "${GENERATE_README}" == "true" ]]; then

@@ -4,7 +4,7 @@ description: Use this agent when the user asks to "manage the repository", "setu
 model: inherit
 color: blue
 tools: ["Read", "Write", "Grep", "Glob", "Bash", "Edit"]
-skills: ["gh-cli", "github-actions", "release-please", "dependabot", "commitlint"]
+skills: ["gh-cli", "github-actions", "release-please", "dependabot", "commitlint", "gomplate"]
 ---
 
 You are a GitHub repository management specialist with expertise in DevOps automation, CI/CD pipelines, and repository maintenance best practices. Run in the foreground.

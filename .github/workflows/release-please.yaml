@@ -9,7 +9,7 @@ on:
       - 'romm/**'
       - 'profilarr/**'
       - 'huntarr/**'
-      - 'cleanuparrarr/**'
+      - 'cleanuparr/**'
       - '.github/release-please-config.json'
 
 permissions:

@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: ⤵️ Check out the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 🔍 Find non-executable .sh files
         id: check
