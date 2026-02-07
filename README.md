@@ -26,7 +26,7 @@ Click on the above button or follow the steps below:
 1. Click on the "INSTALL" button
 
 ## Available Add-ons
-###  <img src="./cleanuparr/icon.png" width="16" height="16" style="margin-right: 4px;">[Cleanuparr](./cleanuparr/)
+###  <img src="https://raw.githubusercontent.com/rigerc/ha-apps/main/cleanuparr/icon.png" width="16" height="16" style="margin-right: 4px;">[Cleanuparr](./cleanuparr/)
 App for [Cleanuparr project](https://github.com/Cleanuparr/Cleanuparr).
 
 [![Version](https://img.shields.io/badge/ha%20app%20version-1.0.0-blue?style=flat-square&logo=homeassistant&logoColor=white)](https://github.com/rigerc/ha-apps/tree/main/cleanuparr)
@@ -40,7 +40,7 @@ blocked files, manages stalled downloads, enforces blacklists/whitelists,
 includes malware detection for *.lnk and *.zipx files, and automatically
 triggers searches to replace removed content. Features strike system and
 notification support.
-###  <img src="./huntarr/icon.png" width="16" height="16" style="margin-right: 4px;">[Huntarr](./huntarr/)
+###  <img src="https://raw.githubusercontent.com/rigerc/ha-apps/main/huntarr/icon.png" width="16" height="16" style="margin-right: 4px;">[Huntarr](./huntarr/)
 App for [Huntarr project](https://github.com/plexguide/Huntarr.io).
 
 [![Version](https://img.shields.io/badge/ha%20app%20version-1.0.0-blue?style=flat-square&logo=homeassistant&logoColor=white)](https://github.com/rigerc/ha-apps/tree/main/huntarr)
@@ -54,7 +54,7 @@ Whisparr. Continuously searches your media libraries for missing content
 and quality upgrades below your cutoff. Runs continuously while being gentle
 on your indexers, filling the gap that *arr apps don't cover by finding
 content not actively searched through RSS feeds.
-###  <img src="./profilarr/icon.png" width="16" height="16" style="margin-right: 4px;">[Profilarr](./profilarr/)
+###  <img src="https://raw.githubusercontent.com/rigerc/ha-apps/main/profilarr/icon.png" width="16" height="16" style="margin-right: 4px;">[Profilarr](./profilarr/)
 App for [Profilarr project](https://github.com/Dictionarry-Hub/profilarr).
 
 [![Version](https://img.shields.io/badge/ha%20app%20version-1.0.0-blue?style=flat-square&logo=homeassistant&logoColor=white)](https://github.com/rigerc/ha-apps/tree/main/profilarr)
@@ -67,7 +67,7 @@ Import, export, sync and delete quality profiles and custom formats
 via Radarr and Sonarr API. Centrally manage your *arr configurations,
 sync master instances with multiple servers, and backup/restore profiles
 with Git-backed configuration storage.
-###  <img src="./romm/icon.png" width="16" height="16" style="margin-right: 4px;">[Romm](./romm/)
+###  <img src="https://raw.githubusercontent.com/rigerc/ha-apps/main/romm/icon.png" width="16" height="16" style="margin-right: 4px;">[Romm](./romm/)
 App for [Romm project](https://github.com/rommapp/romm).
 
 [![Version](https://img.shields.io/badge/ha%20app%20version-1.1.0-blue?style=flat-square&logo=homeassistant&logoColor=white)](https://github.com/rigerc/ha-apps/tree/main/romm)

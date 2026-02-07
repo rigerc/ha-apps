@@ -22,8 +22,16 @@
 
 {{- define "icon" -}}
 {{- $size := .size | default "16" -}}
-{{- $icon_path := .icon_path | default "./icon.png" -}}
-{{- if .addon.has_icon }} <img src="{{ $icon_path }}" width="{{ $size }}" height="{{ $size }}" style="margin-right: 4px;">{{- end }}
+{{- $repo := "" -}}
+{{- if has . "repo" -}}
+{{- $repo = .repo -}}
+{{- else -}}
+{{- $repo = env.Getenv "REPOSITORY" -}}
+{{- end -}}
+{{- $branch := "main" -}}
+{{- $slug := .addon.slug -}}
+{{- $full_url := printf "https://raw.githubusercontent.com/%s/%s/%s/icon.png" $repo $branch $slug -}}
+{{- if .addon.has_icon }} <img src="{{ $full_url }}" width="{{ $size }}" height="{{ $size }}" style="margin-right: 4px;">{{- end }}
 {{- end -}}
 
 {{- define "project-link" -}}

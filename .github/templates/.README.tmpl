@@ -32,7 +32,7 @@ Click on the above button or follow the steps below:
 ## Available Add-ons
 
 {{- range $addons }}
-### {{ template "icon" (dict "addon" . "size" "16" "icon_path" (print "./" .slug "/icon.png")) }}[{{ .name }}](./{{ .slug }}/)
+### {{ template "icon" (dict "addon" . "size" "16" "repo" $repo) }}[{{ .name }}](./{{ .slug }}/)
 {{ template "project-link" (dict "addon" .) }}
 
 {{ template "badges" (dict "addon" . "repo" $repo) }}
