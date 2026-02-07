@@ -92,27 +92,12 @@ jobs:
               fi
             fi
 
-            # Parse versions from Dockerfile changes (look for FROM ... AS lines)
+            # Parse versions from Dockerfile changes (look for FROM ... AS/as lines)
             # Example diff:
             # -FROM ghcr.io/rommapp/romm:1.0.0 AS base
             # +FROM ghcr.io/rommapp/romm:2.0.0 AS base
-            OLD_FROM=$(echo "$PR_DIFF" | grep -E "^-FROM .* AS" | head -n1 | sed -E 's/.*[:/]([^:/ ]+) AS.*/\1/')
-            NEW_FROM=$(echo "$PR_DIFF" | grep -E "^\+FROM .* AS" | head -n1 | sed -E 's/.*[:/]([^:/ ]+) AS.*/\1/')
-
-            # If FROM parsing didn't work, try parsing from config.yaml version field
-            if [ -z "$OLD_FROM" ] || [ -z "$NEW_FROM" ]; then
-              OLD_VERSION=$(echo "$PR_DIFF" | grep -A2 "^--- a/$ADDON_SLUG/config.yaml" | grep "^-version:" | sed -E 's/^-version: *"?([^"]+)"?.*/\1/')
-              NEW_VERSION=$(echo "$PR_DIFF" | grep -A2 "^--- a/$ADDON_SLUG/config.yaml" | grep "^\+version:" | sed -E 's/^\+version: *"?([^"]+)"?.*/\1/')
-            else
-              OLD_VERSION="$OLD_FROM"
-              NEW_VERSION="$NEW_FROM"
-            fi
-
-            # If still empty, try build.yaml labels
-            if [ -z "$OLD_VERSION" ] || [ -z "$NEW_VERSION" ]; then
-              OLD_VERSION=$(echo "$PR_DIFF" | grep -A2 "^--- a/$ADDON_SLUG/build.yaml" | grep "^-.*org.opencontainers.image.version=" | sed -E 's/.*version=([^ ]+).*/\1/' | tr -d '"')
-              NEW_VERSION=$(echo "$PR_DIFF" | grep -A2 "^--- a/$ADDON_SLUG/build.yaml" | grep "^\+.*org.opencontainers.image.version=" | sed -E 's/.*version=([^ ]+).*/\1/' | tr -d '"')
-            fi
+            OLD_FROM=$(echo "$PR_DIFF" | grep -iE "^-FROM .* [Aa][Ss]" | head -n1 | sed -E 's/.*[:/]([^:/ ]+) [Aa][Ss].*/\1/')
+            NEW_FROM=$(echo "$PR_DIFF" | grep -iE "^\+FROM .* [Aa][Ss]" | head -n1 | sed -E 's/.*[:/]([^:/ ]+) [Aa][Ss].*/\1/')
 
             echo "old_version=$OLD_VERSION" >> "$GITHUB_OUTPUT"
             echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
