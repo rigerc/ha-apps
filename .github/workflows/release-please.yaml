@@ -30,7 +30,6 @@ jobs:
           token: ${{ secrets.PAT }}
           manifest-file: .github/.release-please-manifest.json
           config-file: .github/release-please-config.json
-
   trigger-build:
     needs: release-please
     if: needs.release-please.outputs.releases_created == 'true'
