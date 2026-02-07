@@ -74,7 +74,7 @@ jobs:
       - name: 🔒 Check rootfs file permissions
         run: |
           failed=false
-          for addon in ${{ needs.find.outputs.addons_csv }}; do
+          for addon in $(echo "${{ needs.find.outputs.addons_csv }}" | tr ',' ' '); do
             rootfs="./$addon/rootfs"
             if [[ ! -d "$rootfs" ]]; then
               echo "ℹ️ No rootfs directory in $addon, skipping"
@@ -106,7 +106,7 @@ jobs:
 
       - name: 🔍 Shellcheck
         run: |
-          for addon in ${{ needs.find.outputs.addons_csv }}; do
+          for addon in $(echo "${{ needs.find.outputs.addons_csv }}" | tr ',' ' '); do
             echo "🔍 Shellchecking $addon..."
             find "./$addon" -name "*.sh" -exec shellcheck -s bash {} +
           done
@@ -123,7 +123,7 @@ jobs:
 
       - name: 🔍 Markdown Lint
         run: |
-          for addon in ${{ needs.find.outputs.addons_csv }}; do
+          for addon in $(echo "${{ needs.find.outputs.addons_csv }}" | tr ',' ' '); do
             echo "🔍 Markdown linting $addon..."
             find "./$addon" -name "*.md" \
               ! -name "README.md" \
@@ -144,7 +144,7 @@ jobs:
 
       - name: 🔍 JSON Lint
         run: |
-          for addon in ${{ needs.find.outputs.addons_csv }}; do
+          for addon in $(echo "${{ needs.find.outputs.addons_csv }}" | tr ',' ' '); do
             echo "🔍 JSON linting $addon..."
             find "./$addon" -name "*.json" -exec cat {} \; | jq '.'
           done
@@ -161,7 +161,7 @@ jobs:
 
       - name: 🔍 YAML Lint
         run: |
-          for addon in ${{ needs.find.outputs.addons_csv }}; do
+          for addon in $(echo "${{ needs.find.outputs.addons_csv }}" | tr ',' ' '); do
             echo "🔍 YAML linting $addon..."
             find "./$addon" \( -name "*.yaml" -o -name "*.yml" \) \
               -exec yq eval '... comments=""' --output-format=yaml {} + > /dev/null
@@ -173,6 +173,10 @@ jobs:
     timeout-minutes: 10
     needs: find
     if: needs.find.outputs.addons_csv != ''
+    strategy:
+      fail-fast: false
+      matrix:
+        addon: ${{ fromJSON(needs.find.outputs.addons) }}
     steps:
       - name: ⤵️ Check out the repository
         uses: actions/checkout@v5
@@ -180,7 +184,7 @@ jobs:
       - name: 🚀 Add-on Linter
         uses: frenck/action-addon-linter@v2
         with:
-          path: "./${{ needs.find.outputs.addons_csv }}"
+          path: "./${{ matrix.addon }}"
 
   dockerfile:
     name: 🐳 Dockerfile Lint
@@ -188,6 +192,10 @@ jobs:
     timeout-minutes: 10
     needs: find
     if: needs.find.outputs.addons_csv != ''
+    strategy:
+      fail-fast: false
+      matrix:
+        addon: ${{ fromJSON(needs.find.outputs.addons) }}
     steps:
       - name: ⤵️ Check out the repository
         uses: actions/checkout@v5
@@ -195,7 +203,7 @@ jobs:
       - name: 🐳 Dockerfile Lint
         uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: "./${{ needs.find.outputs.addons_csv }}/Dockerfile"
+          dockerfile: "./${{ matrix.addon }}/Dockerfile"
           config: './.github/.hadolint.yaml'
 
   build-yaml:
@@ -210,7 +218,7 @@ jobs:
 
       - name: 📋 Verify build.yaml project key
         run: |
-          for addon in ${{ needs.find.outputs.addons_csv }}; do
+          for addon in $(echo "${{ needs.find.outputs.addons_csv }}" | tr ',' ' '); do
             BUILD_FILE="$addon/build.yaml"
             if [[ ! -f "$BUILD_FILE" ]]; then
               echo "❌ Error: build.yaml not found in $addon"

@@ -22,9 +22,11 @@ concurrency:
 
 jobs:
   lint:
+    name: "Lint"
     uses: ./.github/workflows/lint.yaml
 
   build:
+    name: "Build"
     uses: ./.github/workflows/builder.yaml
     with:
       base_ref: ${{ github.event.pull_request.base.ref }}
