@@ -18,15 +18,6 @@ updates:
       - "docker"
     commit-message:
       prefix: "feat(deps)"
-    groups:
-      # Group minor and patch updates together to reduce PR noise
-      docker-minor-patches:
-        update-types:
-          - "minor"
-          - "patch"
-      docker-major-updates:
-        update-types:
-          - "major"
   - package-ecosystem: "github-actions"
     # GitHub Actions workflows
     directory: "/"
@@ -42,11 +33,7 @@ updates:
     commit-message:
       prefix: "ci(deps)"
     groups:
-      # Group minor and patch updates together to reduce PR noise
-      action-minor-patches:
-        update-types:
-          - "minor"
-          - "patch"
-      action-major-updates:
-        update-types:
-          - "major"
+      # Group all GitHub Actions updates together
+      github-actions:
+        patterns:
+          - "*"
