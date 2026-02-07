@@ -1,0 +1,193 @@
+name: Dependabot Gemini Review Request
+
+on:
+  pull_request:
+    types: [opened, reopened]
+    branches:
+      - 'dependabot/docker/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  request-gemini-review:
+    name: Request Gemini Code Review
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+
+      - name: Extract addon slug and metadata
+        id: addon
+        env:
+          BRANCH_NAME: ${{ github.head_ref }}
+        run: |
+          # Extract addon slug from branch name
+          # Format: dependabot/docker/{addon-slug}/{image-parts}/{version}
+          ADDON_SLUG=$(echo "$BRANCH_NAME" | cut -d'/' -f3)
+          echo "slug=$ADDON_SLUG" >> "$GITHUB_OUTPUT"
+
+          # Get project URL from manifest.json
+          if [ ! -f manifest.json ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::warning::manifest.json not found"
+            exit 0
+          fi
+
+          PROJECT_URL=$(jq -r ".[] | select(.slug==\"$ADDON_SLUG\") | .project" manifest.json)
+
+          if [ -z "$PROJECT_URL" ] || [ "$PROJECT_URL" = "null" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::warning::Addon '$ADDON_SLUG' not found in manifest.json"
+            exit 0
+          fi
+
+          # Validate GitHub URL
+          if [[ ! "$PROJECT_URL" =~ ^https?://github\.com/ ]]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::warning::Project URL is not a GitHub URL: $PROJECT_URL"
+            exit 0
+          fi
+
+          echo "project_url=$PROJECT_URL" >> "$GITHUB_OUTPUT"
+
+          # Extract owner/repo from GitHub URL
+          REPO_PATH=$(echo "$PROJECT_URL" | sed -E 's|https?://github\.com/||' | sed 's|\.git$||')
+          echo "repo_path=$REPO_PATH" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch upstream diff
+        id: diff
+        if: steps.addon.outputs.skip != 'true'
+        env:
+          OLD_VERSION: ${{ steps.metadata.outputs.previous-version }}
+          NEW_VERSION: ${{ steps.metadata.outputs.new-version }}
+          REPO_PATH: ${{ steps.addon.outputs.repo_path }}
+        run: |
+          if [ -z "$OLD_VERSION" ] || [ -z "$NEW_VERSION" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::error::Missing version information"
+            exit 0
+          fi
+
+          # Build compare and diff URLs
+          COMPARE_URL="https://github.com/${REPO_PATH}/compare/${OLD_VERSION}...${NEW_VERSION}"
+          DIFF_URL="${COMPARE_URL}.diff"
+
+          echo "compare_url=$COMPARE_URL" >> "$GITHUB_OUTPUT"
+
+          # Fetch diff content
+          echo "Fetching diff from: $DIFF_URL"
+
+          DIFF_FILE=$(mktemp)
+          if curl -sL "$DIFF_URL" -o "$DIFF_FILE"; then
+            DIFF_SIZE=$(stat -f%z "$DIFF_FILE" 2>/dev/null || stat -c%s "$DIFF_FILE")
+
+            # Truncate if larger than 50KB
+            if [ "$DIFF_SIZE" -gt 51200 ]; then
+              {
+                echo "⚠️ Diff is large ($(numfmt --to=iec-i --suffix=B "$DIFF_SIZE")), truncating to first 50KB..."
+                head -c 51200 "$DIFF_FILE"
+                echo ""
+                echo "..."
+                echo ""
+                echo "[Diff truncated - view full changes at $COMPARE_URL]"
+              } > "${DIFF_FILE}.truncated"
+              mv "${DIFF_FILE}.truncated" "$DIFF_FILE"
+            fi
+
+            # Check if diff is empty
+            if [ ! -s "$DIFF_FILE" ]; then
+              {
+                echo "⚠️ No diff content available. The versions may not exist as tags/releases in the upstream repository."
+                echo ""
+                echo "Please check the compare URL manually: $COMPARE_URL"
+              } > "$DIFF_FILE"
+            fi
+          else
+            {
+              echo "❌ Failed to fetch diff from upstream repository."
+              echo ""
+              echo "Please check the compare URL manually: $COMPARE_URL"
+            } > "$DIFF_FILE"
+          fi
+
+          echo "diff_file=$DIFF_FILE" >> "$GITHUB_OUTPUT"
+
+      - name: Post Gemini review request comment
+        if: steps.addon.outputs.skip != 'true' && steps.diff.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ADDON_SLUG: ${{ steps.addon.outputs.slug }}
+          IMAGE_NAME: ${{ steps.metadata.outputs.dependency-names }}
+          OLD_VERSION: ${{ steps.metadata.outputs.previous-version }}
+          NEW_VERSION: ${{ steps.metadata.outputs.new-version }}
+          UPDATE_TYPE: ${{ steps.metadata.outputs.update-type }}
+          COMPARE_URL: ${{ steps.diff.outputs.compare_url }}
+          DIFF_FILE: ${{ steps.diff.outputs.diff_file }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          # Read diff content
+          DIFF_CONTENT=$(cat "$DIFF_FILE")
+
+          # Create comment body
+          cat << 'EOF' > comment.md
+          /gemini review
+
+          Please review this Dependabot Docker image update for the **ADDON_SLUG** addon.
+
+          ### Update Summary
+          - **Addon**: ADDON_SLUG
+          - **Image**: IMAGE_NAME
+          - **Version Change**: OLD_VERSION → NEW_VERSION
+          - **Update Type**: UPDATE_TYPE
+
+          ### Review Instructions
+          1. Analyze the upstream changes in the diff below
+          2. Check for breaking changes or deprecated features
+          3. Verify compatibility with current addon configuration
+          4. Review security implications of the update
+          5. Assess impact on Home Assistant addon functionality
+
+          ### Upstream Changes
+
+          Full comparison: COMPARE_URL
+
+          <details>
+          <summary>Upstream Diff (OLD_VERSION...NEW_VERSION)</summary>
+
+          ```diff
+          DIFF_CONTENT_PLACEHOLDER
+          ```
+
+          </details>
+
+          ---
+          *Automated request via `dependabot-gemini-review` workflow*
+          EOF
+
+          # Replace placeholders
+          sed -i "s|ADDON_SLUG|$ADDON_SLUG|g" comment.md
+          sed -i "s|IMAGE_NAME|$IMAGE_NAME|g" comment.md
+          sed -i "s|OLD_VERSION|$OLD_VERSION|g" comment.md
+          sed -i "s|NEW_VERSION|$NEW_VERSION|g" comment.md
+          sed -i "s|UPDATE_TYPE|$UPDATE_TYPE|g" comment.md
+          sed -i "s|COMPARE_URL|$COMPARE_URL|g" comment.md
+
+          # Insert diff content (escape special characters for sed)
+          DIFF_ESCAPED=$(echo "$DIFF_CONTENT" | sed 's/\\/\\\\/g' | sed 's/&/\\\&/g')
+          sed -i "s|DIFF_CONTENT_PLACEHOLDER|$DIFF_ESCAPED|g" comment.md
+
+          # Post comment
+          gh pr comment "$PR_NUMBER" --body-file comment.md
+        continue-on-error: true
