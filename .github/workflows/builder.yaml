@@ -55,18 +55,18 @@ jobs:
         run: |
           # Check if specific add-ons were requested
           if [[ -n "${{ inputs.addons }}" ]]; then
-            # Process comma-separated input and build JSON array with jq
-            input_addons="${{ inputs.addons }}"
-            all_addons="${{ steps.addons.outputs.addons }}"
+            # Get all available addons as JSON array
+            all_addons="${{ steps.addons.outputs.addons_list }}"
 
-            # Split by comma, trim whitespace, and filter valid addons
-            result=$(echo "$input_addons" | jq -R 'split(",") | map(select(length > 0)) | map(ltrimstr(" ") | rtrimstr(" "))')
+            # Process input and filter to only valid addons
+            result=$(echo "${{ inputs.addons }}" | jq -R --argjson all "$all_addons" '
+              split(",") |
+              map(select(length > 0)) |
+              map(ltrimstr(" ") | rtrimstr(" ")) |
+              map(select(. as $item | $all | index($item)))
+            ')
 
-            # Filter out any addons that don't exist in the repository
-            valid_addons=$(echo "$result" | jq -r --argjson all "$all_addons" '[.[] | select(. as $item | $all | index($item))]')
-            result="$valid_addons"
-
-            # Check if any valid addons remain
+            # If no valid addons, fall back to changed addons
             addon_count=$(echo "$result" | jq 'length')
             if [[ "$addon_count" -eq 0 ]]; then
               echo "No valid add-ons specified, using changed add-ons"
@@ -77,21 +77,18 @@ jobs:
                 result="[]"
               fi
             fi
-
-            echo "addons=$result" >> "$GITHUB_OUTPUT"
-            echo "Selected add-ons: $result"
           else
             # Use changed add-ons from find-changed-addons
             changed_addons="${{ steps.changed_addons.outputs.addons }}"
             if [[ -n "$changed_addons" ]]; then
               result=$(echo "$changed_addons" | jq -R 'split(",") | map(select(length > 0))')
-              echo "addons=$result" >> "$GITHUB_OUTPUT"
-              echo "Building changed add-ons: $result"
             else
-              echo "addons=[]" >> "$GITHUB_OUTPUT"
-              echo "No changed add-ons to build"
+              result="[]"
             fi
           fi
+
+          echo "addons=$result" >> "$GITHUB_OUTPUT"
+          echo "Building add-ons: $result"
 
   build:
     needs: init
