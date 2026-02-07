@@ -5,6 +5,12 @@ on:
     types: [opened, reopened, synchronize]
     branches:
       - 'dependabot/docker/*'
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to review'
+        required: true
+        type: number
 
 permissions:
   contents: read
@@ -18,25 +24,90 @@ jobs:
   request-gemini-review:
     name: Request Gemini Code Review
     runs-on: ubuntu-latest
-    if: github.actor == 'dependabot[bot]'
+    if: github.event_name == 'workflow_dispatch' || github.actor == 'dependabot[bot]'
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
 
+      - name: Get PR details for manual trigger
+        id: pr_details
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+        run: |
+          # Fetch PR details using gh CLI
+          PR_DATA=$(gh pr view "$PR_NUMBER" --json headRefName,number,author)
+
+          BRANCH_NAME=$(echo "$PR_DATA" | jq -r '.headRefName')
+          AUTHOR=$(echo "$PR_DATA" | jq -r '.author.login')
+
+          {
+            echo "branch_name=$BRANCH_NAME"
+            echo "pr_number=$PR_NUMBER"
+            echo "author=$AUTHOR"
+          } >> "$GITHUB_OUTPUT"
+
+          # Checkout the PR branch
+          gh pr checkout "$PR_NUMBER"
+
       - name: Fetch Dependabot metadata
         id: metadata
+        if: github.actor == 'dependabot[bot]'
         uses: dependabot/fetch-metadata@v2
 
       - name: Extract addon slug and metadata
         id: addon
         env:
-          BRANCH_NAME: ${{ github.head_ref }}
+          BRANCH_NAME: ${{ github.event_name == 'workflow_dispatch' && steps.pr_details.outputs.branch_name || github.head_ref }}
+          IMAGE_NAME: ${{ steps.metadata.outputs.dependency-names }}
         run: |
+          # Validate branch is a Dependabot Docker update
+          if [[ ! "$BRANCH_NAME" =~ ^dependabot/docker/ ]]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::warning::Branch '$BRANCH_NAME' is not a Dependabot Docker update branch"
+            exit 0
+          fi
+
           # Extract addon slug from branch name
           # Format: dependabot/docker/{addon-slug}/{image-parts}/{version}
           ADDON_SLUG=$(echo "$BRANCH_NAME" | cut -d'/' -f3)
           echo "slug=$ADDON_SLUG" >> "$GITHUB_OUTPUT"
+
+          # For manual triggers, extract image name and versions from branch
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # Parse versions from branch name pattern
+            # Branch format: dependabot/docker/addon-slug/image-parts/old-version-to-new-version
+            # Or: dependabot/docker/addon-slug/image-parts-old-version
+            BRANCH_PARTS=$(echo "$BRANCH_NAME" | cut -d'/' -f4-)
+
+            # Try to extract image name from manifest.json based on addon
+            ADDON_CONFIG=$(jq -r ".[] | select(.slug==\"$ADDON_SLUG\")" manifest.json)
+            if [ -n "$ADDON_CONFIG" ] && [ "$ADDON_CONFIG" != "null" ]; then
+              DOCKER_IMAGE=$(echo "$ADDON_CONFIG" | jq -r '.docker_image // empty')
+              if [ -n "$DOCKER_IMAGE" ]; then
+                echo "image_name=$DOCKER_IMAGE" >> "$GITHUB_OUTPUT"
+              fi
+            fi
+
+            # Parse versions from branch name
+            # Look for pattern: something-X.Y.Z or something-vX.Y.Z
+            if [[ "$BRANCH_PARTS" =~ ([0-9]+\.[0-9]+\.[0-9]+[^-]*)-to-([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+              OLD_VERSION="${BASH_REMATCH[1]}"
+              NEW_VERSION="${BASH_REMATCH[2]}"
+            elif [[ "$BRANCH_PARTS" =~ ([v]?[0-9]+\.[0-9]+\.[0-9]+[^-]*) ]]; then
+              # Single version in branch - likely the new version
+              NEW_VERSION="${BASH_REMATCH[1]}"
+              # Get old version from current config.yaml
+              if [ -d "$ADDON_SLUG" ] && [ -f "$ADDON_SLUG/config.yaml" ]; then
+                OLD_VERSION=$(grep '^version:' "$ADDON_SLUG/config.yaml" | awk '{print $2}' | tr -d '"')
+              fi
+            fi
+
+            echo "old_version=$OLD_VERSION" >> "$GITHUB_OUTPUT"
+            echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          fi
 
           # Get project URL from manifest.json
           if [ ! -f manifest.json ]; then
@@ -70,13 +141,13 @@ jobs:
         id: diff
         if: steps.addon.outputs.skip != 'true'
         env:
-          OLD_VERSION: ${{ steps.metadata.outputs.previous-version }}
-          NEW_VERSION: ${{ steps.metadata.outputs.new-version }}
+          OLD_VERSION: ${{ github.event_name == 'workflow_dispatch' && steps.addon.outputs.old_version || steps.metadata.outputs.previous-version }}
+          NEW_VERSION: ${{ github.event_name == 'workflow_dispatch' && steps.addon.outputs.new_version || steps.metadata.outputs.new-version }}
           REPO_PATH: ${{ steps.addon.outputs.repo_path }}
         run: |
           if [ -z "$OLD_VERSION" ] || [ -z "$NEW_VERSION" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
-            echo "::error::Missing version information"
+            echo "::error::Missing version information (old: $OLD_VERSION, new: $NEW_VERSION)"
             exit 0
           fi
 
@@ -129,13 +200,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           ADDON_SLUG: ${{ steps.addon.outputs.slug }}
-          IMAGE_NAME: ${{ steps.metadata.outputs.dependency-names }}
-          OLD_VERSION: ${{ steps.metadata.outputs.previous-version }}
-          NEW_VERSION: ${{ steps.metadata.outputs.new-version }}
-          UPDATE_TYPE: ${{ steps.metadata.outputs.update-type }}
+          IMAGE_NAME: ${{ github.event_name == 'workflow_dispatch' && steps.addon.outputs.image_name || steps.metadata.outputs.dependency-names }}
+          OLD_VERSION: ${{ github.event_name == 'workflow_dispatch' && steps.addon.outputs.old_version || steps.metadata.outputs.previous-version }}
+          NEW_VERSION: ${{ github.event_name == 'workflow_dispatch' && steps.addon.outputs.new_version || steps.metadata.outputs.new-version }}
+          UPDATE_TYPE: ${{ steps.metadata.outputs.update-type || 'unknown' }}
           COMPARE_URL: ${{ steps.diff.outputs.compare_url }}
           DIFF_FILE: ${{ steps.diff.outputs.diff_file }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_NUMBER: ${{ github.event_name == 'workflow_dispatch' && inputs.pr_number || github.event.pull_request.number }}
         run: |
           # Read diff content
           DIFF_CONTENT=$(cat "$DIFF_FILE")
