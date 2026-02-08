@@ -44,9 +44,11 @@ jobs:
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             addons_value="${{ steps.find_all.outputs.addons }}"
-            addons_list_value="${{ steps.find_all.outputs.addons_list }}"
-            echo "DEBUG: addons_value=[$addons_value]"
-            echo "DEBUG: addons_list_value=[$addons_list_value]"
+            # The action outputs invalid JSON like [cleanuparr, huntarr, profilarr, romm]
+            # We need to convert it to valid JSON using jq
+            raw_list="${{ steps.find_all.outputs.addons_list }}"
+            # Remove outer brackets, split by comma, and create proper JSON
+            addons_list_value=$(echo "$raw_list" | sed 's/^\[//;s/\]$//' | tr ',' '\n' | jq -R 'split("\n") | map(select(length > 0))')
             echo "addons=$addons_value" >> "$GITHUB_OUTPUT"
             {
               echo "addons_list<<EOF"
