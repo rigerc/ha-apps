@@ -14,7 +14,7 @@ arch:
   - amd64
 init: false
 startup: services
-webui: http://[HOST]:[PORT]
+webui: http://[HOST]:[PORT:11011]
 boot: manual
 ports:
   11011/tcp: 11011
