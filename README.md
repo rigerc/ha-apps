@@ -57,7 +57,7 @@ content not actively searched through RSS feeds.
 ###  <img src="https://raw.githubusercontent.com/rigerc/ha-apps/main/profilarr/icon.png" width="16" height="16" style="margin-right: 4px;">[Profilarr](./profilarr/)
 App for [Profilarr project](https://github.com/Dictionarry-Hub/profilarr).
 
-[![Version](https://img.shields.io/badge/ha%20app%20version-1.0.0-blue?style=flat-square&logo=homeassistant&logoColor=white)](https://github.com/rigerc/ha-apps/tree/main/profilarr)
+[![Version](https://img.shields.io/badge/ha%20app%20version-1.1.0-blue?style=flat-square&logo=homeassistant&logoColor=white)](https://github.com/rigerc/ha-apps/tree/main/profilarr)
 &nbsp; [![Current](https://img.shields.io/badge/image%20version-v1.1.3-blue?style=flat-square&logo=docker&logoColor=white)](https://github.com/Dictionarry-Hub/profilarr)&nbsp; [![Out of Date](https://img.shields.io/badge/upstream-out%20of%20date-yellow?style=flat-square)](https://github.com/Dictionarry-Hub/profilarr)
 &nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational?style=flat-square&logo=linux&logoColor=white)]()
 &nbsp; [![amd64](https://img.shields.io/badge/platform-amd64-informational?style=flat-square&logo=linux&logoColor=white)]()
