@@ -176,7 +176,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        addon: ${{ fromJSON(needs.find.outputs.addons) }}
+        addon: ${{ fromJSON(needs.find.outputs.addons_list) }}
     steps:
       - name: ⤵️ Check out the repository
         uses: actions/checkout@v6
@@ -195,7 +195,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        addon: ${{ fromJSON(needs.find.outputs.addons) }}
+        addon: ${{ fromJSON(needs.find.outputs.addons_list) }}
     steps:
       - name: ⤵️ Check out the repository
         uses: actions/checkout@v6
