@@ -31,7 +31,8 @@
       "mcp__github__list_tags",
       "mcp__github__list_commits",
       "Bash(gh workflow run:*)",
-      "Bash(.github/scripts/manifest.sh:*)"
+      "Bash(.github/scripts/manifest.sh:*)",
+      "Bash(gh run watch:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
