@@ -44,7 +44,11 @@ jobs:
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "addons=${{ steps.find_all.outputs.addons }}" >> "$GITHUB_OUTPUT"
-            echo "addons_list=${{ steps.find_all.outputs.addons_list }}" >> "$GITHUB_OUTPUT"
+            {
+              echo "addons_list<<EOF"
+              echo "${{ steps.find_all.outputs.addons_list }}"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
           else
             # Output both CSV and JSON formats
             addons="${{ steps.changed_addons.outputs.addons }}"
