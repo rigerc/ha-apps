@@ -43,10 +43,12 @@ jobs:
         id: addons
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "addons=${{ steps.find_all.outputs.addons }}" >> "$GITHUB_OUTPUT"
+            addons_value="${{ steps.find_all.outputs.addons }}"
+            addons_list_value="${{ steps.find_all.outputs.addons_list }}"
+            echo "addons=$addons_value" >> "$GITHUB_OUTPUT"
             {
               echo "addons_list<<EOF"
-              echo "${{ steps.find_all.outputs.addons_list }}"
+              echo "$addons_list_value"
               echo "EOF"
             } >> "$GITHUB_OUTPUT"
           else
