@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.1](https://github.com/rigerc/ha-apps/compare/romm-1.1.0...romm-1.1.1) (2026-02-08)
+
+
+### 🐛 Bug Fixes
+
+* **templates:** update icon paths to use full repo URLs ([0531723](https://github.com/rigerc/ha-apps/commit/05317236cb7d10a2a91c0e288191c2ffeae0b7a3))
+
+
+### 🧰 Maintenance
+
+* update manifest and configs [skip ci] ([9676e3e](https://github.com/rigerc/ha-apps/commit/9676e3e16536827a90b99423fa91ba3a2aa02e04))
+
 ## [1.1.0](https://github.com/rigerc/ha-apps/compare/romm-1.0.0...romm-1.1.0) (2026-02-07)
 
 
