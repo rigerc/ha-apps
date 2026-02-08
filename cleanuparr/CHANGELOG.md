@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.1](https://github.com/rigerc/ha-apps/compare/cleanuparr-1.1.0...cleanuparr-1.1.1) (2026-02-08)
+
+
+### 🐛 Bug Fixes
+
+* **config:** fix config option ([5900fa3](https://github.com/rigerc/ha-apps/commit/5900fa38268b6878deac3196804305e94c41980b))
+
+
+### 🧰 Maintenance
+
+* update manifest and configs [skip ci] ([c363728](https://github.com/rigerc/ha-apps/commit/c36372899e228c6edcf88b80f85d833a9ac8f523))
+
 ## [1.1.0](https://github.com/rigerc/ha-apps/compare/cleanuparr-1.0.0...cleanuparr-1.1.0) (2026-02-07)
 
 
