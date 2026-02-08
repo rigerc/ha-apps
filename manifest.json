@@ -18,7 +18,7 @@
   },
   {
     "slug": "huntarr",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "name": "Huntarr",
     "description": "Automatic missing content hunter for Sonarr, Radarr, Lidarr, Readarr, and\nWhisparr. Continuously searches your media libraries for missing content\nand quality upgrades below your cutoff. Runs continuously while being gentle\non your indexers, filling the gap that *arr apps don't cover by finding\ncontent not actively searched through RSS feeds.",
     "arch": [

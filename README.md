@@ -43,7 +43,7 @@ notification support.
 ###  <img src="https://raw.githubusercontent.com/rigerc/ha-apps/main/huntarr/icon.png" width="16" height="16" style="margin-right: 4px;">[Huntarr](./huntarr/)
 App for [Huntarr project](https://github.com/plexguide/Huntarr.io).
 
-[![Version](https://img.shields.io/badge/ha%20app%20version-1.0.0-blue?style=flat-square&logo=homeassistant&logoColor=white)](https://github.com/rigerc/ha-apps/tree/main/huntarr)
+[![Version](https://img.shields.io/badge/ha%20app%20version-1.1.0-blue?style=flat-square&logo=homeassistant&logoColor=white)](https://github.com/rigerc/ha-apps/tree/main/huntarr)
 &nbsp; [![Current](https://img.shields.io/badge/image%20version-9.1.1-blue?style=flat-square&logo=docker&logoColor=white)](https://github.com/plexguide/Huntarr.io)&nbsp; [![Out of Date](https://img.shields.io/badge/upstream-out%20of%20date-yellow?style=flat-square)](https://github.com/plexguide/Huntarr.io)
 &nbsp; [![amd64](https://img.shields.io/badge/platform-amd64-informational?style=flat-square&logo=linux&logoColor=white)]()
 &nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational?style=flat-square&logo=linux&logoColor=white)]()
