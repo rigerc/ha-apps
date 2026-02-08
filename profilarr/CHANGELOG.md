@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/rigerc/ha-apps/compare/profilarr-1.1.0...profilarr-1.1.1) (2026-02-08)
+
+
+### 🧰 Maintenance
+
+* update manifest and configs [skip ci] ([1e7aeb8](https://github.com/rigerc/ha-apps/commit/1e7aeb8884d12d7ee9a33e1e0160a9dd5d22245b))
+
 ## [1.1.0](https://github.com/rigerc/ha-apps/compare/profilarr-1.0.0...profilarr-1.1.0) (2026-02-08)
 
 
