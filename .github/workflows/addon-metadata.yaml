@@ -63,11 +63,22 @@ jobs:
           ./.github/scripts/manifest.sh -d -r -c
         continue-on-error: true
 
+      - name: Check if release-please files changed
+        id: check-release-files
+        run: |
+          if git diff --quiet ".github/.release-please-manifest.json" ".github/release-please-config.json"; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Commit manifest and config changes
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
           # Note: Modified files (READMEs, manifest.json, dependabot.yml) are excluded
           # in release-please-config.json to prevent triggering new release PRs.
           # [skip ci] prevents other CI workflows from running unnecessarily.
-          commit_message: "chore: update manifest and configs [skip ci]"
+          # We skip [skip ci] when release-please files change to allow versioning to run.
+          commit_message: |
+            chore: update manifest and configs${{ steps.check-release-files.outputs.changed == 'false' && ' [skip ci]' || '' }}
           skip_checkout: true
