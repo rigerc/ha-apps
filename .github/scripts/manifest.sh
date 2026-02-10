@@ -193,6 +193,42 @@ check_gomplate() {
 }
 
 #######################################
+# Check if jq is installed
+# Globals:
+#   None
+# Arguments:
+#   None
+# Returns:
+#   0 if jq is available, 1 otherwise
+#######################################
+check_jq() {
+  if ! command -v jq &>/dev/null; then
+    err "Error: jq is required but not installed"
+    err "Install from: https://github.com/stedolan/jq"
+    return 1
+  fi
+  return 0
+}
+
+#######################################
+# Check if yq is installed
+# Globals:
+#   None
+# Arguments:
+#   None
+# Returns:
+#   0 if yq is available, 1 otherwise
+#######################################
+check_yq() {
+  if ! command -v yq &>/dev/null; then
+    err "Error: yq is required but not installed"
+    err "Install from: https://github.com/mikefarah/yq"
+    return 1
+  fi
+  return 0
+}
+
+#######################################
 # Get repository info from git remote
 # Globals:
 #   None
@@ -581,11 +617,7 @@ update_dependabot() {
   fi
 
   # Check yq is available
-  if ! command -v yq &>/dev/null; then
-    err "Error: yq is required but not installed"
-    err "Install from: https://github.com/mikefarah/yq"
-    return 1
-  fi
+  check_yq || return 1
 
   # Extract all slugs from manifest and format as "/slug"
   local -a directories=()
@@ -650,11 +682,7 @@ update_release_please() {
   fi
 
   # Check yq is available
-  if ! command -v yq &>/dev/null; then
-    err "Error: yq is required but not installed"
-    err "Install from: https://github.com/mikefarah/yq"
-    return 1
-  fi
+  check_yq || return 1
 
   # Extract all slugs from manifest and format as "slug/**"
   local -a paths=()
@@ -717,10 +745,7 @@ update_release_please_manifest() {
     return 1
   fi
 
-  if ! command -v jq &>/dev/null; then
-    err "Error: jq is required but not installed"
-    return 1
-  fi
+  check_jq || return 1
 
   echo "Updating .release-please-manifest.json..." >&2
 
@@ -765,10 +790,7 @@ update_release_please_config() {
     return 1
   fi
 
-  if ! command -v jq &>/dev/null; then
-    err "Error: jq is required but not installed"
-    return 1
-  fi
+  check_jq || return 1
 
   echo "Updating release-please-config.json packages..." >&2
 
@@ -844,11 +866,7 @@ update_ci_workflow() {
   fi
 
   # Check yq is available
-  if ! command -v yq &>/dev/null; then
-    err "Error: yq is required but not installed"
-    err "Install from: https://github.com/mikefarah/yq"
-    return 1
-  fi
+  check_yq || return 1
 
   # Extract all slugs from manifest and format as "slug/**"
   local -a paths=()
