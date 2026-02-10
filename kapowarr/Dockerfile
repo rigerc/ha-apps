@@ -42,3 +42,5 @@ ARG BUILD_ARCH
 LABEL \
   io.hass.type="addon" \
   io.hass.arch="${BUILD_ARCH}"
+
+  
