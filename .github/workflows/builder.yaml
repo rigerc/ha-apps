@@ -143,13 +143,28 @@ jobs:
       - name: 🏥 Start container for healthcheck
         if: steps.check.outputs.build_arch == 'true'
         run: |
-          LOCAL_IMAGE="test-${{ matrix.addon }}-${{ matrix.arch }}"
+          # Find the newly built image by matching repo/image and arch, sorted by creation time
+          BUILT_IMAGE=$(docker images \
+            --filter "reference=ghcr.io/${{ github.repository_owner }}/*" \
+            --format "{{.Repository}}:{{.Tag}} {{.CreatedAt}}" \
+            | grep "${{ steps.check.outputs.image }}" \
+            | grep -E "${{ matrix.arch }}|amd64|aarch64" \
+            | sort -k2 -r | head -n1 | awk '{print $1}')
+
+          if [[ -z "$BUILT_IMAGE" ]]; then
+            echo "ERROR: Could not find built image for ${{ matrix.addon }} (${{ matrix.arch }})"
+            echo "Available images:"
+            docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.CreatedAt}}" | head -n20
+            exit 1
+          fi
+
+          echo "Found built image: $BUILT_IMAGE"
           mkdir -p /tmp/${{ matrix.addon }}-data
           docker run -d \
             --name "${{ matrix.addon }}-${{ matrix.arch }}-healthcheck" \
             -e "TZ=UTC" \
             -v "/tmp/${{ matrix.addon }}-data:/data" \
-            "$LOCAL_IMAGE"
+            "$BUILT_IMAGE"
       - name: 🩺 Wait for healthcheck
         id: healthcheck
         if: steps.check.outputs.build_arch == 'true'

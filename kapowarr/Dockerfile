@@ -2,7 +2,7 @@ ARG BUILD_FROM
 ARG BUILD_VERSION
 
 # Stage 1: Copy application from upstream image
-FROM mrcas/kapowarr:V1.2.0 AS app-source
+FROM mrcas/kapowarr:v1.2.0 AS app-source
 
 # Stage 2: Build on Home Assistant base
 FROM ${BUILD_FROM}
