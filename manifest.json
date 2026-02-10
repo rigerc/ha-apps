@@ -34,6 +34,23 @@
     "is_up_to_date": false
   },
   {
+    "slug": "kapowarr",
+    "version": "1.0.0",
+    "name": "Kapowarr",
+    "description": "Comic book library manager. Build and manage a digital library of comics\nwith automated downloading, renaming, and conversion. Supports downloading\ndirectly or via services like MediaFire and Mega. Get metadata from\nComic Vine and manage your collection with the recognizable *arr UI.",
+    "arch": [
+      "aarch64",
+      "amd64"
+    ],
+    "image": "mrcas/kapowarr",
+    "tag": "v1.2.0",
+    "latest_tag": "V1.2.0",
+    "project": "https://github.com/Casvt/Kapowarr",
+    "has_icon": true,
+    "ingress": true,
+    "is_up_to_date": false
+  },
+  {
     "slug": "profilarr",
     "version": "1.1.0",
     "name": "Profilarr",

@@ -14,6 +14,56 @@
         "panel": "new"
       },
       "problemMatcher": []
+    },
+    {
+      "label": "Generate Manifest",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        ".github/scripts/manifest.sh"
+      ],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Generate Manifest + README",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        ".github/scripts/manifest.sh",
+        "-g"
+      ],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Generate Manifest + Update All",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        ".github/scripts/manifest.sh",
+        "-g",
+        "-d",
+        "-r",
+        "-c"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
     }
   ]
 }

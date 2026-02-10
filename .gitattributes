@@ -4,3 +4,10 @@ README.md           linguist-generated merge=ours
 */README.md         linguist-generated merge=ours
 manifest.json       linguist-generated merge=ours
 */CHANGELOG.md      linguist-generated merge=ours
+
+# Set the default behavior, in case people don't have core.autocrlf set.
+* text eolf=lf
+
+# Denote all files that are truly binary and should not be modified.
+*.png binary
+*.jpg binary

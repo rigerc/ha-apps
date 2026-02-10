@@ -107,6 +107,44 @@ get_github_release_latest() {
 }
 
 #######################################
+# Check if GitHub repo has a release with tag matching {slug}-*
+# Globals:
+#   None
+# Arguments:
+#   project_url - GitHub project URL (e.g., "https://github.com/owner/repo")
+#   slug - Add-on slug to match in tag pattern (e.g., "romm")
+# Returns:
+#   "true" if release with matching tag exists, "false" otherwise
+#######################################
+check_github_has_release_for_slug() {
+  local project_url="$1"
+  local slug="$2"
+  local owner_repo=""
+
+  # Parse owner/repo from GitHub URL
+  owner_repo="${project_url#*://github.com/}"
+  owner_repo="${owner_repo#*github.com/}"
+  owner_repo="${owner_repo%.git}"
+
+  # Validate we got owner/repo format
+  if [[ ! "${owner_repo}" =~ ^[^/]+/[^/]+$ ]]; then
+    echo "false"
+    return 1
+  fi
+
+  # Query GitHub Releases API for all releases, check if any tag matches {slug}-*
+  local matching_tags
+  matching_tags="$(curl -s "https://api.github.com/repos/${owner_repo}/releases?per_page=100" \
+    | jq -r --arg slug "${slug}" '[.[] | select(.tag_name | startswith($slug + "-"))] | length' 2>/dev/null || echo "0")"
+
+  if [[ "${matching_tags}" -gt 0 ]]; then
+    echo "true"
+  else
+    echo "false"
+  fi
+}
+
+#######################################
 # Get latest version from registry based on image prefix
 # Globals:
 #   None
@@ -325,7 +363,7 @@ Generate manifest.json for Home Assistant addons.
 OPTIONS:
   -g, --generate-readme         Generate README.md files using gomplate templates
   -d, --update-dependabot       Update .github/dependabot.yml with all found slugs
-  -r, --update-release-please   Update .github/workflows/release-please.yaml with all found slugs
+  -r, --update-release-please   Update .github/workflows/release-please.yaml and release-please-config.json
   -c, --update-ci               Update .github/workflows/ci.yaml with all found slugs
   -h, --help                    Display this help message
 
@@ -333,9 +371,9 @@ EXAMPLES:
   $(basename "${BASH_SOURCE[0]}")                      # Generate manifest.json only
   $(basename "${BASH_SOURCE[0]}") -g                  # Generate manifest.json and README files
   $(basename "${BASH_SOURCE[0]}") -d                  # Generate manifest.json and update dependabot.yml
-  $(basename "${BASH_SOURCE[0]}") -r                  # Generate manifest.json and update release-please.yaml
+  $(basename "${BASH_SOURCE[0]}") -r                  # Generate manifest.json and update release-please configs
   $(basename "${BASH_SOURCE[0]}") -c                  # Generate manifest.json and update ci.yaml
-  $(basename "${BASH_SOURCE[0]}") -d -r -c            # Update dependabot.yml, release-please.yaml, and ci.yaml
+  $(basename "${BASH_SOURCE[0]}") -d -r -c            # Update dependabot.yml, release-please configs, and ci.yaml
 
 EOF
 }
@@ -482,6 +520,14 @@ extract_addon_info() {
     fi
   fi
 
+  # Check if add-on has a public release on GitHub (tag matching {slug}-*)
+  has_public_release="false"
+  if [[ -n "${project}" && "${project}" == *github.com/* ]]; then
+    echo "Checking for public releases with tag '${slug}-*'..." >&2
+    has_public_release="$(check_github_has_release_for_slug "${project}" "${slug}")"
+    echo "  Has public release: ${has_public_release}" >&2
+  fi
+
   # Output JSON object for this addon
   jq -n \
     --arg slug "${slug}" \
@@ -496,6 +542,7 @@ extract_addon_info() {
     --argjson has_icon "${has_icon}" \
     --argjson ingress "${ingress}" \
     --argjson is_up_to_date "${is_up_to_date}" \
+    --argjson has_public_release "${has_public_release}" \
     '{
       slug: $slug,
       version: $version,
@@ -508,7 +555,8 @@ extract_addon_info() {
       project: $project,
       has_icon: $has_icon,
       ingress: $ingress,
-      is_up_to_date: $is_up_to_date
+      is_up_to_date: $is_up_to_date,
+      has_public_release: $has_public_release
     }'
 }
 
@@ -651,6 +699,83 @@ update_release_please() {
   fi
 
   echo "Updated ${release_please_file}" >&2
+
+  update_release_please_config
+}
+
+#######################################
+# Update release-please-config.json with all found add-ons
+# Globals:
+#   PROJECT_ROOT
+#   MANIFEST_OUTPUT
+# Arguments:
+#   None
+# Returns:
+#   0 on success, 1 on error
+#######################################
+update_release_please_config() {
+  local config_file="${PROJECT_ROOT}/.github/release-please-config.json"
+
+  if [[ ! -f "${config_file}" ]]; then
+    err "Error: release-please-config.json not found: ${config_file}"
+    return 1
+  fi
+
+  if [[ ! -f "${MANIFEST_OUTPUT}" ]]; then
+    err "Error: manifest.json not found. Generate it first."
+    return 1
+  fi
+
+  if ! command -v jq &>/dev/null; then
+    err "Error: jq is required but not installed"
+    return 1
+  fi
+
+  echo "Updating release-please-config.json packages..." >&2
+
+  local config
+  config="$(cat "${config_file}")"
+
+  local new_packages="{}"
+  local slug
+  local name
+  local package_entry
+
+  while IFS= read -r addon; do
+    slug="$(echo "${addon}" | jq -r '.slug')"
+    name="$(echo "${addon}" | jq -r '.name')"
+
+    package_entry="$(jq -n \
+      --arg name "${name}" \
+      --arg slug "${slug}" \
+      '{
+        "release-type": "simple",
+        "package-name": $name,
+        "component": $slug,
+        "changelog-path": "CHANGELOG.md",
+        "extra-files": [
+          {
+            "type": "yaml",
+            "path": "config.yaml",
+            "jsonpath": "$.version"
+          },
+          {
+            "type": "yaml",
+            "path": "build.yaml",
+            "jsonpath": "$.labels['\''org.opencontainers.image.version'\'']"
+          }
+        ]
+      }')"
+
+    new_packages="$(echo "${new_packages}" | jq --arg slug "${slug}" --argjson entry "${package_entry}" '. + {($slug): $entry}')"
+  done < <(jq -c '.[]' "${MANIFEST_OUTPUT}" | sort -t'"' -k4)
+
+  local updated_config
+  updated_config="$(echo "${config}" | jq --argjson packages "${new_packages}" '.packages = $packages')"
+
+  echo "${updated_config}" | jq '.' > "${config_file}"
+
+  echo "Updated ${config_file}" >&2
   return 0
 }
 
