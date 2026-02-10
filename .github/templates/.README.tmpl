@@ -32,7 +32,7 @@ Click on the above button or follow the steps below:
 ## Available Add-ons
 
 {{- range $addons }}
-{{- if .has_public_release }}
+{{- if .last_release }}
 ### {{ template "icon" (dict "addon" . "size" "16" "repo" $repo) }}[{{ .name }}](./{{ .slug }}/)
 {{ template "project-link" (dict "addon" .) }}
 
