@@ -54,6 +54,19 @@ Whisparr. Continuously searches your media libraries for missing content
 and quality upgrades below your cutoff. Runs continuously while being gentle
 on your indexers, filling the gap that *arr apps don't cover by finding
 content not actively searched through RSS feeds.
+###  <img src="https://raw.githubusercontent.com/rigerc/ha-apps/main/kapowarr/icon.png" width="16" height="16" style="margin-right: 4px;">[Kapowarr](./kapowarr/)
+App for [Kapowarr project](https://github.com/Casvt/Kapowarr).
+
+[![Version](https://img.shields.io/badge/ha%20app%20version-1.1.0-blue?style=flat-square&logo=homeassistant&logoColor=white)](https://github.com/rigerc/ha-apps/tree/main/kapowarr)
+&nbsp; [![Current](https://img.shields.io/badge/image%20version-v1.2.0-blue?style=flat-square&logo=docker&logoColor=white)](https://github.com/Casvt/Kapowarr)&nbsp; [![Out of Date](https://img.shields.io/badge/upstream-out%20of%20date-yellow?style=flat-square)](https://github.com/Casvt/Kapowarr)
+&nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational?style=flat-square&logo=linux&logoColor=white)]()
+&nbsp; [![amd64](https://img.shields.io/badge/platform-amd64-informational?style=flat-square&logo=linux&logoColor=white)]()
+&nbsp; [![Ingress](https://img.shields.io/badge/ingress-enabled-green?style=flat-square&logo=homeassistant&logoColor=white)]()
+
+Comic book library manager. Build and manage a digital library of comics
+with automated downloading, renaming, and conversion. Supports downloading
+directly or via services like MediaFire and Mega. Get metadata from
+Comic Vine and manage your collection with the recognizable *arr UI.
 ###  <img src="https://raw.githubusercontent.com/rigerc/ha-apps/main/profilarr/icon.png" width="16" height="16" style="margin-right: 4px;">[Profilarr](./profilarr/)
 App for [Profilarr project](https://github.com/Dictionarry-Hub/profilarr).
 
