@@ -6,6 +6,7 @@ on:
     paths:
       - "cleanuparr/**"
       - "huntarr/**"
+      - "kapowarr/**"
       - "profilarr/**"
       - "romm/**"
       - ".github/release-please-config.json"
