@@ -1,0 +1,12 @@
+#!/usr/bin/with-contenv bashio
+bashio::log.info "Starting Kapowarr..."
+
+cd /app || bashio::exit.nok "Could not change to /app directory"
+
+PORT=5656
+bashio::log.info "Kapowarr will listen on 0.0.0.0:${PORT}"
+
+export KAPOWARR_PORT=${PORT}
+export KAPOWARR_HOST=0.0.0.0
+
+exec python3 /app/Kapowarr.py

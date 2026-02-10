@@ -1,0 +1,14 @@
+build_from:
+  aarch64: ghcr.io/home-assistant/aarch64-base:3.21
+  amd64: ghcr.io/home-assistant/amd64-base:3.21
+labels:
+  project: https://github.com/Casvt/Kapowarr
+  maintainer: rigerc
+  org.opencontainers.image.authors: rigerc
+  org.opencontainers.image.licenses: GPL-3.0 License
+  org.opencontainers.image.title: 'Home Assistant Unofficial Add-on: Kapowarr'
+  org.opencontainers.image.description: Comic book library manager with *arr-style UI
+  org.opencontainers.image.source: https://github.com/rigerc/ha-apps/kapowarr
+  io.hass.upstream.image: mrcas/kapowarr
+  org.opencontainers.image.url: https://github.com/rigerc/ha-apps
+  org.opencontainers.image.documentation: https://github.com/rigerc/ha-apps/kapowarr/README.md
