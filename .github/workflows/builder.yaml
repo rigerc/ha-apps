@@ -143,12 +143,11 @@ jobs:
       - name: 🏥 Start container for healthcheck
         if: steps.check.outputs.build_arch == 'true'
         run: |
-          # Find the newly built image by matching repo/image and arch, sorted by creation time
+          # Find the newly built image by matching add-on name and architecture, sorted by creation time
+          # The builder may create oddly formatted image names, so we match on the add-on name
           BUILT_IMAGE=$(docker images \
-            --filter "reference=ghcr.io/${{ github.repository_owner }}/*" \
             --format "{{.Repository}}:{{.Tag}} {{.CreatedAt}}" \
-            | grep "${{ steps.check.outputs.image }}" \
-            | grep -E "${{ matrix.arch }}|amd64|aarch64" \
+            | grep -i "${{ matrix.addon }}" \
             | sort -k2 -r | head -n1 | awk '{print $1}')
 
           if [[ -z "$BUILT_IMAGE" ]]; then
