@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.3](https://github.com/rigerc/ha-apps/compare/kapowarr-1.1.2...kapowarr-1.1.3) (2026-02-10)
+
+
+### 🐛 Bug Fixes
+
+* **nginx:** add daemon off to nginx config ([82e0935](https://github.com/rigerc/ha-apps/commit/82e0935258e52122ab307a79c0f8fcd057a7cb7c))
+
+
+### 🧰 Maintenance
+
+* update manifest and configs [skip ci] ([e3bf456](https://github.com/rigerc/ha-apps/commit/e3bf456441f506fb4d995e71d1120160beb3e471))
+
 ## [1.1.2](https://github.com/rigerc/ha-apps/compare/kapowarr-1.1.1...kapowarr-1.1.2) (2026-02-10)
 
 
