@@ -11,7 +11,6 @@
   "prerelease": false,
   "release-search-depth": 100,
   "commit-search-depth": 200,
-  "initial-version": "1.0.0",
   "exclude-paths": [
     "*/README.md",
     "README.md",
