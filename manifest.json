@@ -60,11 +60,11 @@
       "amd64"
     ],
     "image": "rommapp/romm",
-    "tag": "4.6.0",
+    "tag": "4.6.1",
     "latest_tag": "4.6.1",
     "project": "https://github.com/rommapp/romm",
     "has_icon": true,
     "ingress": false,
-    "is_up_to_date": false
+    "is_up_to_date": true
   }
 ]

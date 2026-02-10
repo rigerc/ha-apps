@@ -1,21 +1,23 @@
 ARG BUILD_FROM
 ARG BUILD_VERSION
-FROM rommapp/romm:4.6.0 AS romm-base
+ARG BUILD_ARCH
+FROM rommapp/romm:4.6.1 AS romm-base
 FROM ${BUILD_FROM} AS final
 
+LABEL \
+  io.hass.type="addon" \
+  io.hass.arch="${BUILD_ARCH}"
 
 # Copy Python runtime from Romm image (ensures compatibility with venv)
-# This ensures we use the same Python version as the virtual environment
+# NOTE: The python3.13 path must be verified when bumping the upstream version
 COPY --from=romm-base /usr/local/bin/python* /usr/local/bin/
 COPY --from=romm-base /usr/local/lib/libpython* /usr/local/lib/
 COPY --from=romm-base /usr/local/lib/python3.13 /usr/local/lib/python3.13
 
 # Install runtime dependencies
-# - bash: Already in HA base, but ensure it's present
 # - mariadb-connector-c: MySQL/MariaDB client library
 # - libpq: PostgreSQL client library
 # - p7zip: 7zip archive support
-# - tzdata: Timezone data
 # - valkey: Redis-compatible in-memory data store (for background jobs)
 # - pcre2: PCRE library for nginx regex support
 # - zlib: Compression library (needed by Python and nginx)
@@ -28,11 +30,9 @@ COPY --from=romm-base /usr/local/lib/python3.13 /usr/local/lib/python3.13
 # - libbz2: bzip2 compression (needed by Python)
 # - xz-libs: LZMA compression (needed by Python)
 RUN apk add --no-cache \
-    bash \
     mariadb-connector-c \
     libpq \
     p7zip \
-    tzdata \
     libmagic \
     valkey \
     pcre2 \
@@ -61,30 +61,24 @@ COPY --from=romm-base /etc/nginx /tmp/nginx-etc
 COPY --from=romm-base /usr/lib/nginx /usr/lib/nginx
 COPY --from=romm-base /usr/sbin/nginx /usr/sbin/nginx
 
-# Move nginx config to final location and create required directories
-RUN mkdir -p /run/nginx && \
-    mkdir -p /var/log/nginx && \
-    mkdir -p /var/cache/nginx && \
-    mkdir -p /etc/nginx && \
+# Setup nginx and create required directories
+# NOTE: nginx user/group created because upstream nginx.conf contains "user nginx;" directive
+RUN mkdir -p /run/nginx /var/log/nginx /var/cache/nginx /etc/nginx /romm /redis-data && \
     cp -r /tmp/nginx-etc/* /etc/nginx/ && \
     rm -rf /tmp/nginx-etc && \
-    # Create nginx user/group only if they don't exist
+    chmod 755 /romm /redis-data && \
     if ! id nginx >/dev/null 2>&1; then \
         addgroup -S nginx && \
         adduser -S -D -H -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx; \
     fi
 
-# Create romm directory structure
-RUN mkdir -p /romm /redis-data && \
-    chmod 755 /romm /redis-data
-
 # Copy rootfs (s6 service scripts)
 COPY rootfs /
 
 # Set permissions
-RUN chmod a+x /etc/cont-init.d/*.sh \
-    && find /etc/services.d -type f -name "run" -exec chmod +x {} \; \
-    && find /etc/services.d -type f -name "finish" -exec chmod +x {} \;
+RUN find /etc/services.d -type f -name "run" -exec chmod +x {} \; && \
+    find /etc/services.d -type f -name "finish" -exec chmod +x {} \; && \
+    find /etc/cont-init.d -type f -exec chmod +x {} \;
 
 # Set environment for Python
 ENV PATH="/src/.venv/bin:${PATH}"
@@ -94,3 +88,6 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /romm
 EXPOSE 5999
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:5999/health || exit 1
