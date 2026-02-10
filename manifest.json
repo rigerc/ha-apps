@@ -15,7 +15,7 @@
     "has_icon": true,
     "ingress": false,
     "is_up_to_date": true,
-    "has_public_release": false
+    "last_release": "cleanuparr-1.1.0"
   },
   {
     "slug": "huntarr",
@@ -33,7 +33,7 @@
     "has_icon": true,
     "ingress": true,
     "is_up_to_date": false,
-    "has_public_release": false
+    "last_release": "huntarr-1.1.0"
   },
   {
     "slug": "kapowarr",
@@ -51,7 +51,7 @@
     "has_icon": true,
     "ingress": true,
     "is_up_to_date": false,
-    "has_public_release": false
+    "last_release": ""
   },
   {
     "slug": "profilarr",
@@ -69,7 +69,7 @@
     "has_icon": true,
     "ingress": true,
     "is_up_to_date": false,
-    "has_public_release": false
+    "last_release": "profilarr-1.1.0"
   },
   {
     "slug": "romm",
@@ -87,6 +87,6 @@
     "has_icon": true,
     "ingress": false,
     "is_up_to_date": true,
-    "has_public_release": false
+    "last_release": "romm-1.1.0"
   }
 ]
