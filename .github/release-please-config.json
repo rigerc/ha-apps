@@ -1,3 +1,4 @@
+
 {
   "separate-pull-requests": true,
   "pull-request-title-pattern": "chore(repo): 🚀 Release ${component} ${version}",
