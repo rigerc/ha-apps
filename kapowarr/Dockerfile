@@ -21,10 +21,8 @@ RUN apk add --no-cache \
     musl-dev \
     libffi-dev \
     rust \
-    cargo
-
-# Install Python dependencies from requirements.txt
-RUN pip3 install --no-cache-dir --break-system-packages -r /app/requirements.txt
+    cargo \
+    && pip3 install --no-cache-dir --break-system-packages -r /app/requirements.txt
 
 # Copy S6-overlay configuration
 COPY rootfs /
