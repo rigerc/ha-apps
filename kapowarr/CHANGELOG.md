@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.1](https://github.com/rigerc/ha-apps/compare/kapowarr-1.1.0...kapowarr-1.1.1) (2026-02-10)
+
+
+### 🐛 Bug Fixes
+
+* **Dockerfile:** add build dependencies and fixes ([c8385d2](https://github.com/rigerc/ha-apps/commit/c8385d294f86cf7fa38e2f2f8c5454260eb65625))
+* **Dockerfile:** combine cargo and pip install into single RUN command ([72a9525](https://github.com/rigerc/ha-apps/commit/72a95251a9e92141d92dd8bb23c97343c638db01))
+
+
+### 🧰 Maintenance
+
+* update manifest and configs [skip ci] ([4db8fb9](https://github.com/rigerc/ha-apps/commit/4db8fb96ce5e300b8d2327f4274acaf05923c3ae))
+
 ## [1.1.0](https://github.com/rigerc/ha-apps/compare/kapowarr-1.0.0...kapowarr-1.1.0) (2026-02-10)
 
 
