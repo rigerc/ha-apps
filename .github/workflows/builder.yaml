@@ -140,3 +140,41 @@ jobs:
             --image "${{ steps.check.outputs.image }}" \
             --docker-hub "ghcr.io/${{ github.repository_owner }}" \
             --addon
+      - name: 🏥 Start container for healthcheck
+        if: steps.check.outputs.build_arch == 'true'
+        run: |
+          LOCAL_IMAGE="test-${{ matrix.addon }}-${{ matrix.arch }}"
+          mkdir -p /tmp/${{ matrix.addon }}-data
+          docker run -d \
+            --name "${{ matrix.addon }}-${{ matrix.arch }}-healthcheck" \
+            -e "TZ=UTC" \
+            -v "/tmp/${{ matrix.addon }}-data:/data" \
+            "$LOCAL_IMAGE"
+      - name: 🩺 Wait for healthcheck
+        id: healthcheck
+        if: steps.check.outputs.build_arch == 'true'
+        uses: stringbean/docker-healthcheck-action@v3.0.0
+        with:
+          container: ${{ matrix.addon }}-${{ matrix.arch }}-healthcheck
+          wait-time: 120
+          require-status: running
+          require-healthy: true
+        continue-on-error: true
+      - name: 📊 Healthcheck status
+        if: always() && steps.check.outputs.build_arch == 'true'
+        run: |
+          {
+            echo "## Healthcheck: ${{ matrix.addon }} (${{ matrix.arch }})"
+            echo "- Status: \`${{ steps.healthcheck.outputs.status }}\`"
+            echo "- Healthy: \`${{ steps.healthcheck.outputs.healthy }}\`"
+            if [ "${{ steps.healthcheck.outputs.healthy }}" != "true" ]; then
+              echo "### Container Logs"
+              echo "\`\`\`"
+              docker logs "${{ matrix.addon }}-${{ matrix.arch }}-healthcheck" 2>&1 || true
+              echo "\`\`\`"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: 🧹 Cleanup healthcheck container
+        if: always() && steps.check.outputs.build_arch == 'true'
+        run: |
+          docker rm -f "${{ matrix.addon }}-${{ matrix.arch }}-healthcheck" || true
