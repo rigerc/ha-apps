@@ -538,7 +538,13 @@ extract_addon_info() {
       current_clean="${tag#v}"
       latest_clean="${latest_tag#v}"
 
+      # Use version-aware sort for comparison
+      highest_version=$(printf '%s\n' "${current_clean}" "${latest_clean}" | sort -V | tail -n 1)
+
       if [[ "${current_clean}" == "${latest_clean}" ]]; then
+        is_up_to_date="true"
+      elif [[ "${current_clean}" == "${highest_version}" ]]; then
+        # Current version is newer than latest_tag
         is_up_to_date="true"
       else
         is_up_to_date="false"

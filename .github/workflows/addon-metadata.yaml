@@ -12,6 +12,10 @@ on:
       - "*/Dockerfile"
       - ".github/templates/**"
       - ".github/scripts/manifest.sh"
+      - "!manifest.json"
+      - "!.github/dependabot.yml"
+      - "!.github/.release-please-manifest.json"
+      - "!*/README.md"
 
   schedule:
     - cron: '0 6 * * 2'  # Tuesdays at 06:00 UTC
@@ -20,7 +24,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: addon-metadata-${{ github.repository }}-main
+  group: ${{ github.workflow }}-${{ github.repository }}-${{ github.run_id }}
   cancel-in-progress: true
 
 jobs:
@@ -51,17 +55,14 @@ jobs:
       - name: Generate manifest
         run: |
           ./.github/scripts/manifest.sh
-        continue-on-error: true
 
       - name: Generate READMEs
         run: |
           ./.github/scripts/manifest.sh -g
-        continue-on-error: true
 
       - name: Update dependabot.yml, release-please.yaml, and ci.yaml
         run: |
           ./.github/scripts/manifest.sh -d -r -c
-        continue-on-error: true
 
       - name: Check if release-please files changed
         id: check-release-files
@@ -81,4 +82,7 @@ jobs:
           # We skip [skip ci] when release-please files change to allow versioning to run.
           commit_message: |
             chore: update manifest and configs${{ steps.check-release-files.outputs.changed == 'false' && ' [skip ci]' || '' }}
+          commit_user_name: github-actions[bot]
+          commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com
+          file_pattern: 'manifest.json */README.md .github/dependabot.yml .github/workflows/ci.yaml .github/workflows/release-please.yaml .github/release-please-config.json .github/.release-please-manifest.json'
           skip_checkout: true
