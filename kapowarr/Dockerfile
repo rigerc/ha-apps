@@ -10,14 +10,21 @@ FROM ${BUILD_FROM}
 # Copy application from upstream
 COPY --from=app-source /app /app
 
-# Install runtime dependencies (Alpine)
+# Install runtime and build dependencies
+# Build dependencies needed for cryptography (Rust package)
 RUN apk add --no-cache \
-    python3 \
-    py3-pip \
     bash \
     tzdata \
     curl \
-    nginx
+    nginx \
+    gcc \
+    musl-dev \
+    libffi-dev \
+    rust \
+    cargo
+
+# Install Python dependencies from requirements.txt
+RUN pip3 install --no-cache-dir --break-system-packages -r /app/requirements.txt
 
 # Copy S6-overlay configuration
 COPY rootfs /

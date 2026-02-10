@@ -14,13 +14,15 @@ init: false
 startup: services
 boot: manual
 ingress: true
-#ingress_port: 8099
+ingress_port: 8099
 panel_icon: mdi:book-open-page-variant
 map:
   - share:rw
   - addon_config:rw
 options:
   log_level: info
+  timezone: UTC
 schema:
   log_level: list(trace|debug|info|warning|error)
+  timezone: str
 image: ghcr.io/rigerc/ha-apps-kapowarr-{arch}

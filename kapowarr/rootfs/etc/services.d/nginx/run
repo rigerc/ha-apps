@@ -1,3 +1,29 @@
-#!/usr/bin/execlineb -P
-with-contenv
-nginx -g "daemon off;"
+#!/usr/bin/with-contenv bashio
+# ==============================================================================
+# Nginx service run script for Kapowarr
+# s6-overlay v2: This script starts nginx as a supervised service
+# The process must run in the foreground for proper supervision
+# ==============================================================================
+
+set -e
+
+bashio::log.info "Starting nginx service..."
+
+# Wait for Kapowarr backend to be ready on port 5656
+bashio::log.info "Waiting for Kapowarr backend on port 5656..."
+bashio::net.wait_for 5656 localhost 300
+
+bashio::log.info "Kapowarr backend is ready"
+
+# Test nginx configuration
+if ! nginx -t; then
+    bashio::log.error "Nginx configuration test failed"
+    exit 1
+fi
+
+bashio::log.info "Nginx starting in foreground mode"
+
+# Execute nginx in foreground mode
+# Using exec replaces the shell with nginx, ensuring proper signal handling
+exec nginx
+

@@ -1,12 +1,43 @@
 #!/usr/bin/with-contenv bashio
+# ==============================================================================
+# Start Kapowarr service
+# s6-overlay v2 docs: https://github.com/just-containers/s6-overlay
+# ==============================================================================
+
+# Redirect stderr to stdout for proper logging
+exec 2>&1
+
 bashio::log.info "Starting Kapowarr..."
 
+# Parse configuration from add-on options
+LOG_LEVEL=$(bashio::config 'log_level')
+
+# Log configuration
+bashio::log.info "Log level: ${LOG_LEVEL}"
+
+# Set environment variables
+export TZ="$(bashio::config 'timezone' 'UTC')"
+export PYTHONPATH=/app
+export PYTHONUNBUFFERED=1
+
+# Set BASE_URL for ingress support
+# Get the ingress entry path so the app knows the base URL for routing
+if bashio::addon.ingress; then
+    export BASE_URL="$(bashio::addon.ingress_entry)"
+    bashio::log.info "Ingress enabled, BASE_URL set to: ${BASE_URL}"
+fi
+
+# Change to application directory
 cd /app || bashio::exit.nok "Could not change to /app directory"
 
+# Set Kapowarr port and host
 PORT=5656
 bashio::log.info "Kapowarr will listen on 0.0.0.0:${PORT}"
 
 export KAPOWARR_PORT=${PORT}
 export KAPOWARR_HOST=0.0.0.0
 
+# Execute Kapowarr in foreground mode
+# IMPORTANT: Must use 'exec' and run in foreground (not daemon mode)
 exec python3 /app/Kapowarr.py
+
