@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.1.0](https://github.com/rigerc/ha-apps/compare/kapowarr-1.0.0...kapowarr-1.1.0) (2026-02-10)
+
+
+### ✨ Features
+
+* **kapowarr:** initial release of Kapowarr add-on with documentation, Dockerfile, and configuration ([84dcfb9](https://github.com/rigerc/ha-apps/commit/84dcfb9dd23097b3e1037f7dcbd8cf02f14fec99))
+
+
+### 🐛 Bug Fixes
+
+* **builder:** improve image detection and error handling in healthcheck step ([993cda5](https://github.com/rigerc/ha-apps/commit/993cda562bbc8a39914cf7fa80463b6df35cedbd))
+* **config:** comment out ingress_port in configuration ([e55b9d9](https://github.com/rigerc/ha-apps/commit/e55b9d9891cefb9802afdcf116d6eb067ab657bc))
+* **Dockerfile:** fix tag case with upstream ([d9ecf81](https://github.com/rigerc/ha-apps/commit/d9ecf81c732ad94dae6d5813dd90fac58eb1c854))
+* make shell scripts executable ([afcd9e0](https://github.com/rigerc/ha-apps/commit/afcd9e0c648c198fb5a7d58eb249fd20dab90f10))
+
+
+### 🧰 Maintenance
+
+* **repo:** test ([90154a6](https://github.com/rigerc/ha-apps/commit/90154a6b3d1076e7b54c7ab5d9fe95aa17bc9756))
+* update manifest and configs ([8c26da1](https://github.com/rigerc/ha-apps/commit/8c26da1c9c4ba39eceb6b1ce01ee06edf78f1ba7))
+* update manifest and configs [skip ci] ([a2288df](https://github.com/rigerc/ha-apps/commit/a2288dfb46340d48a51217c687765c220bf432cd))
+* update manifest and configs [skip ci] ([39baa8f](https://github.com/rigerc/ha-apps/commit/39baa8fe44bcd26160bb6294956fb5f9dd94ddc8))
+
 ## 1.0.0 (2026-02-10)
 
 ### Added
