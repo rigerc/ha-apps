@@ -120,15 +120,6 @@ jobs:
              echo "${{ matrix.arch }} is not a valid arch for ${{ matrix.addon }}, skipping build"
              echo "build_arch=false" >> "$GITHUB_OUTPUT"
           fi
-      - name: 💾 Cache Docker layers
-        if: steps.check.outputs.build_arch == 'true'
-        uses: actions/cache@v5
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ matrix.addon }}-${{ matrix.arch }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-${{ matrix.addon }}-${{ matrix.arch }}-
-            ${{ runner.os }}-buildx-${{ matrix.addon }}-
       - name: 🔧 Build
         if: steps.check.outputs.build_arch == 'true'
         uses: home-assistant/builder@2025.11.0
