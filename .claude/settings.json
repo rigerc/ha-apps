@@ -3,7 +3,8 @@
   "env": {
     "ENABLE_TOOL_SEARCH": "auto:5",
     "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "true",
-    "DISABLE_TELEMETRY": "true"
+    "DISABLE_TELEMETRY": "true",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "true"
   },
   "permissions": {
     "allow": [
