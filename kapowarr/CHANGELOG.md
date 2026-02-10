@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.2](https://github.com/rigerc/ha-apps/compare/kapowarr-1.1.1...kapowarr-1.1.2) (2026-02-10)
+
+
+### 🐛 Bug Fixes
+
+* update ingress port to 9919 ([89bf029](https://github.com/rigerc/ha-apps/commit/89bf029e407fbe4db3ea9367c8eeaddf80d58eb6))
+
+
+### 🧰 Maintenance
+
+* update manifest and configs [skip ci] ([f96f596](https://github.com/rigerc/ha-apps/commit/f96f596821b5e9538d56c336782f7c5f62a7bca0))
+
 ## [1.1.1](https://github.com/rigerc/ha-apps/compare/kapowarr-1.1.0...kapowarr-1.1.1) (2026-02-10)
 
 
