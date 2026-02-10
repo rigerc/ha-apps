@@ -14,7 +14,7 @@ init: false
 startup: services
 boot: manual
 ingress: true
-ingress_port: 8099
+ingress_port: 9919
 panel_icon: mdi:book-open-page-variant
 map:
   - share:rw

@@ -40,7 +40,7 @@ ENV KAPOWARR_PORT=5656 \
 
 # Health check on nginx ingress port
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-  CMD curl -f http://localhost:8099/health || exit 1
+  CMD curl -f http://localhost:9919/health || exit 1
 
 # Labels
 ARG BUILD_ARCH
