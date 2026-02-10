@@ -1,5 +1,12 @@
 #!/usr/bin/with-contenv bashio
 # shellcheck shell=bash
+set -e
+
+# Skip migrations if setup failed (s6 v2 doesn't halt on init script failure)
+if [ ! -f /tmp/.romm-setup-complete ]; then
+    bashio::log.error "Setup did not complete successfully, skipping migrations"
+    exit 1
+fi
 
 # Start Valkey in background for migrations
 bashio::log.info "Starting Valkey for database migrations..."

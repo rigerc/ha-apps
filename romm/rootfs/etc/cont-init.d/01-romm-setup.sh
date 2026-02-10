@@ -1,6 +1,6 @@
 #!/usr/bin/with-contenv bashio
 # shellcheck shell=bash
-
+set -e
 
 bashio::log.info "Setting up Romm configuration..."
 
@@ -155,5 +155,8 @@ export_env PYTHONPATH /backend
 
 # Disable OpenTelemetry (not needed for HA add-on)
 export_env OTEL_SDK_DISABLED true
+
+# Signal to subsequent init scripts that setup succeeded
+touch /tmp/.romm-setup-complete
 
 bashio::log.info "Romm initialization complete"
