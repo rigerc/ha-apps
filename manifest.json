@@ -37,7 +37,7 @@
   },
   {
     "slug": "kapowarr",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "name": "Kapowarr",
     "description": "Comic book library manager. Build and manage a digital library of comics\nwith automated downloading, renaming, and conversion. Supports downloading\ndirectly or via services like MediaFire and Mega. Get metadata from\nComic Vine and manage your collection with the recognizable *arr UI.",
     "arch": [
