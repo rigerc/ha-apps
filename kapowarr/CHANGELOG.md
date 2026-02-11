@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.5](https://github.com/rigerc/ha-apps/compare/kapowarr-1.4.4...kapowarr-1.4.5) (2026-02-11)
+
+
+### 🐛 Bug Fixes
+
+* **nginx:** improve API path rewriting in ingress template ([3a9e8fe](https://github.com/rigerc/ha-apps/commit/3a9e8fe795bb2eb2b98b24b707b601f9cd0bbc38))
+
+
+### 🧰 Maintenance
+
+* update manifest and configs [skip ci] ([7844c75](https://github.com/rigerc/ha-apps/commit/7844c75b89c4538723c323ceeea13ebbfeebc73b))
+
 ## [1.4.4](https://github.com/rigerc/ha-apps/compare/kapowarr-1.4.3...kapowarr-1.4.4) (2026-02-11)
 
 
