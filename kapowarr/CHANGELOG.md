@@ -1,0 +1,41 @@
+# Changelog
+
+## [1.3.0](https://github.com/rigerc/ha-apps/compare/kapowarr-1.2.5...kapowarr-1.3.0) (2026-02-11)
+
+
+### ✨ Features
+
+* **kapowarr:** initial release of Kapowarr add-on with documentation, Dockerfile, and configuration ([84dcfb9](https://github.com/rigerc/ha-apps/commit/84dcfb9dd23097b3e1037f7dcbd8cf02f14fec99))
+
+
+### 🐛 Bug Fixes
+
+* **builder:** improve image detection and error handling in healthcheck step ([993cda5](https://github.com/rigerc/ha-apps/commit/993cda562bbc8a39914cf7fa80463b6df35cedbd))
+* **config:** comment out ingress_port in configuration ([e55b9d9](https://github.com/rigerc/ha-apps/commit/e55b9d9891cefb9802afdcf116d6eb067ab657bc))
+* **Dockerfile:** add build dependencies and fixes ([c8385d2](https://github.com/rigerc/ha-apps/commit/c8385d294f86cf7fa38e2f2f8c5454260eb65625))
+* **Dockerfile:** combine cargo and pip install into single RUN command ([72a9525](https://github.com/rigerc/ha-apps/commit/72a95251a9e92141d92dd8bb23c97343c638db01))
+* **Dockerfile:** fix tag case with upstream ([d9ecf81](https://github.com/rigerc/ha-apps/commit/d9ecf81c732ad94dae6d5813dd90fac58eb1c854))
+* make shell scripts executable ([afcd9e0](https://github.com/rigerc/ha-apps/commit/afcd9e0c648c198fb5a7d58eb249fd20dab90f10))
+* make shell scripts executable [skip ci] ([438c6f1](https://github.com/rigerc/ha-apps/commit/438c6f1d81ef153182f0c3dc04880a8038f89bec))
+* **nginx:** add daemon off to nginx config ([82e0935](https://github.com/rigerc/ha-apps/commit/82e0935258e52122ab307a79c0f8fcd057a7cb7c))
+* update ingress port to 9919 ([89bf029](https://github.com/rigerc/ha-apps/commit/89bf029e407fbe4db3ea9367c8eeaddf80d58eb6))
+
+
+### 🧰 Maintenance
+
+* fixes ([0e71dfe](https://github.com/rigerc/ha-apps/commit/0e71dfef2163857c618be72b7aa54713f1e050cd))
+* **repo:** 🚀 Release  kapowarr 1.1.0 ([#28](https://github.com/rigerc/ha-apps/issues/28)) ([98c3df9](https://github.com/rigerc/ha-apps/commit/98c3df9ceaf1ca35d1c29d92ebf06b4af2ac4c9e))
+* **repo:** 🚀 Release  kapowarr 1.1.1 ([#29](https://github.com/rigerc/ha-apps/issues/29)) ([81f2298](https://github.com/rigerc/ha-apps/commit/81f22989ff4ba8326803104f34ead73d563585b8))
+* **repo:** 🚀 Release  kapowarr 1.1.2 ([#30](https://github.com/rigerc/ha-apps/issues/30)) ([146efea](https://github.com/rigerc/ha-apps/commit/146efeadcc9be5ca3a04b4e887210c2a5627bc7c))
+* **repo:** 🚀 Release  kapowarr 1.1.3 ([#31](https://github.com/rigerc/ha-apps/issues/31)) ([4ad5173](https://github.com/rigerc/ha-apps/commit/4ad51738bf9722248b89a8f0a80ba86642060ac5))
+* **repo:** test ([90154a6](https://github.com/rigerc/ha-apps/commit/90154a6b3d1076e7b54c7ab5d9fe95aa17bc9756))
+* stuff ([2514c7b](https://github.com/rigerc/ha-apps/commit/2514c7b76f5799fc713aa71ddbaea5a5ec903797))
+* stuff ([919bb61](https://github.com/rigerc/ha-apps/commit/919bb619f6422fb08286a85beae663293ce07ddc))
+* update manifest and configs ([5d3d1d4](https://github.com/rigerc/ha-apps/commit/5d3d1d4ab9311e9be4bad839691cd0942eb927e5))
+* update manifest and configs ([8c26da1](https://github.com/rigerc/ha-apps/commit/8c26da1c9c4ba39eceb6b1ce01ee06edf78f1ba7))
+* update manifest and configs [skip ci] ([812a6a6](https://github.com/rigerc/ha-apps/commit/812a6a6417f46a3da0d0dace2476721611053697))
+* update manifest and configs [skip ci] ([e3bf456](https://github.com/rigerc/ha-apps/commit/e3bf456441f506fb4d995e71d1120160beb3e471))
+* update manifest and configs [skip ci] ([f96f596](https://github.com/rigerc/ha-apps/commit/f96f596821b5e9538d56c336782f7c5f62a7bca0))
+* update manifest and configs [skip ci] ([4db8fb9](https://github.com/rigerc/ha-apps/commit/4db8fb96ce5e300b8d2327f4274acaf05923c3ae))
+* update manifest and configs [skip ci] ([a2288df](https://github.com/rigerc/ha-apps/commit/a2288dfb46340d48a51217c687765c220bf432cd))
+* update manifest and configs [skip ci] ([39baa8f](https://github.com/rigerc/ha-apps/commit/39baa8fe44bcd26160bb6294956fb5f9dd94ddc8))

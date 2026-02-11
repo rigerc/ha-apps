@@ -1,66 +1,25 @@
-# ==============================================================================
-# config.yaml — Home Assistant Add-on manifest
-# Full schema reference:
-#   https://developers.home-assistant.io/docs/add-ons/configuration
-# ==============================================================================
-
-# Human-readable name shown in the HA add-on store
 name: Kapowarr
-
-version: 1.2.5
-
-# Unique identifier — lowercase letters, digits and underscores only.
-# Used in URLs, file paths, and API calls.
+version: 1.3.0
 slug: kapowarr
-
-# Short description shown in the add-on store card (one line, no markdown)
 description: >-
-  Comic book library manager with automated downloading, renaming, and conversion.
-
-# Link to the source repository (used in store UI)
+  Comic book library manager with automated downloading, renaming, and
+  conversion.
 url: https://github.com/Casvt/Kapowarr
-
-# Target CPU architectures.
 arch:
   - aarch64
   - amd64
-
-# REQUIRED for s6-overlay v3 base images
 init: false
-
-# Controls when the add-on is started relative to the HA boot sequence.
 startup: services
-
-# "manual" means the add-on does NOT start automatically on HA boot.
 boot: manual
-
-# ---------------------------------------------------------------------------
-# Ingress — embedded web UI inside Home Assistant
-# ---------------------------------------------------------------------------
-
-# Enable ingress (the add-on's web UI appears as a sidebar panel in HA)
 ingress: true
-
-# The port nginx inside the container listens on for HA ingress traffic.
 ingress_port: 9919
-
-# Sidebar icon — must be a valid MDI icon name
 panel_icon: mdi:book-open-page-variant
-
-# ---------------------------------------------------------------------------
-# Filesystem mounts
-# ---------------------------------------------------------------------------
 map:
   - addon_config:rw
   - share:rw
-
-# ---------------------------------------------------------------------------
-# User-visible options (shown in the add-on configuration UI)
-# ---------------------------------------------------------------------------
 options:
   log_level: info
   timezone: UTC
-
 schema:
   log_level: list(trace|debug|info|warning|error)
   timezone: str
