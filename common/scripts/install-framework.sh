@@ -279,7 +279,7 @@ main() {
     # Execute installation based on mode
     case "${install_mode}" in
         local)
-            install_framework_from_local
+            install_framework_from_local "${FRAMEWORK_DIR}"
             ;;
         github)
             install_framework_from_github "${github_version}"
