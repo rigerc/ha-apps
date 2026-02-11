@@ -31,6 +31,10 @@ source /usr/local/lib/ha-framework/ha-env.sh
 # Source configuration helpers
 # shellcheck source=/usr/local/lib/ha-framework/ha-config.sh
 source /usr/local/lib/ha-framework/ha-config.sh
+
+# Source template helpers
+# shellcheck source=/usr/local/lib/ha-framework/ha-template.sh
+source /usr/local/lib/ha-framework/ha-template.sh
 ```
 
 ## Library Modules
@@ -91,6 +95,35 @@ ha::validate::url "https://api.example.com"
 ha::validate::not_empty "${value}" "API_KEY"
 ```
 
+### ha-template.sh
+Template rendering utilities for tempio (Go templates) and sed-style substitutions.
+
+```bash
+# Render tempio Go template with variables
+ha::template::render ingress.gtpl /etc/nginx/servers/ingress.conf \
+    ingress_interface="${ingress_interface}" \
+    ingress_port="^${ingress_port}" \
+    app_port="^${APP_PORT}"
+
+# Find template file in standard search paths
+template_path=$(ha::template::find "config.gtpl")
+
+# Check if template exists
+if ha::template::exists "ingress.gtpl"; then
+    ha::template::render "ingress.gtpl" /etc/nginx/ingress.conf port="8080"
+fi
+
+# Sed-style substitution for simple templates
+ha::template::substitute /etc/nginx.conf.template /etc/nginx/conf \
+    port="8080" host="0.0.0.0"
+
+# Render with JSON data
+ha::template::render_json template.gtpl /etc/output.conf '{"key": "value"}'
+
+# Validate nginx config
+ha::template::validate_nginx /etc/nginx/servers/ingress.conf
+```
+
 ## Version
 
-Current version: 1.0.0
+Current version: 1.1.0

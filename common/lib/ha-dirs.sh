@@ -166,14 +166,13 @@ ha::dirs::clear() {
 
     _ha_dirs_log "Clearing directory: ${path}"
 
-    # Build find command with optional exclusions
-    local find_cmd="find '${path}' -mindepth 1 -maxdepth 1"
+    # Use find with array for safe handling of special characters
+    local exclude_args=()
     for exclude in "$@"; do
-        find_cmd="${find_cmd} ! -name '${exclude}'"
+        exclude_args+=(! -name "${exclude}")
     done
-    find_cmd="${find_cmd} -exec rm -rf {} +"
 
-    if ! eval "${find_cmd}"; then
+    if ! find "${path}" -mindepth 1 -maxdepth 1 "${exclude_args[@]}" -exec rm -rf {} +; then
         bashio::exit.nok "Failed to clear directory: ${path}"
     fi
 }

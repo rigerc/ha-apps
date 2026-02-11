@@ -41,7 +41,8 @@ ha::env::export() {
     local name="${1:?Variable name is required}"
     local value="${2:-}"
 
-    export "${name}=${value}"
+    # Use eval to export variable with dynamic name (quotes prevent expansion)
+    eval "export ${name}=\${value}"
     printf '%s' "${value}" > "${_HA_ENV_DIR}/${name}"
 }
 

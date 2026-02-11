@@ -194,15 +194,11 @@ ha::secret::compare() {
     local file1="${1:?First file is required}"
     local file2="${2:?Second file is required}"
 
-    if [[ ! -f "${file1}" || ! -f "${file2}" ]]; then
-        return 1
-    fi
-
-    # Use cmp for byte-by-byte comparison
+    # Use cmp for byte-by-byte comparison (returns non-zero if files differ or don't exist)
     if cmp -s "${file1}" "${file2}"; then
         return 0  # Files are identical
     else
-        return 1  # Files differ
+        return 1  # Files differ or don't exist
     fi
 }
 
@@ -258,14 +254,17 @@ ha::secret::validate_key() {
     local key_value="${1:?Key value is required}"
     local min_length="${2:-16}"
 
-    # Check minimum length
-    if [[ ${#key_value} -lt ${min_length} ]]; then
+    # Check minimum length after trimming whitespace
+    local trimmed="${key_value#"${key_value%%[![:space:]]*}"}"
+    trimmed="${trimmed%"${trimmed##*[![:space:]]}"}"
+
+    if [[ ${#trimmed} -lt ${min_length} ]]; then
         bashio::log.error "Key must be at least ${min_length} characters"
         return 1
     fi
 
     # Check for empty or whitespace-only keys
-    if [[ -z "${key_value// /}" ]]; then
+    if [[ -z "${trimmed}" ]]; then
         bashio::log.error "Key cannot be empty or whitespace only"
         return 1
     fi

@@ -89,12 +89,7 @@ ha::validate::url() {
         fi
     fi
 
-    # Basic URL structure validation
-    # Check for http:// or https:// prefix
-    if [[ ! "${url}" =~ ^https?:// ]]; then
-        bashio::exit.nok "${_HA_VALIDATE_ERROR_PREFIX}: '${url}' is not a valid URL"
-    fi
-    # Additional check for characters after protocol
+    # Check for characters after protocol
     local url_without_protocol="${url#*://}"
     if [[ -z "${url_without_protocol}" ]]; then
         bashio::exit.nok "${_HA_VALIDATE_ERROR_PREFIX}: '${url}' is not a valid URL"
@@ -385,21 +380,12 @@ ha::validate::is_false() {
 ha::validate::ip_address() {
     local ip="${1:?IP address is required}"
 
-    # IPv4 validation regex
-    local ip_regex='^([0-9]{1,3}\.){3}[0-9]{1,3}$'
+    # IPv4 validation regex - strictly checks format and valid octet range
+    local ip_regex='^((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])$'
 
     if [[ ! "${ip}" =~ ${ip_regex} ]]; then
         bashio::exit.nok "${_HA_VALIDATE_ERROR_PREFIX}: '${ip}' is not a valid IPv4 address"
     fi
-
-    # Validate each octet is 0-255
-    local IFS='.'
-    read -ra octets <<< "${ip}"
-    for octet in "${octets[@]}"; do
-        if (( octet < 0 || octet > 255 )); then
-            bashio::exit.nok "${_HA_VALIDATE_ERROR_PREFIX}: '${ip}' is not a valid IPv4 address"
-        fi
-    done
 
     return 0
 }
