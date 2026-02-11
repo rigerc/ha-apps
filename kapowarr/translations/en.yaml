@@ -1,5 +1,17 @@
 ---
+# ==============================================================================
+# translations/en.yaml — English UI translations for Kapowarr add-on options
+# ==============================================================================
 configuration:
   log_level:
     name: "Log Level"
-    description: "Controls the verbosity of log output. Use 'info' for normal operation, 'debug' for troubleshooting."
+    description: >-
+      Controls the verbosity of log output.
+      Use 'info' for normal operation, 'debug' for troubleshooting,
+      'warning' or 'error' for minimal output.
+
+  timezone:
+    name: "Timezone"
+    description: >-
+      The timezone for the application (e.g., 'America/New_York', 'Europe/London').
+      Defaults to UTC.

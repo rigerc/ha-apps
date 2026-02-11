@@ -1,43 +1,49 @@
 #!/usr/bin/with-contenv bashio
+# shellcheck shell=bash
 # ==============================================================================
-# Start Kapowarr service
-# s6-overlay v2 docs: https://github.com/just-containers/s6-overlay
+# services.d/kapowarr/run — Kapowarr service run script
+#
+# s6-overlay v3 calls this script to START the Kapowarr application service.
+# The script MUST run the application in the FOREGROUND.
 # ==============================================================================
 
-# Redirect stderr to stdout for proper logging
+# Redirect stderr to stdout
 exec 2>&1
 
-bashio::log.info "Starting Kapowarr..."
+# Source the shared logging library
+# shellcheck source=/usr/local/lib/ha-log.sh
+source /usr/local/lib/ha-log.sh
 
-# Parse configuration from add-on options
-LOG_LEVEL=$(bashio::config 'log_level')
+ha::log::init "kapowarr"
 
-# Log configuration
-bashio::log.info "Log level: ${LOG_LEVEL}"
+log_info "Starting Kapowarr..."
 
-# Set environment variables
-export TZ="$(bashio::config 'timezone' 'UTC')"
-export PYTHONPATH=/app
-export PYTHONUNBUFFERED=1
+# ---------------------------------------------------------------------------
+# Read configuration
+# ---------------------------------------------------------------------------
+declare log_level
+log_level="$(bashio::config 'log_level' 'info')"
+log_info "Log level: ${log_level}"
 
-# Set BASE_URL for ingress support
-# Get the ingress entry path so the app knows the base URL for routing
-if bashio::addon.ingress; then
-    export BASE_URL="$(bashio::addon.ingress_entry)"
-    bashio::log.info "Ingress enabled, BASE_URL set to: ${BASE_URL}"
-fi
+# ---------------------------------------------------------------------------
+# Set runtime environment variables
+# ---------------------------------------------------------------------------
+export TZ="${TZ:-UTC}"
 
-# Change to application directory
+# Get the port from environment or default to 5656
+declare app_port
+app_port="${APP_PORT:-5656}"
+
+log_info "Kapowarr will listen on 0.0.0.0:${app_port}"
+
+# ---------------------------------------------------------------------------
+# Change to the application directory
+# ---------------------------------------------------------------------------
 cd /app || bashio::exit.nok "Could not change to /app directory"
 
-# Set Kapowarr port and host
-PORT=5656
-bashio::log.info "Kapowarr will listen on 0.0.0.0:${PORT}"
-
-export KAPOWARR_PORT=${PORT}
-export KAPOWARR_HOST=0.0.0.0
-
-# Execute Kapowarr in foreground mode
-# IMPORTANT: Must use 'exec' and run in foreground (not daemon mode)
+# ---------------------------------------------------------------------------
+# Start Kapowarr
+# Kapowarr is a Python Flask application. The entry point is Kapowarr.py
+# It reads configuration from environment variables and command-line args.
+# ---------------------------------------------------------------------------
 exec python3 /app/Kapowarr.py
-

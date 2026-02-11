@@ -2,15 +2,15 @@
 
 ## What is Kapowarr?
 
-Kapowarr is a software to build and manage a comic book library, fitting in the \*arr suite of software. It allows you to build a digital library of comics with automated downloading, renaming, and conversion.
+Kapowarr is a comic book library manager that fits in the *arr suite of software. It allows you to build and manage a digital library of comics with automated downloading, renaming, and conversion.
 
 ## Installation
 
-1. Add this repository to your Home Assistant instance
-2. Install the Kapowarr add-on
-3. Configure the add-on options (optional)
+1. Add this repository to your Home Assistant instance via the Add-on Store
+2. Install the **Kapowarr** add-on
+3. Configure the add-on options (see [Configuration](#configuration) below)
 4. Start the add-on
-5. Access Kapowarr via the sidebar or the web interface
+5. Access Kapowarr via the Home Assistant sidebar or the Open Web UI button
 
 ## Configuration
 
@@ -18,81 +18,66 @@ Kapowarr is a software to build and manage a comic book library, fitting in the 
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `log_level` | string | `info` | Controls the verbosity of log output. Options: `trace`, `debug`, `info`, `warning`, `error` |
+| `log_level` | string | `info` | Log verbosity: `trace`, `debug`, `info`, `warning`, `error` |
+| `timezone` | string | `UTC` | Timezone string (e.g., `America/New_York`) |
 
-### Volumes
+### Storage
 
 The add-on maps the following directories:
 
-| Container Path | Description |
-|---------------|-------------|
-| `/data` | Kapowarr database and configuration storage |
-| `/share` | Shared storage accessible by other add-ons |
+| Container Path | Host Path | Description |
+|----------------|-----------|-------------|
+| `/config` | `/addon_configs/kapowarr/` | Persistent configuration and database |
+| `/share` | `/share/` | Shared storage accessible by other add-ons |
 
-## Usage
+## Ingress
 
-### First-Time Setup
+This add-on supports **Home Assistant Ingress**, allowing you to access Kapowarr
+directly from the Home Assistant sidebar without exposing any additional ports.
+
+The embedded web UI is accessible by clicking the add-on tile in the sidebar.
+
+## First-Time Setup
 
 1. Start the add-on
-2. Access Kapowarr through the Home Assistant sidebar or via the web interface
-3. Follow the initial setup wizard to configure your library paths
-4. Add your comic book folders to the library
+2. Click the **Open Web UI** button (or navigate to it in the sidebar)
+3. Add comic volumes using the Comic Vine search
+4. Map folders to volumes to import your existing library
+5. Configure download settings in the Settings panel
 
-### Library Management
+## Upgrade Notes
 
-- **Add Volumes**: Search for comics and add them to your library
-- **Import Existing**: Import your current comic collection
-- **Download**: Automatically download missing issues
-- **Rename**: Rename files according to your preferred format
-- **Convert**: Convert between different comic archive formats
-
-### Supported Services
-
-Kapowarr supports downloading from:
-- Direct downloads
-- MediaFire
-- Mega
-- And many other file hosting services
-
-## Ingress Access
-
-This add-on supports Home Assistant Ingress, allowing you to access Kapowarr directly from the Home Assistant sidebar without exposing additional ports.
-
-## Tips
-
-1. **Library Paths**: Map your comic collection folders through the `/share` directory
-2. **API Keys**: Get a Comic Vine API key for better metadata retrieval
-3. **Naming Convention**: Set up your preferred naming convention in settings
-4. **Quality Profiles**: Configure quality profiles for automatic downloads
+When upgrading the add-on, your configuration data in `/config` is preserved.
 
 ## Troubleshooting
 
-### Common Issues
+### Add-on fails to start
 
-**Add-on won't start:**
-- Check the add-on logs for error messages
-- Ensure no other service is using the same port
+Check the add-on logs for error messages. Common causes:
 
-**Can't access web interface:**
-- Wait a few seconds for the service to fully start
-- Try refreshing the page
+- **Port conflict** — another service is using the same port.
+- **Permission error** — the `/config` directory has incorrect ownership.
 
-**Downloads not working:**
-- Check your download client configuration
-- Verify your indexers are properly configured
+### Web interface shows 502 Bad Gateway
+
+The nginx proxy cannot reach the backend application. Wait 10–20 seconds for
+the application to fully start, then refresh. If the error persists, check
+the add-on logs for application startup errors.
+
+### Application is slow or unresponsive
+
+- Increase `log_level` to `debug` to see detailed request logs
+- Check the host system for resource pressure (CPU, memory, disk I/O)
 
 ## Support
 
-For issues with this add-on:
-- Check the [GitHub Issues](https://github.com/rigerc/ha-apps/issues)
-
-For issues with Kapowarr itself:
-- [Kapowarr GitHub](https://github.com/Casvt/Kapowarr)
-- [Discord Server](https://discord.gg/nMNdgG7vsE)
-- [Reddit Community](https://www.reddit.com/r/kapowarr/)
+- Add-on issues: [GitHub Issues](https://github.com/rigerc/ha-apps/issues)
+- Application issues: [Upstream GitHub](https://github.com/Casvt/Kapowarr/issues)
 
 ## Resources
 
 - [Kapowarr Documentation](https://casvt.github.io/Kapowarr/)
 - [Kapowarr GitHub](https://github.com/Casvt/Kapowarr)
+- [Kapowarr Discord](https://discord.gg/nMNdgG7vsE)
+- [Kapowarr Subreddit](https://www.reddit.com/r/kapowarr/)
 - [Home Assistant Add-on Documentation](https://developers.home-assistant.io/docs/add-ons)

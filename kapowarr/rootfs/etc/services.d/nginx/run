@@ -1,24 +1,51 @@
 #!/usr/bin/with-contenv bashio
+# shellcheck shell=bash
 # ==============================================================================
-# Nginx service run script for Kapowarr
+# services.d/nginx/run — nginx service run script
+#
+# s6-overlay starts nginx AFTER all cont-init.d scripts have completed.
+# This script waits for the backend application to be ready before starting
+# nginx, so the proxy does not return 502 errors during startup.
 # ==============================================================================
 
-bashio::log.info "Starting nginx service..."
+# Redirect stderr to stdout
+exec 2>&1
 
-# Wait for Kapowarr backend to be ready on port 5656
-bashio::log.info "Waiting for Kapowarr backend on port 5656..."
-if ! bashio::net.wait_for 5656 localhost 300; then
-    bashio::log.error "Kapowarr did not become ready on port 5656 within 300s"
+# Source the shared logging library
+# shellcheck source=/usr/local/lib/ha-log.sh
+source /usr/local/lib/ha-log.sh
+
+ha::log::init "nginx"
+
+log_info "Starting nginx ingress proxy..."
+
+# ---------------------------------------------------------------------------
+# Wait for the backend application to be ready
+# ---------------------------------------------------------------------------
+readonly backend_host="localhost"
+readonly backend_port="${APP_PORT:-5656}"
+readonly wait_timeout=300
+
+log_info "Waiting for kapowarr backend on ${backend_host}:${backend_port} (timeout: ${wait_timeout}s)..."
+
+if ! bashio::net.wait_for "${backend_port}" "${backend_host}" "${wait_timeout}"; then
+    log_error "kapowarr backend did not become ready within ${wait_timeout}s"
+    log_error "Check the kapowarr service logs for startup errors"
     exit 1
 fi
 
-bashio::log.info "Kapowarr backend is ready"
+log_info "kapowarr backend is ready on ${backend_host}:${backend_port}"
 
+# ---------------------------------------------------------------------------
+# Final nginx configuration check before starting
+# ---------------------------------------------------------------------------
 if ! nginx -t 2>&1; then
-    bashio::log.error "Nginx configuration test failed"
+    log_error "nginx configuration test failed — check /etc/nginx/servers/ingress.conf"
     exit 1
 fi
 
-bashio::log.info "Nginx starting in foreground mode"
+# ---------------------------------------------------------------------------
+# Start nginx in the foreground
+# ---------------------------------------------------------------------------
+log_info "nginx starting in foreground mode"
 exec nginx
-

@@ -20,6 +20,7 @@ updates:
       prefix: "feat(deps)"
   - package-ecosystem: "github-actions"
     # GitHub Actions workflows
+
     directory: "/"
     schedule:
       interval: "weekly"

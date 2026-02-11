@@ -1,11 +1,31 @@
 #!/usr/bin/with-contenv bashio
+# shellcheck shell=bash
 # ==============================================================================
-# Handle nginx service exit/crash
+# services.d/nginx/finish — nginx service finish script
+#
+# s6-overlay calls this script when the nginx 'run' script exits.
+#
+# Arguments passed by s6:
+#   $1 — exit code of the run script
+#          0   = clean shutdown
+#          256 = nginx was killed by a signal
+#          N   = nginx exited with error code N
+#
+# If nginx exits abnormally it indicates a configuration error or resource
+# problem that requires operator intervention.  We halt the add-on rather
+# than looping endlessly.
 # ==============================================================================
 
-# Exit code 0 = normal shutdown, 256 = killed by signal, other = crash
-if [[ "${1}" -ne 0 ]] && [[ "${1}" -ne 256 ]]; then
-    bashio::log.error "Nginx crashed with exit code ${1}, stopping add-on"
+declare -r exit_code="${1}"
+
+# Source the shared logging library
+# shellcheck source=/usr/local/lib/ha-log.sh
+source /usr/local/lib/ha-log.sh
+
+ha::log::init "nginx"
+
+if [[ "${exit_code}" -ne 0 ]] && [[ "${exit_code}" -ne 256 ]]; then
+    log_error "nginx crashed (exit code ${exit_code}) — stopping add-on"
+    log_error "Check the nginx error log output above for details"
     s6-svscanctl -t /var/run/s6/services
 fi
-

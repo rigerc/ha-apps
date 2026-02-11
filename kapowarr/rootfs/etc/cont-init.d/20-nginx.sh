@@ -1,29 +1,60 @@
 #!/usr/bin/with-contenv bashio
 # shellcheck shell=bash
 # ==============================================================================
-# Configure nginx for ingress
-# Runs during container initialization, before services start
+# 20-nginx.sh — nginx ingress configuration
+#
+# Reads the ingress IP address and port from the HA supervisor API and renders
+# the nginx server block from a Go template using tempio.
 # ==============================================================================
 
 set -e
 
-bashio::log.info "Configuring nginx..."
+# Source the shared logging library
+# shellcheck source=/usr/local/lib/ha-log.sh
+source /usr/local/lib/ha-log.sh
 
-#################
-# INGRESS SETUP #
-#################
+ha::log::init "nginx"
 
+log_info "Configuring nginx ingress..."
+
+# ---------------------------------------------------------------------------
+# Obtain ingress coordinates from the HA supervisor
+# ---------------------------------------------------------------------------
 declare ingress_interface
 declare ingress_port
+declare app_port
 
-# Get ingress configuration from Home Assistant
-ingress_port=$(bashio::addon.ingress_port)
-ingress_interface=$(bashio::addon.ip_address)
+ingress_interface="$(bashio::addon.ip_address)"
+ingress_port="$(bashio::addon.ingress_port)"
+app_port="${APP_PORT:-5656}"
 
-# Update ingress configuration with actual values
-sed -i "s/%%port%%/${ingress_port}/g" /etc/nginx/servers/ingress.conf
-sed -i "s/%%interface%%/${ingress_interface}/g" /etc/nginx/servers/ingress.conf
+log_debug "ingress_interface = ${ingress_interface}"
+log_debug "ingress_port      = ${ingress_port}"
+log_debug "app_port          = ${app_port}"
 
-bashio::log.info "Ingress configured on ${ingress_interface}:${ingress_port}"
-bashio::log.info "Nginx will proxy requests to Kapowarr on 0.0.0.0:5656"
-bashio::log.info "Nginx configuration complete"
+# ---------------------------------------------------------------------------
+# Render the nginx server block from the Go template using tempio.
+# ---------------------------------------------------------------------------
+log_info "Rendering /etc/nginx/servers/ingress.conf via tempio..."
+
+bashio::var.json \
+    ingress_interface "${ingress_interface}" \
+    ingress_port      "^${ingress_port}" \
+    app_port          "^${app_port}" \
+    | tempio \
+        -template /etc/nginx/templates/ingress.gtpl \
+        -out /etc/nginx/servers/ingress.conf
+
+log_info "Ingress listening on ${ingress_interface}:${ingress_port} -> 127.0.0.1:${app_port}"
+
+# ---------------------------------------------------------------------------
+# Validate the nginx configuration before the nginx service starts
+# ---------------------------------------------------------------------------
+if ! nginx -t 2>&1 | grep -q "syntax is ok"; then
+    log_error "nginx configuration test failed — check /etc/nginx/servers/ingress.conf"
+    nginx -t 2>&1 || true
+    exit 1
+fi
+
+log_info "nginx configuration is valid"
+log_info "nginx ingress setup complete"

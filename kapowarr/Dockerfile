@@ -1,51 +1,64 @@
+# syntax=docker/dockerfile:1
+# ==============================================================================
+# Dockerfile — Kapowarr Home Assistant Add-on
+#
+# Pattern: multi-stage build
+#   Stage 1 (app-source): copy binaries / assets from the upstream image
+#   Stage 2 (final):      build on the HA base image, install runtime deps
+#
+# The first FROM ... AS line is parsed by manifest.sh to track the upstream
+# version. Keep it on a single line.
+# ==============================================================================
+
 ARG BUILD_FROM
 ARG BUILD_VERSION
 
-# Stage 1: Copy application from upstream image
+# ------------------------------------------------------------------------------
+# Stage 1 — upstream application source
+# manifest.sh tracks this FROM line for upstream version updates
+# ------------------------------------------------------------------------------
 FROM mrcas/kapowarr:v1.2.0 AS app-source
 
-# Stage 2: Build on Home Assistant base
+# ------------------------------------------------------------------------------
+# Stage 2 — Home Assistant add-on wrapper
+# ------------------------------------------------------------------------------
 FROM ${BUILD_FROM}
 
-# Copy application from upstream
+# Install nginx for ingress
+RUN apk add --no-cache nginx
+
+# Copy the application from the upstream image
 COPY --from=app-source /app /app
 
-# Install runtime and build dependencies
-# Build dependencies needed for cryptography (Rust package)
-RUN apk add --no-cache \
-    bash \
-    tzdata \
-    curl \
-    nginx \
-    gcc \
-    musl-dev \
-    libffi-dev \
-    rust \
-    cargo \
-    && pip3 install --no-cache-dir --break-system-packages -r /app/requirements.txt
-
-# Copy S6-overlay configuration
+# Copy the rootfs overlay
 COPY rootfs /
 
-# Set permissions for S6 scripts
-RUN find /etc/services.d -type f -name "run" -exec chmod +x {} \; && \
-    find /etc/services.d -type f -name "finish" -exec chmod +x {} \; && \
-    find /etc/cont-init.d -type f -exec chmod +x {} \;
+# Create the nginx servers directory
+RUN mkdir -p /etc/nginx/servers
 
+# Set execute permissions on all s6 and init scripts
+RUN chmod +x \
+    /etc/cont-init.d/*.sh \
+    /etc/services.d/kapowarr/run \
+    /etc/services.d/kapowarr/finish \
+    /etc/services.d/nginx/run \
+    /etc/services.d/nginx/finish \
+    /usr/local/lib/ha-log.sh
+
+# Set the working directory
 WORKDIR /app
 
-# Environment variables
-ENV KAPOWARR_PORT=5656 \
-    KAPOWARR_HOST=0.0.0.0
+# Application environment variables
+# Kapowarr listens on port 5656 by default
+ENV APP_PORT=5656 \
+    APP_HOST=0.0.0.0
 
-# Health check on nginx ingress port
+# Health check — tests the nginx ingress endpoint
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-  CMD curl -f http://localhost:9919/health || exit 1
+    CMD curl -f http://localhost:9919/health || exit 1
 
-# Labels
+# OCI labels
 ARG BUILD_ARCH
 LABEL \
-  io.hass.type="addon" \
-  io.hass.arch="${BUILD_ARCH}"
-
-  
+    io.hass.type="addon" \
+    io.hass.arch="${BUILD_ARCH}"
