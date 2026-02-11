@@ -59,7 +59,5 @@
   "disabledMcpjsonServers": [
     "ref"
   ],
-  "enabledPlugins": {
-    "oh-my-claudecode@omc": false
-  }
+  "enabledPlugins": {}
 }
