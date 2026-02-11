@@ -56,8 +56,8 @@
     "defaultMode": "default"
   },
   "enableAllProjectMcpServers": true,
-  "disabledMcpjsonServers": ["ref"],
-  "enabledPlugins": {
-    "oh-my-claudecode@omc": false
-  }
+  "disabledMcpjsonServers": [
+    "ref"
+  ],
+  "enabledPlugins": {}
 }

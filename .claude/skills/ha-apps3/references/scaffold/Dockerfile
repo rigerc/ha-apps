@@ -57,6 +57,11 @@ COPY --from=app-source /app /app
 # Copy the rootfs overlay — this overlays /etc and /usr/local inside the container
 COPY rootfs /
 
+# Create the nginx servers directory.
+# ingress.conf is not shipped as a static file; it is rendered at container start
+# by cont-init.d/20-nginx.sh using tempio from the template in nginx/templates/.
+RUN mkdir -p /etc/nginx/servers
+
 # Set execute permissions on all s6 and init scripts in a single layer.
 RUN chmod +x \
     /etc/cont-init.d/*.sh \

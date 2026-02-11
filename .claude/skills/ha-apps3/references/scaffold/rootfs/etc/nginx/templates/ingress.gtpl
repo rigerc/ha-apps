@@ -1,18 +1,23 @@
 # ==============================================================================
-# ingress.conf — nginx server block for HA ingress
+# ingress.gtpl — nginx server block Go template
 #
-# PLACEHOLDERS (replaced at runtime by cont-init.d/20-nginx.sh):
-#   %%interface%%  — container IP address (from bashio::addon.ip_address)
-#   %%port%%       — dynamically assigned ingress port (from bashio::addon.ingress_port)
+# Rendered at container start by cont-init.d/20-nginx.sh using tempio.
+# Output is written to /etc/nginx/servers/ingress.conf.
 #
-# CUSTOMIZE: Update the proxy_pass port (APP_PORT) to match the internal port
-#            your application listens on.
+# Template variables (supplied by 20-nginx.sh via bashio::var.json):
+#   .ingress_interface — container IP address (from bashio::addon.ip_address)
+#   .ingress_port      — dynamically assigned ingress port (from bashio::addon.ingress_port)
+#   .app_port          — internal port the application listens on (from $APP_PORT env var)
+#
+# CUSTOMIZE: No manual edits needed here.
+#   - To change the backend port, update ENV APP_PORT in the Dockerfile.
+#   - For base-path rewriting, uncomment the sub_filter block in the location below.
 # ==============================================================================
 
 server {
     # HA ingress traffic arrives on the dynamically assigned port at the
-    # container's IP address.  Both placeholders are substituted by 20-nginx.sh.
-    listen %%interface%%:%%port%% default_server;
+    # container's IP address. Both values are injected at runtime by 20-nginx.sh.
+    listen {{ .ingress_interface }}:{{ .ingress_port }} default_server;
 
     # Common server parameters (security headers, server_name)
     include /etc/nginx/includes/server_params.conf;
@@ -31,7 +36,6 @@ server {
 
     # ------------------------------------------------------------------
     # Main proxy location
-    # CUSTOMIZE: Replace APP_PORT with the port your application listens on.
     # ------------------------------------------------------------------
     location / {
         # Restrict access to the HA ingress subnet only.
@@ -41,8 +45,7 @@ server {
         deny  all;
 
         # Forward to the backend application.
-        # CUSTOMIZE: Replace APP_PORT with your application's internal port.
-        proxy_pass http://127.0.0.1:APP_PORT;
+        proxy_pass http://127.0.0.1:{{ .app_port }};
 
         # Disable response buffering so streaming responses (e.g., log tails,
         # SSE, chunked JSON) are delivered immediately to the client.

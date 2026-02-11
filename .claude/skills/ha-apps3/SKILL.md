@@ -75,8 +75,9 @@ mv myapp/rootfs/etc/services.d/APP_NAME myapp/rootfs/etc/services.d/myapp
 # Replace the placeholder string in all text files
 grep -rl APP_NAME myapp/ | xargs sed -i 's/APP_NAME/myapp/g'
 
-# Replace the port placeholder (e.g., if the app listens on 8080)
-grep -rl APP_PORT myapp/ | xargs sed -i 's/APP_PORT/8080/g'
+# Replace the port placeholder in the Dockerfile ENV line only.
+# The ${APP_PORT} variable references in run scripts are correct as-is.
+sed -i '/^ENV APP_PORT=/s/APP_PORT/8080/g' myapp/Dockerfile
 ```
 
 ---
@@ -205,16 +206,20 @@ Use `exec` (not just calling the binary) so the app replaces the shell process a
 
 ### nginx ingress (automatic)
 
-The nginx configuration in `rootfs/etc/nginx/servers/ingress.conf` uses placeholders `%%interface%%` and `%%port%%` that `20-nginx.sh` replaces at runtime using the values from the HA supervisor API. The only field to update manually is `proxy_pass`:
+The nginx server block is rendered at container start by `20-nginx.sh` using **tempio** (a Go template tool pre-installed in all HA base images). The template at `rootfs/etc/nginx/templates/ingress.gtpl` receives these variables:
 
-```nginx
-proxy_pass http://127.0.0.1:APP_PORT;  # replace APP_PORT with your app's port
-```
+| Template variable | Source |
+|-------------------|--------|
+| `{{ .ingress_interface }}` | `bashio::addon.ip_address` — container IP as seen by HA |
+| `{{ .ingress_port }}` | `bashio::addon.ingress_port` — dynamically assigned port |
+| `{{ .app_port }}` | `$APP_PORT` — from Dockerfile ENV instruction |
+
+**No manual nginx configuration is needed.** The `proxy_pass` directive uses `{{ .app_port }}` which is automatically injected from the Dockerfile's `ENV APP_PORT` value.
 
 **How ingress traffic flows:**
 1. The user clicks the sidebar panel in HA.
-2. HA's ingress gateway authenticates the user and forwards the request to `%%interface%%:%%port%%` inside the container, adding an `X-Ingress-Path` header with the full path prefix (e.g. `/api/hassio_ingress/<token>`).
-3. nginx proxies the request to the backend on `127.0.0.1:APP_PORT`, forwarding `X-Ingress-Path` to the backend (already set in `proxy_params.conf`).
+2. HA's ingress gateway authenticates the user and forwards the request to `{{ .ingress_interface }}:{{ .ingress_port }}` inside the container, adding an `X-Ingress-Path` header with the full path prefix (e.g. `/api/hassio_ingress/<token>`).
+3. nginx proxies the request to the backend on `127.0.0.1:{{ .app_port }}`, forwarding `X-Ingress-Path` to the backend (already set in `proxy_params.conf`).
 
 **Authentication:** HA handles it. The backend application does not need to implement login for ingress access — only `172.30.32.2` (the HA ingress gateway) can reach nginx, and the user is already authenticated before the request arrives.
 
@@ -225,7 +230,7 @@ proxy_pass http://127.0.0.1:APP_PORT;  # replace APP_PORT with your app's port
 **Apps that embed absolute paths:** If the app generates HTML with absolute paths like `href="/static/app.js"` and does not support a configurable base URL, two options exist:
 
 - **Preferred:** Configure the app to use its base URL from the `X-Ingress-Path` header or the `APP_BASE_URL` environment variable (written by `10-app-setup.sh` via `bashio::addon.ingress_entry`). Many modern web apps support a `BASE_URL` / `ROOT_PATH` config option for exactly this purpose.
-- **Fallback:** Uncomment the `sub_filter` and `proxy_redirect` directives in `ingress.conf` — nginx rewrites the paths in HTML responses on the fly.
+- **Fallback:** Uncomment the `sub_filter` and `proxy_redirect` directives in `ingress.gtpl` — nginx rewrites the paths in HTML responses on the fly.
 
 **Additional ingress config options** (add to `config.yaml` when needed):
 
@@ -288,6 +293,8 @@ curl -f http://localhost:8099/health
 - **Services run in foreground** — never use `&` or daemon flags in `run` scripts
 - **`armv7`/`armhf`/`i386` are NOT supported** — only `aarch64` and `amd64`
 - **After changing `config.yaml` or `Dockerfile`** — run `.github/scripts/manifest.sh`
+- **`tempio` is pre-installed** — do not add it to Dockerfile `apk add`; it's in all HA base images
+- **Port configuration via `ENV APP_PORT`** — the Dockerfile `ENV APP_PORT` is the single source of truth; `20-nginx.sh` reads it via `$APP_PORT` and passes it to tempio
 
 ---
 
@@ -301,7 +308,8 @@ Consult these files for detailed information:
 - `Dockerfile` — multi-stage pattern with inline comments
 - `rootfs/etc/cont-init.d/` — three annotated init scripts (banner, app setup, nginx)
 - `rootfs/etc/services.d/` — app and nginx service run/finish scripts
-- `rootfs/etc/nginx/` — nginx.conf, ingress.conf, and includes
+- `rootfs/etc/nginx/templates/ingress.gtpl` — Go template for nginx server block, rendered by tempio
+- `rootfs/etc/nginx/includes/` — shared nginx configuration snippets (proxy params, server params)
 - `rootfs/usr/local/lib/ha-log.sh` — shared logging library API
 
 **HA add-on documentation** (`references/`):

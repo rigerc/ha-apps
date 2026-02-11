@@ -7,8 +7,9 @@
 # This script waits for the backend application to be ready before starting
 # nginx, so the proxy does not return 502 errors during startup.
 #
-# CUSTOMIZE: Update the port number (APP_PORT) and wait timeout to match your
-#            application's startup characteristics.
+# The backend port is read from $APP_PORT, which is set in the Dockerfile
+# ENV instruction and pre-populated into the container environment by s6-overlay.
+# CUSTOMIZE: Adjust the wait_timeout below for apps with long startup times.
 # ==============================================================================
 
 # Redirect stderr to stdout so nginx errors appear in the HA add-on log
@@ -28,22 +29,22 @@ log_info "Starting nginx ingress proxy..."
 # bashio::net.wait_for <port> <host> <timeout_seconds>
 # Returns 0 when a TCP connection to <host>:<port> succeeds within the timeout.
 #
-# CUSTOMIZE: Replace APP_PORT with the port your application listens on.
-#            Adjust the timeout (default: 300s) for apps with long startup times.
+# APP_PORT is set in the Dockerfile ENV instruction and pre-populated by
+# s6-overlay into the container environment.
+# CUSTOMIZE: Adjust the timeout (default: 300s) for apps with long startup times.
 # ---------------------------------------------------------------------------
-readonly backend_port=APP_PORT
 readonly backend_host="localhost"
 readonly wait_timeout=300
 
-log_info "Waiting for APP_NAME backend on ${backend_host}:${backend_port} (timeout: ${wait_timeout}s)..."
+log_info "Waiting for APP_NAME backend on ${backend_host}:${APP_PORT} (timeout: ${wait_timeout}s)..."
 
-if ! bashio::net.wait_for "${backend_port}" "${backend_host}" "${wait_timeout}"; then
+if ! bashio::net.wait_for "${APP_PORT}" "${backend_host}" "${wait_timeout}"; then
     log_error "APP_NAME backend did not become ready within ${wait_timeout}s"
     log_error "Check the APP_NAME service logs for startup errors"
     exit 1
 fi
 
-log_info "APP_NAME backend is ready on ${backend_host}:${backend_port}"
+log_info "APP_NAME backend is ready on ${backend_host}:${APP_PORT}"
 
 # ---------------------------------------------------------------------------
 # Final nginx configuration check before starting

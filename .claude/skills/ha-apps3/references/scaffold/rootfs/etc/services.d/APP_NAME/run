@@ -40,9 +40,8 @@ log_info "Log level: ${log_level}"
 export TZ="${TZ:-UTC}"
 export APP_LOG_LEVEL="${log_level}"
 
-# CUSTOMIZE: most applications listen on a fixed internal port.
-# This should match the port in servers/ingress.conf proxy_pass.
-readonly APP_PORT=APP_PORT
+# APP_PORT is set in the Dockerfile ENV instruction and pre-populated by
+# s6-overlay into the container environment. No assignment needed here.
 log_info "APP_NAME will listen on 0.0.0.0:${APP_PORT}"
 
 # ---------------------------------------------------------------------------
