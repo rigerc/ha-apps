@@ -6,8 +6,8 @@
 # USAGE
 #   Source this file at the top of any init or service script:
 #
-#     # shellcheck source=/usr/local/lib/ha-log.sh
-#     source /usr/local/lib/ha-log.sh
+#     # shellcheck source=/usr/local/lib/ha-framework/ha-log.sh
+#     source /usr/local/lib/ha-framework/ha-log.sh
 #
 #   Then call the logging functions:
 #
@@ -24,21 +24,21 @@
 #     log_warn  "Using defaults"
 #     log_error "Connection failed"
 #
-# LOG LEVELS (controlled by the 'log_level' add-on option)
+# LOG LEVELS (controlled by 'log_level' add-on option)
 #   trace   — extremely verbose; every function call and variable value
 #   debug   — diagnostic messages useful during development
 #   info    — normal operational messages (default)
 #   warning — non-fatal issues that may need attention
-#   error   — fatal errors; the service will likely stop
+#   error   — fatal errors; service will likely stop
 #
 # OUTPUT
 #   All log output goes to stdout/stderr (captured by s6-overlay and displayed
-#   in the Home Assistant add-on log panel).
+#   in Home Assistant add-on log panel).
 #   File logging is optional — set HA_LOG_FILE to enable (see below).
 #
 # ENVIRONMENT VARIABLES
-#   HA_LOG_LEVEL    — override the bashio log level (trace|debug|info|warning|error)
-#                     defaults to the 'log_level' option from /data/options.json
+#   HA_LOG_LEVEL    — override of bashio log level (trace|debug|info|warning|error)
+#                     defaults to 'log_level' option from /data/options.json
 #   HA_LOG_FILE     — if set to a path, log messages are ALSO written to that file
 #                     example: export HA_LOG_FILE=/data/APP_NAME.log
 #   HA_LOG_MAX_SIZE — maximum log file size in bytes before rotation (default: 1048576 = 1 MiB)
@@ -65,24 +65,30 @@ _ha_log_level_num() {
     esac
 }
 
-# Resolve the effective log level once and cache it.
+# Resolve effective log level once and cache it.
 # Priority: HA_LOG_LEVEL env var > bashio config 'log_level' > "info"
+#
+# IMPORTANT: Also syncs of level to bashio's internal __BASHIO_LOG_LEVEL
+# so that bashio::log.debug/trace actually output when requested.
+# Without this, bashio silently filters debug/trace even when add-on
+# option is set to debug (bashio defaults to INFO level 5, DEBUG is 6).
 _ha_log_resolve_level() {
+    local level="info"
+
     if [[ -n "${HA_LOG_LEVEL:-}" ]]; then
-        echo "${HA_LOG_LEVEL}"
-        return
+        level="${HA_LOG_LEVEL}"
+    elif configured_level="$(bashio::config 'log_level' 2>/dev/null)" && [[ -n "${configured_level}" ]]; then
+        level="${configured_level}"
     fi
 
-    # Attempt to read from add-on options (gracefully falls back if bashio unavailable)
-    local configured_level
-    if configured_level="$(bashio::config 'log_level' 2>/dev/null)"; then
-        echo "${configured_level}"
-    else
-        echo "info"
-    fi
+    # Sync to bashio's log level so bashio::log.debug/trace work
+    # This sets __BASHIO_LOG_LEVEL appropriately (debug=6, info=5, etc.)
+    bashio::log.level "${level}" 2>/dev/null || true
+
+    echo "${level}"
 }
 
-# Cache the resolved level in a global variable on first use
+# Cache resolved level in a global variable on first use
 _HA_LOG_EFFECTIVE_LEVEL=""
 _ha_log_get_effective_level() {
     if [[ -z "${_HA_LOG_EFFECTIVE_LEVEL}" ]]; then
@@ -91,7 +97,7 @@ _ha_log_get_effective_level() {
     echo "${_HA_LOG_EFFECTIVE_LEVEL}"
 }
 
-# Force a re-read of the log level (call if options may have changed)
+# Force a re-read of log level (call if options may have changed)
 ha::log::reload_level() {
     _HA_LOG_EFFECTIVE_LEVEL=""
 }
@@ -111,8 +117,8 @@ _ha_log_write() {
     timestamp="$(date '+%Y-%m-%dT%H:%M:%S%z')"
     local line="[${timestamp}] [${severity}] [${component}] ${message}"
 
-    # Route to the appropriate bashio log function (which writes to stdout/stderr
-    # in the correct format for the HA log panel).
+    # Route to appropriate bashio log function (which writes to stdout/stderr
+    # in the correct format for HA log panel).
     case "${severity}" in
         TRACE|DEBUG)
             bashio::log.debug "${line}"
@@ -138,7 +144,7 @@ _ha_log_write() {
 }
 
 # ---------------------------------------------------------------------------
-# Internal: append a line to the log file, rotating if necessary
+# Internal: append a line to log file, rotating if necessary
 # ---------------------------------------------------------------------------
 _ha_log_write_file() {
     local line="${1}"
@@ -146,12 +152,12 @@ _ha_log_write_file() {
     local max_size="${HA_LOG_MAX_SIZE:-1048576}"  # 1 MiB default
     local backups="${HA_LOG_BACKUPS:-3}"
 
-    # Ensure the parent directory exists
+    # Ensure parent directory exists
     local log_dir
     log_dir="$(dirname "${log_file}")"
     [[ -d "${log_dir}" ]] || mkdir -p "${log_dir}"
 
-    # Rotate if the file exceeds the maximum size
+    # Rotate if file exceeds maximum size
     if [[ -f "${log_file}" ]]; then
         local current_size
         current_size="$(wc -c < "${log_file}" 2>/dev/null || echo 0)"
@@ -179,7 +185,7 @@ _ha_log_rotate() {
         [[ -f "${log_file}.${i}" ]] && mv "${log_file}.${i}" "${log_file}.$((i + 1))"
     done
 
-    # Rotate the current log to .1
+    # Rotate current log to .1
     [[ -f "${log_file}" ]] && mv "${log_file}" "${log_file}.1"
 }
 
@@ -262,7 +268,7 @@ log_error()  { ha::log::error  '${component}' \"\$*\"; }
 # ---------------------------------------------------------------------------
 # ha::log::banner <title> [version]
 #
-# Prints a startup banner to the log.  Useful in cont-init.d/00-banner.sh.
+# Prints a startup banner to the log. Useful in cont-init.d/00-banner.sh.
 # Example:
 #   ha::log::banner "APP_NAME" "1.2.3"
 # ---------------------------------------------------------------------------
@@ -281,7 +287,7 @@ ha::log::banner() {
 # ---------------------------------------------------------------------------
 # ha::log::section <heading>
 #
-# Prints a visible section separator in the log.  Useful for grouping
+# Prints a visible section separator in the log. Useful for grouping
 # related log messages during long initialization sequences.
 # Example:
 #   ha::log::section "Database migration"

@@ -13,9 +13,9 @@
 # CUSTOMIZE: update the display name to match your add-on
 readonly ADDON_DISPLAY_NAME="APP_NAME"
 
-# Source the shared logging library
-# shellcheck source=/usr/local/lib/ha-log.sh
-source /usr/local/lib/ha-log.sh
+# Source the shared logging library from HA framework
+# shellcheck source=/usr/local/lib/ha-framework/ha-log.sh
+source /usr/local/lib/ha-framework/ha-log.sh
 
 # Print startup banner
 ha::log::banner "${ADDON_DISPLAY_NAME}"

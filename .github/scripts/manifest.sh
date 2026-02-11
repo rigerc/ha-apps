@@ -933,7 +933,7 @@ generate_manifest() {
     if addon_info="$(extract_addon_info "${config_file}" 2>/dev/null)"; then
       manifest="$(jq --argjson addon "${addon_info}" '. + [$addon]' <<< "${manifest}")"
     fi
-  done < <(find . -mindepth 2 -maxdepth 2 -type f \( -name "config.yaml" -o -name "config.yml" \) | sort)
+  done < <(find . -mindepth 2 -maxdepth 2 -type f \( -name "config.yaml" -o -name "config.yml" \) | grep -v "^./common/" | sort)
 
   # Write manifest atomically
   echo "${manifest}" | jq '.' > "${MANIFEST_OUTPUT}"

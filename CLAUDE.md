@@ -28,6 +28,19 @@ actionlint .github/workflows/*.yaml
 ├── DOCS.md        # User-facing docs (manually maintained)
 └── rootfs/        # Filesystem overlay (run.sh entrypoint, config scripts)
 
+common/            # Shared framework for HA add-ons
+├── README.md      # Framework documentation and usage guide
+├── version.txt    # Framework version for cache busting
+├── lib/           # Shared library modules
+│   ├── ha-log.sh       # Logging utilities
+│   ├── ha-env.sh       # Environment variable export
+│   ├── ha-config.sh    # Configuration helpers
+│   ├── ha-dirs.sh      # Directory and symlink management
+│   ├── ha-secret.sh    # Secret generation
+│   └── ha-validate.sh   # Validation functions
+└── scripts/        # Installation scripts
+    └── install-framework.sh  # Downloads and installs framework in container
+
 .github/
 ├── scripts/manifest.sh         # Manifest generator (reads config.yaml, Dockerfile)
 ├── templates/                  # Gomplate templates for READMEs
@@ -36,6 +49,39 @@ actionlint .github/workflows/*.yaml
 
 manifest.json      # Auto-generated add-on registry (used by README templates)
 ```
+
+## Common Framework
+
+The `common/` directory provides shared helper scripts and utilities for all add-ons. During Docker build, each add-on downloads the framework from GitHub and installs it at `/usr/local/lib/ha-framework/`.
+
+### Usage in Add-on Dockerfile
+
+```dockerfile
+# After copying rootfs, download and install the framework
+RUN apk add --no-cache curl && \
+    curl -fsSL "https://raw.githubusercontent.com/rigerc/ha-apps/main/common/scripts/install-framework.sh" -o /tmp/install.sh && \
+    chmod +x /tmp/install.sh && \
+    /tmp/install.sh --github main && \
+    rm -f /tmp/install.sh
+```
+
+### Usage in Init/Service Scripts
+
+Source individual libraries from the framework:
+
+```bash
+# Source logging library
+# shellcheck source=/usr/local/lib/ha-framework/ha-log.sh
+source /usr/local/lib/ha-framework/ha-log.sh
+
+# Source environment helpers
+source /usr/local/lib/ha-framework/ha-env.sh
+
+# Source configuration helpers
+source /usr/local/lib/ha-framework/ha-config.sh
+```
+
+See `common/README.md` for complete library documentation.
 
 ## Critical: Auto-Generated Files
 

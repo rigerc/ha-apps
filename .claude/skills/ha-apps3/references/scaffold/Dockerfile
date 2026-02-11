@@ -57,6 +57,14 @@ COPY --from=app-source /app /app
 # Copy the rootfs overlay — this overlays /etc and /usr/local inside the container
 COPY rootfs /
 
+# Install common HA framework from GitHub
+# Downloads and installs shared utilities for logging, configuration, and more.
+RUN apk add --no-cache curl && \
+    curl -fsSL "https://raw.githubusercontent.com/rigerc/ha-apps/main/common/scripts/install-framework.sh" -o /tmp/install-framework.sh && \
+    chmod +x /tmp/install-framework.sh && \
+    /tmp/install-framework.sh --github main && \
+    rm -f /tmp/install-framework.sh
+
 # Create the nginx servers directory.
 # ingress.conf is not shipped as a static file; it is rendered at container start
 # by cont-init.d/20-nginx.sh using tempio from the template in nginx/templates/.
@@ -68,8 +76,7 @@ RUN chmod +x \
     /etc/services.d/APP_NAME/run \
     /etc/services.d/APP_NAME/finish \
     /etc/services.d/nginx/run \
-    /etc/services.d/nginx/finish \
-    /usr/local/lib/ha-log.sh
+    /etc/services.d/nginx/finish
 
 # Set the working directory to the application root
 WORKDIR /app
