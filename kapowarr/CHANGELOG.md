@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.3](https://github.com/rigerc/ha-apps/compare/kapowarr-1.4.2...kapowarr-1.4.3) (2026-02-11)
+
+
+### 🐛 Bug Fixes
+
+* **Dockerfile:** add sqlite3 and reinstall Python dependencies ([874e6e4](https://github.com/rigerc/ha-apps/commit/874e6e43496dd47727f43dd3ba0c4ad637a1ea90))
+
+
+### 🧰 Maintenance
+
+* update manifest and configs [skip ci] ([8b0e3bc](https://github.com/rigerc/ha-apps/commit/8b0e3bce8be25910499bdcda980783e9ca42e673))
+
 ## [1.4.2](https://github.com/rigerc/ha-apps/compare/kapowarr-1.4.1...kapowarr-1.4.2) (2026-02-11)
 
 
