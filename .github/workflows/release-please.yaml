@@ -37,6 +37,7 @@ jobs:
     strategy:
       matrix:
         path: ${{ fromJSON(needs.release-please.outputs.paths_released) }}
+      fail-fast: false
     uses: ./.github/workflows/deploy.yaml
     with:
       addon: ${{ matrix.path }}

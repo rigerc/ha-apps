@@ -20,6 +20,13 @@
     ".github/dependabot.yml"
   ],
   "packages": {
+    "common": {
+      "release-type": "simple",
+      "package-name": "Common Framework",
+      "component": "common",
+      "changelog-path": "CHANGELOG.md",
+      "version-file": "version.txt"
+    },
     "cleanuparr": {
       "release-type": "simple",
       "package-name": "Cleanuparr",
