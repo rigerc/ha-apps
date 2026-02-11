@@ -164,12 +164,26 @@ ha::validate::in_range() {
         bashio::exit.nok "${_HA_VALIDATE_ERROR_PREFIX}: ${name} must be numeric, got: ${value}"
     fi
 
-    # Check range
-    if (( $(echo "${value} < ${min}" | bc -l 2>/dev/null || echo "0") )); then
+    # Integer fast path — no bc required
+    if [[ "${value}" =~ ^-?[0-9]+$ ]] && \
+       [[ "${min}"   =~ ^-?[0-9]+$ ]] && \
+       [[ "${max}"   =~ ^-?[0-9]+$ ]]; then
+        if (( value < min || value > max )); then
+            bashio::exit.nok "${_HA_VALIDATE_ERROR_PREFIX}: ${name} must be between ${min} and ${max}, got: ${value}"
+        fi
+        return 0
+    fi
+
+    # Float path — require bc
+    if ! command -v bc &>/dev/null; then
+        bashio::exit.nok "${_HA_VALIDATE_ERROR_PREFIX}: 'bc' is required for float range validation but is not installed"
+    fi
+
+    if (( $(echo "${value} < ${min}" | bc -l) )); then
         bashio::exit.nok "${_HA_VALIDATE_ERROR_PREFIX}: ${name} must be at least ${min}, got: ${value}"
     fi
 
-    if (( $(echo "${value} > ${max}" | bc -l 2>/dev/null || echo "0") )); then
+    if (( $(echo "${value} > ${max}" | bc -l) )); then
         bashio::exit.nok "${_HA_VALIDATE_ERROR_PREFIX}: ${name} must be at most ${max}, got: ${value}"
     fi
 

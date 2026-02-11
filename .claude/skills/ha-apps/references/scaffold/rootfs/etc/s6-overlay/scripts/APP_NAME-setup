@@ -15,9 +15,9 @@
 
 set -e
 
-# Source the shared logging library from HA framework
-# shellcheck source=/usr/local/lib/ha-framework/ha-log.sh
-source /usr/local/lib/ha-framework/ha-log.sh
+# Source the full HA framework (loads all libraries including ha-log.sh)
+# shellcheck source=/usr/local/lib/ha-framework/ha-framework.sh
+source /usr/local/lib/ha-framework/ha-framework.sh
 
 # Initialise short-form logging helpers (log_info, log_debug, log_warn, log_error)
 ha::log::init "setup"
@@ -43,21 +43,20 @@ log_debug "timezone  = ${timezone}"
 # s6-overlay v3 reads /var/run/s6/container_environment/* and makes those
 # variables available via "with-contenv" (the shebang in service run scripts).
 #
-# Write ONLY variables that the service script needs but that are not already
-# available from the HA base image.
+# Use ha::env::export for generic variables, ha::env::log_level for log level,
+# ha::env::timezone for TZ, and ha::env::ingress for the ingress entry URL.
 # ---------------------------------------------------------------------------
-declare env_dir="/var/run/s6/container_environment"
 
 # Timezone
-printf '%s' "${timezone}" > "${env_dir}/TZ"
+ha::env::timezone "${timezone}"
 log_debug "TZ persisted: ${timezone}"
 
-# Application log level (normalised to uppercase for apps that expect it)
-printf '%s' "${log_level}" > "${env_dir}/APP_LOG_LEVEL"
+# Application log level
+ha::env::log_level "${log_level}"
 
 # CUSTOMIZE: export additional environment variables here, for example:
-# printf '%s' "$(bashio::config 'username')" > "${env_dir}/APP_USERNAME"
-# printf '%s' "$(bashio::config 'password')" > "${env_dir}/APP_PASSWORD"
+# ha::env::export "APP_USERNAME" "$(bashio::config 'username')"
+# ha::env::export "APP_PASSWORD" "$(bashio::config 'password')"
 
 # ---------------------------------------------------------------------------
 # Prepare persistent data directories
@@ -66,21 +65,18 @@ printf '%s' "${log_level}" > "${env_dir}/APP_LOG_LEVEL"
 ha::log::section "Directory setup"
 
 # /config is the addon_config mount (persistent, survives restarts and updates)
-if [[ ! -d "/config" ]]; then
-    log_warn "/config directory not found — creating it"
-    mkdir -p /config
-fi
+# ha::dirs::ensure creates the directory (and its parents) if it does not exist
+ha::dirs::ensure "/config"
 
 # Create application-specific subdirectories inside /config
 # CUSTOMIZE: adjust these paths to match what your application expects
-mkdir -p /config/data
-mkdir -p /config/logs
+ha::dirs::create_subdirs "/config" "data" "logs"
 
 log_debug "Data directories ready"
 
 # /share is the shared storage mount
 # CUSTOMIZE: uncomment if the app needs to write to /share
-# mkdir -p /share/APP_NAME
+# ha::dirs::ensure "/share/APP_NAME"
 
 # ---------------------------------------------------------------------------
 # Ingress: export the base URL so the app can construct correct URLs
@@ -88,7 +84,7 @@ log_debug "Data directories ready"
 if bashio::addon.ingress; then
     declare ingress_entry
     ingress_entry="$(bashio::addon.ingress_entry)"
-    printf '%s' "${ingress_entry}" > "${env_dir}/APP_BASE_URL"
+    ha::env::ingress "${ingress_entry}"
     log_info "Ingress base URL: ${ingress_entry}"
 fi
 

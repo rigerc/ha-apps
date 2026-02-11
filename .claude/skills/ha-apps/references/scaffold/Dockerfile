@@ -58,27 +58,25 @@ COPY --from=app-source /app /app
 COPY rootfs /
 
 # Install common HA framework from GitHub
-# Downloads and installs shared utilities for logging, configuration, and more.
-RUN apk add --no-cache curl && \
-    curl -fsSL "https://raw.githubusercontent.com/rigerc/ha-apps/main/common/scripts/install-framework.sh" -o /tmp/install-framework.sh && \
+# NOTE: curl is already provided by the HA base image.
+RUN curl -fsSL "https://raw.githubusercontent.com/rigerc/ha-apps/main/common/scripts/install-framework.sh" -o /tmp/install-framework.sh && \
     chmod +x /tmp/install-framework.sh && \
     /tmp/install-framework.sh --github main && \
     rm -f /tmp/install-framework.sh
 
-# Create the nginx servers directory.
+# Create the nginx servers directory and set execute permissions on all
+# s6-overlay v3 scripts in a single layer.
 # ingress.conf is not shipped as a static file; it is rendered at container start
 # by the nginx-setup oneshot using tempio from the template in nginx/templates/.
-RUN mkdir -p /etc/nginx/servers
-
-# Set execute permissions on all s6-overlay v3 scripts in a single layer.
-RUN chmod +x \
-    /etc/s6-overlay/scripts/banner \
-    /etc/s6-overlay/scripts/APP_NAME-setup \
-    /etc/s6-overlay/scripts/nginx-setup \
-    /etc/s6-overlay/s6-rc.d/APP_NAME/run \
-    /etc/s6-overlay/s6-rc.d/APP_NAME/finish \
-    /etc/s6-overlay/s6-rc.d/nginx/run \
-    /etc/s6-overlay/s6-rc.d/nginx/finish
+RUN mkdir -p /etc/nginx/servers && \
+    chmod +x \
+        /etc/s6-overlay/scripts/banner \
+        /etc/s6-overlay/scripts/APP_NAME-setup \
+        /etc/s6-overlay/scripts/nginx-setup \
+        /etc/s6-overlay/s6-rc.d/APP_NAME/run \
+        /etc/s6-overlay/s6-rc.d/APP_NAME/finish \
+        /etc/s6-overlay/s6-rc.d/nginx/run \
+        /etc/s6-overlay/s6-rc.d/nginx/finish
 
 # Set the working directory to the application root
 WORKDIR /app

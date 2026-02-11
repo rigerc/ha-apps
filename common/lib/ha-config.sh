@@ -293,7 +293,7 @@ ha::config::validate_path() {
 ha::config::map_to_env() {
     local config_key="${1:?Config key is required}"
     local env_name="${2:?Environment variable name is required}"
-    local transform_func="${3:-cat}"
+    local transform_func="${3:-}"
 
     if ! bashio::config.has_value "${config_key}"; then
         return 0
@@ -302,7 +302,11 @@ ha::config::map_to_env() {
     local value
     value="$(bashio::config "${config_key}")"
     local transformed
-    transformed="$(${transform_func} "${value}")"
+    if [[ -n "${transform_func}" ]]; then
+        transformed="$("${transform_func}" "${value}")"
+    else
+        transformed="${value}"
+    fi
 
     export "${env_name}=${transformed}"
     printf '%s' "${transformed}" > "/var/run/s6/container_environment/${env_name}"

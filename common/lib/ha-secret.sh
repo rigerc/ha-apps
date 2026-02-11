@@ -119,7 +119,6 @@ ha::secret::ensure() {
     # 3. Generate new secret
     bashio::log.info "No ${config_key} configured — generating one automatically"
     ha::secret::generate "${output_file}" "${length}" "${mode}"
-    cat "${output_file}"
 }
 
 # ---------------------------------------------------------------------------

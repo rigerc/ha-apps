@@ -15,8 +15,7 @@
 #         /tmp/install.sh && rm -f /tmp/install.sh
 #
 #   During container init (downloading from GitHub):
-#     RUN apk add --no-cache curl && \
-#         curl -fsSL "https://raw.githubusercontent.com/rigerc/ha-apps/main/common/scripts/install-framework.sh" -o /tmp/install.sh && \
+#     RUN curl -fsSL "https://raw.githubusercontent.com/rigerc/ha-apps/main/common/scripts/install-framework.sh" -o /tmp/install.sh && \
 #         bash /tmp/install.sh && rm -f /tmp/install.sh
 #
 #   To install from local copy during build:
@@ -29,11 +28,34 @@ set -e
 readonly FRAMEWORK_DIR="/usr/local/lib/ha-framework"
 readonly VERSION_FILE="${FRAMEWORK_DIR}/version.txt"
 
-# Colors for output (disabled in container, but useful for local testing)
-readonly COLOR_RESET=""
-readonly COLOR_GREEN=""
-readonly COLOR_YELLOW=""
-readonly COLOR_RED=""
+# Colors for output — only emit ANSI codes when stdout is a terminal
+if [[ -t 1 ]]; then
+    readonly COLOR_RESET=$'\033[0m'
+    readonly COLOR_GREEN=$'\033[0;32m'
+    readonly COLOR_YELLOW=$'\033[0;33m'
+    readonly COLOR_RED=$'\033[0;31m'
+else
+    readonly COLOR_RESET=""
+    readonly COLOR_GREEN=""
+    readonly COLOR_YELLOW=""
+    readonly COLOR_RED=""
+fi
+
+# ---------------------------------------------------------------------------
+# Single authoritative list of framework library files.
+# Both install_framework_from_github() and verify_installation() reference
+# this array so the two functions can never get out of sync.
+# ---------------------------------------------------------------------------
+readonly FRAMEWORK_LIBRARIES=(
+    "ha-log.sh"
+    "ha-env.sh"
+    "ha-config.sh"
+    "ha-dirs.sh"
+    "ha-secret.sh"
+    "ha-template.sh"
+    "ha-validate.sh"
+    "ha-framework.sh"
+)
 
 # ---------------------------------------------------------------------------
 # Logging functions
@@ -83,9 +105,39 @@ install_framework_from_local() {
 }
 
 # ---------------------------------------------------------------------------
+# _discover_github_libs <version>
+#
+# Uses the GitHub Contents API to enumerate .sh files in common/lib.
+# Prints one filename per line on success, or returns 1 on failure.
+# No jq required — parsing is done with grep and sed.
+# ---------------------------------------------------------------------------
+_discover_github_libs() {
+    local version="${1}"
+    local api_url="https://api.github.com/repos/rigerc/ha-apps/contents/common/lib?ref=${version}"
+
+    local response
+    if ! response="$(curl -fsSL "${api_url}" 2>/dev/null)"; then
+        return 1
+    fi
+
+    # Extract filenames from JSON array: "name":"ha-foo.sh"
+    local names
+    names="$(printf '%s' "${response}" | grep -o '"name":"[^"]*\.sh"' | sed 's/"name":"//;s/"//')"
+
+    if [[ -z "${names}" ]]; then
+        return 1
+    fi
+
+    echo "${names}"
+    return 0
+}
+
+# ---------------------------------------------------------------------------
 # install_framework_from_github <version>
 #
 # Downloads and installs framework from GitHub.
+# Tries to discover the library list dynamically via the Contents API first;
+# falls back to FRAMEWORK_LIBRARIES if the API call fails (rate-limit protection).
 # ---------------------------------------------------------------------------
 install_framework_from_github() {
     local version="${1:-main}"
@@ -96,15 +148,18 @@ install_framework_from_github() {
     # Create framework directory
     mkdir -p "${FRAMEWORK_DIR}"
 
-    # List of library files to download
-    local libraries=(
-        "ha-log.sh"
-        "ha-env.sh"
-        "ha-config.sh"
-        "ha-dirs.sh"
-        "ha-secret.sh"
-        "ha-validate.sh"
-    )
+    # Attempt dynamic discovery; fall back to the static list
+    local libraries=()
+    local discovered
+    if discovered="$(_discover_github_libs "${version}")"; then
+        log_info "Discovered libraries via GitHub API"
+        while IFS= read -r lib; do
+            [[ -n "${lib}" ]] && libraries+=("${lib}")
+        done <<< "${discovered}"
+    else
+        log_warn "GitHub API discovery failed (rate limit?); using built-in library list"
+        libraries=("${FRAMEWORK_LIBRARIES[@]}")
+    fi
 
     # Download each library file
     for lib in "${libraries[@]}"; do
@@ -136,17 +191,8 @@ install_framework_from_github() {
 verify_installation() {
     log_info "Verifying framework installation..."
 
-    local required_libs=(
-        "ha-log.sh"
-        "ha-env.sh"
-        "ha-config.sh"
-        "ha-dirs.sh"
-        "ha-secret.sh"
-        "ha-validate.sh"
-    )
-
     local missing=0
-    for lib in "${required_libs[@]}"; do
+    for lib in "${FRAMEWORK_LIBRARIES[@]}"; do
         local path="${FRAMEWORK_DIR}/${lib}"
         if [[ ! -f "${path}" ]]; then
             log_error "Missing library: ${lib}"
@@ -269,7 +315,7 @@ main() {
     # Auto-detect mode if not specified
     if [[ "${install_mode}" == "auto" ]]; then
         if [[ -d "/usr/local/lib/ha-framework" ]] && \
-           ls /usr/local/lib/ha-framework/*.sh >/dev/null 2>&1; then
+           compgen -G "/usr/local/lib/ha-framework/*.sh" >/dev/null 2>&1; then
             install_mode="local"
         else
             install_mode="github"

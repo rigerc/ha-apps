@@ -91,7 +91,7 @@ _ha_template_build_vars() {
     for arg in "${args[@]}"; do
         [[ -z "${arg}" ]] && continue
 
-        if [[ "${arg}" =~ ^=([^=]+)=(.*)$ ]]; then
+        if [[ "${arg}" =~ ^([^=]+)=(.*)$ ]]; then
             local key="${BASH_REMATCH[1]}"
             local value="${BASH_REMATCH[2]}"
 
