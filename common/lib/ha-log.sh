@@ -117,25 +117,13 @@ _ha_log_write() {
     timestamp="$(date '+%Y-%m-%dT%H:%M:%S%z')"
     local line="[${timestamp}] [${severity}] [${component}] ${message}"
 
-    # Route to appropriate bashio log function (which writes to stdout/stderr
-    # in the correct format for HA log panel).
-    case "${severity}" in
-        TRACE|DEBUG)
-            bashio::log.debug "${line}"
-            ;;
-        INFO)
-            bashio::log.info  "${line}"
-            ;;
-        WARN)
-            bashio::log.warning "${line}"
-            ;;
-        ERROR)
-            bashio::log.error "${line}"
-            ;;
-        *)
-            bashio::log.info  "${line}"
-            ;;
-    esac
+    # Route all messages through bashio::log.info.
+    # ha-log.sh already filters by effective level before calling this function,
+    # so severity-specific bashio functions (log.debug, log.warning, etc.) are
+    # not needed for filtering. Calling them can trigger a bashio nameref bug
+    # ("debug: unbound variable") when log level names are used as variable
+    # references internally by bashio under set -u.
+    bashio::log.info "${line}"
 
     # Optional file logging
     if [[ -n "${HA_LOG_FILE:-}" ]]; then

@@ -1,7 +1,7 @@
 #!/usr/bin/with-contenv bashio
 # shellcheck shell=bash
 # ==============================================================================
-# services.d/nginx/finish — nginx service finish script
+# s6-rc.d/nginx/finish — nginx service finish script
 #
 # s6-overlay calls this script when the nginx 'run' script exits.
 #
@@ -27,5 +27,10 @@ ha::log::init "nginx"
 if [[ "${exit_code}" -ne 0 ]] && [[ "${exit_code}" -ne 256 ]]; then
     log_error "nginx crashed (exit code ${exit_code}) — stopping add-on"
     log_error "Check the nginx error log output above for details"
-    s6-svscanctl -t /var/run/s6/services
+
+    # Write the exit code so the container returns a non-zero status
+    echo "${exit_code}" > /run/s6-linux-init-container-results/exitcode
+
+    # Halt the entire s6 supervision tree (stops the add-on)
+    exec /run/s6/basedir/bin/halt
 fi
