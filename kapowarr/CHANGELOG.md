@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.7](https://github.com/rigerc/ha-apps/compare/kapowarr-1.4.6...kapowarr-1.4.7) (2026-02-11)
+
+
+### 🐛 Bug Fixes
+
+* **ingress:** update ingress path to use ingress_entry instead of ingress_path ([1c067de](https://github.com/rigerc/ha-apps/commit/1c067de3f12ef00c21fbbb6f197d499bf7dc54c2))
+
 ## [1.4.6](https://github.com/rigerc/ha-apps/compare/kapowarr-1.4.5...kapowarr-1.4.6) (2026-02-11)
 
 
