@@ -7,18 +7,11 @@ on:
     branches:
       - main
     paths:
-      - "*/config.yaml"
-      - "*/build.yaml"
-      - "*/Dockerfile"
       - ".github/templates/**"
       - ".github/scripts/manifest.sh"
-      - "!manifest.json"
-      - "!.github/dependabot.yml"
-      - "!.github/.release-please-manifest.json"
-      - "!*/README.md"
 
   schedule:
-    - cron: '0 6 * * 2'  # Tuesdays at 06:00 UTC
+    - cron: '15 0 * * *'  # Daily at 00:15 UTC
 
 permissions:
   contents: write
