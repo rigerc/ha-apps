@@ -10,7 +10,6 @@ on:
       - "kapowarr/**"
       - "profilarr/**"
       - "romm/**"
-      - "common/**"
   workflow_dispatch:
 permissions:
   contents: read

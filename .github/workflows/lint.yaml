@@ -17,7 +17,6 @@ jobs:
     outputs:
       addons: ${{ steps.addons.outputs.addons_list }}
       addons_csv: ${{ steps.addons.outputs.addons }}
-      common_changed: ${{ steps.check_common.outputs.any_changed || steps.check_common_dispatch.outputs.common_changed || 'false' }}
     steps:
       - name: ⤵️ Check out the repository
         uses: actions/checkout@v6
@@ -39,24 +38,6 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         with:
           ignore: ".gemini"
-
-      - name: 🔍 Check if common framework changed
-        id: check_common
-        if: github.event_name != 'workflow_dispatch'
-        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47
-        with:
-          files: common/**
-
-      - name: 🔍 Check if common framework has shell scripts (workflow_dispatch)
-        id: check_common_dispatch
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          # For manual dispatch, check if any .sh files exist in common/
-          if find ./common -name "*.sh" -type f | grep -q .; then
-            echo "common_changed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "common_changed=false" >> "$GITHUB_OUTPUT"
-          fi
 
       - name: 📋 Build addons list
         id: addons
@@ -128,7 +109,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: find
-    if: needs.find.outputs.addons_csv != '' || needs.find.outputs.common_changed == 'true'
+    if: needs.find.outputs.addons_csv != ''
     steps:
       - name: ⤵️ Check out the repository
         uses: actions/checkout@v6
@@ -140,12 +121,6 @@ jobs:
             echo "🔍 Shellchecking $addon..."
             find "./$addon" -name "*.sh" -exec shellcheck -s bash {} +
           done
-
-          # Shellcheck common framework if changed
-          if [[ "${{ needs.find.outputs.common_changed }}" == "true" ]]; then
-            echo "🔍 Shellchecking common..."
-            find "./common" -name "*.sh" -exec shellcheck -s bash {} +
-          fi
 
   markdown:
     name: 🔍 Markdown Lint

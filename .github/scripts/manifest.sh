@@ -598,70 +598,6 @@ extract_addon_info() {
 }
 
 #######################################
-# Extract common framework information
-# Globals:
-#   PROJECT_ROOT
-# Arguments:
-#   None
-# Returns:
-#   0 on success, 1 on error
-#######################################
-extract_common_info() {
-  local common_dir="${PROJECT_ROOT}/common"
-  local version_file="${common_dir}/version.txt"
-  local slug="common"
-  local name="HA Common Framework"
-  local description="Shared framework library for Home Assistant add-ons providing logging, environment, configuration, directories, secret generation, and validation utilities."
-  local version=""
-  local last_release=""
-
-  # Read version from version.txt
-  if [[ -f "${version_file}" ]]; then
-    version="$(cat "${version_file}" | tr -d '\n\r' | tr -d ' ')"
-  fi
-
-  # Check if common has a public release on GitHub (tag matching common-*)
-  echo "Checking for public releases with tag 'common-*'..." >&2
-  last_release="$(get_latest_release_for_slug "${slug}")"
-  if [[ -n "${last_release}" ]]; then
-    echo "  Last release: ${last_release}" >&2
-  else
-    echo "  No public release found" >&2
-  fi
-
-  # Output JSON object for this addon
-  jq -n \
-    --arg slug "${slug}" \
-    --arg version "${version}" \
-    --arg name "${name}" \
-    --arg description "${description}" \
-    --argjson architectures "${architectures}" \
-    --arg image "${image}" \
-    --arg tag "${tag}" \
-    --arg latest_tag "${latest_tag}" \
-    --arg project "${project}" \
-    --argjson has_icon "${has_icon}" \
-    --argjson ingress "${ingress}" \
-    --argjson is_up_to_date "${is_up_to_date}" \
-    --arg last_release "${last_release}" \
-    '{
-      slug: $slug,
-      version: $version,
-      name: $name,
-      description: $description,
-      arch: $architectures,
-      image: $image,
-      tag: $tag,
-      latest_tag: $latest_tag,
-      project: $project,
-      has_icon: $has_icon,
-      ingress: $ingress,
-      is_up_to_date: $is_up_to_date,
-      last_release: $last_release
-    }'
-}
-
-#######################################
 # Update dependabot.yml with all found slugs
 # Globals:
 #   PROJECT_ROOT
@@ -824,16 +760,6 @@ update_release_please_manifest() {
   local slug
   local version
 
-  # Add common framework version from version.txt
-  local common_version_file="${PROJECT_ROOT}/common/version.txt"
-  if [[ -f "${common_version_file}" ]]; then
-    local common_version
-    common_version="$(cat "${common_version_file}" | tr -d '\n\r' | tr -d ' ')"
-    if [[ -n "${common_version}" ]]; then
-      new_manifest="$(echo "${new_manifest}" | jq --arg version "${common_version}" '. + {common: $version}')"
-    fi
-  fi
-
   while IFS= read -r addon; do
     slug="$(echo "${addon}" | jq -r '.slug')"
     version="$(echo "${addon}" | jq -r '.version')"
@@ -882,19 +808,9 @@ update_release_please_config() {
   local name
   local package_entry
 
-  # Preserve common package entry if it exists
-  if echo "${config}" | jq -e '.packages.common' > /dev/null 2>&1; then
-    new_packages="$(echo "${config}" | jq '.packages | {common: .common}')"
-  fi
-
   while IFS= read -r addon; do
     slug="$(echo "${addon}" | jq -r '.slug')"
     name="$(echo "${addon}" | jq -r '.name')"
-
-    # Skip common - it has special handling above
-    if [[ "${slug}" == "common" ]]; then
-      continue
-    fi
 
     package_entry="$(jq -n \
       --arg name "${name}" \
@@ -983,12 +899,6 @@ update_ci_workflow() {
       paths_json+=", \"${path}\""
     fi
   done < <(printf '%s\n' "${paths[@]}" | sort)
-  # Add common/** to paths (framework directory)
-  if [[ "${first}" == "true" ]]; then
-    paths_json="\"common/**\""
-  else
-    paths_json+=", \"common/**\""
-  fi
   paths_json+="]"
 
   # Apply the update using yq with double-quoted style

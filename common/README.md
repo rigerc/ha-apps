@@ -1,172 +1,639 @@
 # Home Assistant Add-on Common Framework
 
-Shared helper scripts and utilities for Home Assistant add-ons. This framework provides consistent, tested functions for logging, configuration, environment management, and common setup patterns.
+Shared helper scripts for Home Assistant add-ons in this repository. Provides consistent logging, configuration reading, environment variable export, directory management, secret handling, and validation — all built on top of bashio.
 
-## Installationn
+**Installed at:** `/usr/local/lib/ha-framework/`
+**Current version:** 1.1.0
 
-In your add-on's Dockerfile, add the framework installation after copying rootfs:
+---
+
+## Installation
+
+Add the following to your add-on's `Dockerfile` after copying `rootfs`:
 
 ```dockerfile
-# Download and install common framework
 RUN apk add --no-cache curl && \
-    FRAMEWORK_VERSION=$(curl -s https://raw.githubusercontent.com/rigerc/ha-apps/main/common/version.txt) && \
-    curl -fsSL "https://raw.githubusercontent.com/rigerc/ha-apps/main/common/scripts/install-framework.sh" -o /tmp/install.sh && \
-    bash /tmp/install.sh "${FRAMEWORK_VERSION}" && \
+    curl -fsSL "https://raw.githubusercontent.com/rigerc/ha-apps/main/common/scripts/install-framework.sh" \
+        -o /tmp/install.sh && \
+    chmod +x /tmp/install.sh && \
+    /tmp/install.sh --github main && \
     rm -f /tmp/install.sh
 ```
 
+To pin to a specific version tag instead of `main`:
+
+```dockerfile
+/tmp/install.sh --github v1.1.0
+```
+
+---
+
 ## Usage
 
-Source individual libraries in your init or service scripts:
+Source the libraries you need at the top of any `cont-init.d` or service script:
 
 ```bash
-# Source logging library
+#!/usr/bin/with-contenv bashio
+# shellcheck shell=bash
+
 # shellcheck source=/usr/local/lib/ha-framework/ha-log.sh
 source /usr/local/lib/ha-framework/ha-log.sh
 
-# Source environment helpers
 # shellcheck source=/usr/local/lib/ha-framework/ha-env.sh
 source /usr/local/lib/ha-framework/ha-env.sh
 
-# Source configuration helpers
 # shellcheck source=/usr/local/lib/ha-framework/ha-config.sh
 source /usr/local/lib/ha-framework/ha-config.sh
 
-# Source initialization helpers
-# shellcheck source=/usr/local/lib/ha-framework/ha-env.sh
-source /usr/local/lib/ha-framework/ha-env.sh
+# shellcheck source=/usr/local/lib/ha-framework/ha-dirs.sh
+source /usr/local/lib/ha-framework/ha-dirs.sh
 
-# Source template helpers
-# shellcheck source=/usr/local/lib/ha-framework/ha-template.sh
-source /usr/local/lib/ha-framework/ha-template.sh
+# shellcheck source=/usr/local/lib/ha-framework/ha-secret.sh
+source /usr/local/lib/ha-framework/ha-secret.sh
+
+# shellcheck source=/usr/local/lib/ha-framework/ha-validate.sh
+source /usr/local/lib/ha-framework/ha-validate.sh
 ```
 
-## Library Modules
+Each library is idempotent — sourcing it multiple times is safe.
 
-### ha-log.sh
-Structured logging with component scoping and log level control.
+---
+
+## Libraries
+
+- [ha-log.sh](#ha-logsh) — Structured logging with level control and optional file output
+- [ha-env.sh](#ha-envsh) — Export variables to shell and s6-overlay container environment
+- [ha-config.sh](#ha-configsh) — Read and validate add-on configuration options
+- [ha-dirs.sh](#ha-dirssh) — Create directories, manage symlinks
+- [ha-secret.sh](#ha-secretsh) — Generate and persist cryptographic secrets
+- [ha-validate.sh](#ha-validatesh) — Validate values (ports, URLs, emails, ranges, etc.)
+
+---
+
+## ha-log.sh
+
+Structured logging built on top of bashio. All output goes to stdout/stderr and appears in the Home Assistant add-on log panel.
+
+### Log levels
+
+| Level     | When to use |
+|-----------|-------------|
+| `trace`   | Every function call, variable values — maximum verbosity |
+| `debug`   | Diagnostic messages useful during development |
+| `info`    | Normal operational messages (default) |
+| `warning` | Non-fatal issues that may need attention |
+| `error`   | Fatal errors — service will likely stop |
+
+Level is read from the `log_level` option in `/data/options.json`. Override via the `HA_LOG_LEVEL` environment variable.
+
+### Short-form helpers (recommended)
+
+Call `ha::log::init` once per script to get `log_info`, `log_debug`, etc. scoped to a component name:
 
 ```bash
-ha::log::init "myapp"  # Creates log_info, log_debug, etc.
-log_info "Application starting"
-ha::log::section "Database setup"
-ha::log::banner "My App" "1.0.0"
+ha::log::init "myapp"
+
+log_info  "Server started on port 8080"
+log_debug "Request received: GET /"
+log_warn  "Config file not found, using defaults"
+log_error "Failed to connect to database"
+log_trace "Entering function foo with args: $*"
 ```
 
-### ha-env.sh
-Environment variable export utilities for add-on initialization.
+Output format: `[2024-01-15T10:30:00+0000] [INFO] [myapp] Server started on port 8080`
+
+### Direct API
+
+Use when you need per-call component control:
 
 ```bash
-ha::env::export "MY_VAR" "some_value"
-ha::env::export_config "my_option" "MY_VAR"
-ha::env::export_required "required_option" "REQUIRED_VAR"
+ha::log::info    "nginx" "Starting nginx"
+ha::log::debug   "nginx" "Config reloaded"
+ha::log::warn    "nginx" "Worker process restarted"
+ha::log::error   "nginx" "Failed to bind port 80"
+ha::log::trace   "nginx" "Entering upstream block"
+ha::log::warning "nginx" "Alias for warn"
+```
+
+Errors are always emitted regardless of the configured log level.
+
+### Banners and sections
+
+```bash
+# Startup banner — use in your first cont-init.d script
+ha::log::banner "My App" "2.1.0"
+# Output:
+# ---
+# My App v2.1.0
+# Initializing add-on...
+# ---
+
+# Section separator — groups related log lines during long init sequences
+ha::log::section "Database migration"
+# Output: --- Database migration ---
+```
+
+### File logging (optional)
+
+Set environment variables before sourcing to enable file logging:
+
+```bash
+export HA_LOG_FILE="/data/myapp.log"
+export HA_LOG_MAX_SIZE=2097152   # 2 MiB (default: 1 MiB)
+export HA_LOG_BACKUPS=5          # rotated files to keep (default: 3)
+```
+
+Log messages are written to stdout/stderr **and** the file. The file rotates automatically when `HA_LOG_MAX_SIZE` is exceeded.
+
+### Force level re-read
+
+```bash
+# If options may have changed since the script started:
+ha::log::reload_level
+```
+
+---
+
+## ha-env.sh
+
+Exports environment variables to both the shell and to `/var/run/s6/container_environment/`, making them available to all s6-overlay services that use `#!/usr/bin/with-contenv bashio`.
+
+### Export a literal value
+
+```bash
+ha::env::export "APP_PORT" "8080"
+ha::env::export "DATABASE_URL" "postgresql://localhost/myapp"
+```
+
+### Export from add-on configuration
+
+Reads from `/data/options.json` via bashio:
+
+```bash
+# Config key becomes env name (uppercased): log_level -> LOG_LEVEL
+ha::env::export_config "log_level"
+
+# Explicit env name
+ha::env::export_config "database.host" "DB_HOST"
+ha::env::export_config "database.port" "DB_PORT"
+```
+
+### Required configuration
+
+Exits with an error if the option is missing:
+
+```bash
+ha::env::export_required "database.host"
+ha::env::export_required "api_key" "API_KEY"
+```
+
+### Optional configuration
+
+Only exports if the option has a value:
+
+```bash
+ha::env::export_if_set "smtp_host"
+ha::env::export_if_set "smtp_host" "SMTP_HOST"
+```
+
+### Default fallback
+
+Only sets the variable if it is not already defined in the environment:
+
+```bash
+ha::env::export_default "APP_PORT" "8080"
+ha::env::export_default "LOG_LEVEL" "info"
+```
+
+### Export from a file
+
+Useful for secrets or values generated at runtime:
+
+```bash
+ha::env::export_from_file "AUTH_SECRET" "/data/.secret_key"
+```
+
+Exits with error if the file does not exist.
+
+### Export multiple config keys with a prefix
+
+```bash
+# Config: metadata_providers.api_key=abc, metadata_providers.url=https://...
+ha::env::export_multi "METADATA" "metadata_providers.api_key" "metadata_providers.url"
+# Exports: METADATA_METADATA_PROVIDERS_API_KEY, METADATA_METADATA_PROVIDERS_URL
+```
+
+### Built-in convenience functions
+
+```bash
+# Reads "timezone" config key (default: UTC), exports TZ, logs the value
 ha::env::timezone
+ha::env::timezone "tz" "America/New_York"   # custom key and default
+
+# Reads "log_level" config key (default: info), exports LOG_LEVEL
 ha::env::log_level
-ha::env::ingress "BASE_URL"
-ha::env::service_discovery "mysql"
+ha::env::log_level "log_level" "debug" "APP_LOG_LEVEL"  # custom key, default, env name
+
+# Exports ingress entry URL — does nothing if ingress is not enabled
+ha::env::ingress                  # exports INGRESS_ENTRY
+ha::env::ingress "BASE_URL"       # custom env name
 ```
 
-### ha-init.sh (Example template)
-Example initialization script demonstrating standard patterns. Copy and customize for your add-on.
+### Service discovery
+
+Checks if an add-on service is available and exports its connection details:
 
 ```bash
-# Use as a starting point for your cont-init.d scripts
-cp /usr/local/lib/ha-framework/examples/ha-init.sh /etc/cont-init.d/10-init.sh
+if ha::env::service_discovery "mysql"; then
+    # Now available: MYSQL_HOST, MYSQL_PORT, MYSQL_USERNAME, MYSQL_PASSWORD, MYSQL_DATABASE
+    log_info "Using MySQL"
+else
+    log_info "MySQL not available, falling back to SQLite"
+fi
+
+ha::env::service_discovery "redis"
+# Exports: REDIS_HOST, REDIS_PORT, REDIS_USERNAME, REDIS_PASSWORD, REDIS_DATABASE
 ```
 
-See the file for a complete example with comments explaining each section.
-Environment variable export to both shell and s6-overlay.
+---
 
-```bash
-ha::env::export "MY_VAR" "some_value"
-ha::env::export_config "my_option" "MY_VAR"
-ha::env::export_required "required_option" "REQUIRED_VAR"
-```
+## ha-config.sh
 
-### ha-config.sh
-Configuration reading and validation helpers.
+Wrappers around `bashio::config` with consistent error handling and validation.
+
+### Require a value exists
 
 ```bash
 ha::config::require "database.host"
-ha::config::get "log_level" "info"
-ha::config::validate_port "web_port"
-ha::config::validate_url "api_url"
-ha::config::remove_deprecated "old_option"  # Remove stale config keys
+
+# At least one of these must exist:
+ha::config::require_any "api_key" "api_token" "api_password"
 ```
 
-### ha-dirs.sh
-Directory creation and symlink management.
+Both exit with an error message if the requirement is not met.
+
+### Read values
 
 ```bash
-ha::dirs::ensure "/config/data" "755"
-ha::dirs::create_subdirs "/config" "data" "logs" "cache"
-ha::symlink::create "/data/library" "/romm/library"
-ha::symlink::update "/data/library" "/romm/library"
+# Returns the value; sets global $_HA_CONFIG_GET_VALUE
+log_level="$(ha::config::get "log_level" "info")"
+
+# Normalizes true/yes/on/1/enabled -> "true", false/no/off/0/disabled/"" -> "false"
+enabled="$(ha::config::get_bool "feature_enabled" "false")"
+if [[ "${enabled}" == "true" ]]; then
+    log_info "Feature is enabled"
+fi
+
+# Splits a config value into an array (global: $_HA_CONFIG_GET_LIST)
+ha::config::get_list "allowed_ips" ","
+for ip in "${_HA_CONFIG_GET_LIST[@]}"; do
+    log_info "Allowing IP: ${ip}"
+done
 ```
 
-### ha-secret.sh
-Secret generation and management.
+### Validate option values
+
+All validation functions exit with an error message on failure:
+
+```bash
+# Port number (default range: 1-65535)
+ha::config::validate_port "web_port"
+ha::config::validate_port "web_port" 1024 65535   # custom range
+
+# URL format
+ha::config::validate_url "api_url"
+ha::config::validate_url "api_url" "true"          # require HTTPS
+
+# Email address format
+ha::config::validate_email "admin_email"
+
+# One of a set of allowed values
+ha::config::validate_choice "log_level" "trace" "debug" "info" "warning" "error"
+
+# File system path (optionally require it to exist)
+ha::config::validate_path "data_dir"
+ha::config::validate_path "config_file" "true"     # must exist
+```
+
+### Map config value to env variable with transformation
+
+```bash
+to_upper() { echo "${1^^}"; }
+ha::config::map_to_env "log_level" "LOG_LEVEL" "to_upper"
+```
+
+The transform function receives the raw config value on `$1` and should echo the transformed value. Defaults to `cat` (no transformation).
+
+### Remove deprecated options
+
+Prevents Supervisor warnings when you remove a config option from an existing add-on:
+
+```bash
+ha::config::remove_deprecated "old_option"
+ha::config::remove_deprecated "deprecated_feature_flag"
+```
+
+Call these at the start of your init script, before any other config reads. They silently do nothing if the key doesn't exist.
+
+---
+
+## ha-dirs.sh
+
+Directory creation, permission management, and symlink handling.
+
+### Create directories
+
+```bash
+# Creates the directory if it doesn't exist (idempotent)
+ha::dirs::ensure "/config/data"
+ha::dirs::ensure "/config/data" "755"
+ha::dirs::ensure "/config/data" "755" "abc:users"   # set owner
+
+# Create multiple subdirectories under a base path
+ha::dirs::create_subdirs "/config" "data" "logs" "cache" "tmp"
+# Creates: /config/data, /config/logs, /config/cache, /config/tmp
+```
+
+### Create files
+
+```bash
+# Creates an empty file if it doesn't exist (creates parent dirs if needed)
+ha::dirs::ensure_file "/config/config.yml"
+ha::dirs::ensure_file "/config/.secret" "600"
+ha::dirs::ensure_file "/config/.secret" "600" "abc:users"
+```
+
+### Clear directory contents
+
+```bash
+# Removes everything inside the directory, keeping the directory itself
+ha::dirs::clear "/tmp"
+
+# Exclude specific files from deletion
+ha::dirs::clear "/config/cache" "*.keep" ".gitkeep"
+```
+
+### Symlinks
+
+```bash
+# Create a symlink (fails if something already exists at the link path)
+ha::symlink::create "/data/library" "/romm/library"
+
+# Force creation — removes whatever exists at the link path first
+ha::symlink::create "/data/library" "/romm/library" "true"
+
+# Update a symlink — safe alternative to force create
+# Removes and recreates if target changed; warns and removes if not a symlink
+ha::symlink::update "/data/library" "/romm/library"
+
+# Create a relative symlink (portable)
+ha::symlink::ensure_relative "/romm" "/data/assets" "/var/www/html/assets/romm"
+```
+
+`ha::symlink::create` is idempotent: if the symlink already points to the correct target it does nothing.
+
+### Utilities
+
+```bash
+# Check if a mount point is read-only (returns 0 if read-only)
+if ha::dirs::mount_is_readonly "/boot"; then
+    log_warn "/boot is read-only, skipping write"
+fi
+
+# Get human-readable directory size
+size="$(ha::dirs::get_size "/config/data")"
+log_info "Data directory size: ${size}"
+```
+
+### Suppress log output
+
+```bash
+ha::dirs::set_quiet true
+ha::dirs::create_subdirs "/config" "a" "b" "c" "d"   # no log lines
+ha::dirs::set_quiet false
+```
+
+---
+
+## ha-secret.sh
+
+Cryptographically secure secret generation and persistence. Secrets default to 32-byte hex strings using `openssl rand -hex` (falls back to `/dev/urandom`).
+
+### Ensure a secret exists (primary function)
+
+Checks for the secret in this order: add-on config → existing file → generate new. Returns the secret value on stdout:
+
+```bash
+# Secret is stored in /data/.secret_key; config option is "auth_secret"
+secret="$(ha::secret::ensure "auth_secret" "/data/.secret_key")"
+ha::env::export "AUTH_SECRET" "${secret}"
+
+# Custom length (bytes) and file permissions
+jwt_secret="$(ha::secret::ensure "jwt_secret" "/data/.jwt_secret" 64 600)"
+```
+
+### Generate a new secret file
+
+Generates and saves a secret, printing the value to stdout. Does nothing if the file already exists:
 
 ```bash
 ha::secret::generate "/data/.secret_key"
-ha::secret::ensure "auth_secret" "/data/.auth_secret"
+ha::secret::generate "/data/.jwt_secret" 64 600   # 64 bytes, mode 600
 ```
 
-### ha-validate.sh
-Common validation functions.
+### Generate a token (alphanumeric)
+
+```bash
+api_token="$(ha::secret::generate_token 32)"
+session_id="$(ha::secret::generate_token 16 "sess-")"
+```
+
+### Hash a password
+
+```bash
+hash="$(ha::secret::hash_password "${password}" "${salt}")"
+```
+
+Uses `openssl dgst -sha256` (falls back to `sha256sum`). Not suitable as a standalone password storage mechanism — use bcrypt/argon2 for that.
+
+### Base64 encoding/decoding
+
+```bash
+encoded="$(ha::secret::to_b64 "my_secret_value")"
+decoded="$(ha::secret::from_b64 "${encoded}")"
+```
+
+### Validate a key meets minimum requirements
+
+```bash
+if ! ha::secret::validate_key "${api_key}" 32; then
+    bashio::exit.nok "API key is too short"
+fi
+```
+
+Returns 1 (does not exit) if the key is too short or empty.
+
+### Compare two secret files (constant-time)
+
+```bash
+if ha::secret::compare "/data/secret1" "/data/secret2"; then
+    log_info "Secrets match"
+fi
+```
+
+---
+
+## ha-validate.sh
+
+Standalone validation functions that operate on values directly (not config keys). All functions exit with an error on failure unless noted.
+
+### Port numbers
 
 ```bash
 ha::validate::port "8080"
+ha::validate::port "8080" 1024 65535   # custom range
+```
+
+### URLs
+
+```bash
 ha::validate::url "https://api.example.com"
-ha::validate::not_empty "${value}" "API_KEY"
+ha::validate::url "https://api.example.com" "true"              # require HTTPS
+ha::validate::url "http://localhost:8080" "false" "true"         # allow localhost
 ```
 
-### ha-init.sh
-Universal initialization utilities for add-on startup.
+### Non-empty strings
 
 ```bash
-ha::init::banner "My App" "1.0.0"
-ha::init::timezone
-ha::init::log_level
-ha::init::ensure_dirs "/config/data" "/config/logs"
-ha::init::export_env "API_KEY" "api_key"
-ha::init::ingress "BASE_URL"
-ha::init::service_discovery "mysql"
-ha::init::cleanup_options "old_flag" "deprecated_setting"
-
-# Complete initialization sequence
-ha::init::run_all "My App"
+ha::validate::not_empty "${api_key}" "API_KEY"
 ```
 
-### ha-template.sh
-Template rendering utilities for tempio (Go templates) and sed-style substitutions.
+### Email addresses
 
 ```bash
-# Render tempio Go template with variables
-ha::template::render ingress.gtpl /etc/nginx/servers/ingress.conf \
-    ingress_interface="${ingress_interface}" \
-    ingress_port="^${ingress_port}" \
-    app_port="^${APP_PORT}"
+ha::validate::email "user@example.com"
+```
 
-# Find template file in standard search paths
-template_path=$(ha::template::find "config.gtpl")
+### Numeric range
 
-# Check if template exists
-if ha::template::exists "ingress.gtpl"; then
-    ha::template::render "ingress.gtpl" /etc/nginx/ingress.conf port="8080"
+```bash
+ha::validate::in_range "50" 0 100 "Percentage"
+ha::validate::in_range "${timeout}" 1 300
+```
+
+### String length
+
+```bash
+ha::validate::min_length "${password}" 8 "Password"
+ha::validate::max_length "${username}" 32 "Username"
+```
+
+### Regex pattern
+
+```bash
+ha::validate::matches_regex "${value}" "^[a-z0-9_]+$" "Field name"
+ha::validate::matches_regex "${port}" "^[0-9]+$" "Port" "Must be numeric"
+```
+
+### File and directory existence
+
+```bash
+ha::validate::file_exists "/config/config.yml"
+ha::validate::file_exists "/config/optional.yml" "false"   # returns 1 instead of exiting
+
+ha::validate::dir_exists "/config/data"
+ha::validate::dir_exists "/config/optional" "false"
+```
+
+### Allowed values
+
+```bash
+ha::validate::one_of "info" "Log level" "trace" "debug" "info" "warning" "error"
+```
+
+Note the argument order: `value`, `name`, then `allowed1`, `allowed2`, ...
+
+### Boolean checks (return-only, no exit)
+
+```bash
+if ha::validate::is_true "${enabled}"; then
+    log_info "Feature is enabled"
 fi
 
-# Sed-style substitution for simple templates
-ha::template::substitute /etc/nginx.conf.template /etc/nginx/conf \
-    port="8080" host="0.0.0.0"
-
-# Render with JSON data
-ha::template::render_json template.gtpl /etc/output.conf '{"key": "value"}'
-
-# Validate nginx config
-ha::template::validate_nginx /etc/nginx/servers/ingress.conf
+if ha::validate::is_false "${debug}"; then
+    log_info "Debug is off"
+fi
 ```
 
-## Version
+Recognizes: `true/yes/on/1/enabled` as true, `false/no/off/0/disabled/""` as false.
 
-Current version: 1.1.0
+### IPv4 address
+
+```bash
+ha::validate::ip_address "192.168.1.1"
+```
+
+---
+
+## Complete example: cont-init.d script
+
+```bash
+#!/usr/bin/with-contenv bashio
+# shellcheck shell=bash
+# 10-app-setup.sh — Main initialization for My App
+
+set -e
+
+source /usr/local/lib/ha-framework/ha-log.sh
+source /usr/local/lib/ha-framework/ha-env.sh
+source /usr/local/lib/ha-framework/ha-config.sh
+source /usr/local/lib/ha-framework/ha-dirs.sh
+source /usr/local/lib/ha-framework/ha-secret.sh
+
+ha::log::init "myapp"
+
+# --- Startup ---
+ha::log::banner "$(bashio::addon.name)" "$(bashio::addon.version)"
+
+# --- Validate required config ---
+ha::log::section "Config validation"
+ha::config::require "api.url"
+ha::config::validate_url "api.url"
+ha::config::validate_port "web_port"
+
+# --- Directories ---
+ha::log::section "Directories"
+ha::dirs::create_subdirs "/config" "data" "logs" "cache"
+ha::dirs::ensure "/share/myapp" "775"
+
+# --- Environment ---
+ha::log::section "Environment"
+ha::env::timezone
+ha::env::log_level
+ha::env::export_required "api.url" "API_URL"
+ha::env::export_config   "web_port" "WEB_PORT"
+ha::env::export_if_set   "api.token" "API_TOKEN"
+ha::env::export_default  "APP_ENV" "production"
+
+# Export ingress URL if enabled
+ha::env::ingress "BASE_URL"
+
+# --- Secrets ---
+ha::log::section "Secrets"
+secret="$(ha::secret::ensure "secret_key" "/data/.secret_key")"
+ha::env::export "SECRET_KEY" "${secret}"
+
+# --- Service discovery ---
+ha::log::section "Services"
+if ha::env::service_discovery "mysql"; then
+    log_info "Using MySQL at ${MYSQL_HOST}:${MYSQL_PORT}"
+else
+    log_info "No MySQL service found, using SQLite"
+fi
+
+# --- Remove deprecated options ---
+ha::config::remove_deprecated "old_api_url"
+ha::config::remove_deprecated "legacy_flag"
+
+log_info "Initialization complete"
+```
