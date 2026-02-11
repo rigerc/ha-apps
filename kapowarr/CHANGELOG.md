@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.1](https://github.com/rigerc/ha-apps/compare/kapowarr-1.4.0...kapowarr-1.4.1) (2026-02-11)
+
+
+### 🐛 Bug Fixes
+
+* remove unused environment variables and ingress configuration check ([09fe26c](https://github.com/rigerc/ha-apps/commit/09fe26c1752d675aed87759b5f186305ad9b4c22))
+
+
+### 🧰 Maintenance
+
+* update manifest and configs [skip ci] ([3181f62](https://github.com/rigerc/ha-apps/commit/3181f62e9579c50c16ac692d11709fcf38ef0779))
+
 ## [1.4.0](https://github.com/rigerc/ha-apps/compare/kapowarr-1.3.0...kapowarr-1.4.0) (2026-02-11)
 
 
