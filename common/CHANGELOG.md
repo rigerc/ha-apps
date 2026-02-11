@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/rigerc/ha-apps/compare/v1.0.0...v1.0.1) (2026-02-11)
+
+
+### Bug Fixes
+
+* make shell scripts executable [skip ci] ([140a9f6](https://github.com/rigerc/ha-apps/commit/140a9f66c06dff0e7578df6a43e0319a0ba18ec0))
+
 ## 1.1.0 (Unreleased)
 
 ### Features
