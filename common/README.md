@@ -32,6 +32,10 @@ source /usr/local/lib/ha-framework/ha-env.sh
 # shellcheck source=/usr/local/lib/ha-framework/ha-config.sh
 source /usr/local/lib/ha-framework/ha-config.sh
 
+# Source initialization helpers
+# shellcheck source=/usr/local/lib/ha-framework/ha-env.sh
+source /usr/local/lib/ha-framework/ha-env.sh
+
 # Source template helpers
 # shellcheck source=/usr/local/lib/ha-framework/ha-template.sh
 source /usr/local/lib/ha-framework/ha-template.sh
@@ -50,6 +54,27 @@ ha::log::banner "My App" "1.0.0"
 ```
 
 ### ha-env.sh
+Environment variable export utilities for add-on initialization.
+
+```bash
+ha::env::export "MY_VAR" "some_value"
+ha::env::export_config "my_option" "MY_VAR"
+ha::env::export_required "required_option" "REQUIRED_VAR"
+ha::env::timezone
+ha::env::log_level
+ha::env::ingress "BASE_URL"
+ha::env::service_discovery "mysql"
+```
+
+### ha-init.sh (Example template)
+Example initialization script demonstrating standard patterns. Copy and customize for your add-on.
+
+```bash
+# Use as a starting point for your cont-init.d scripts
+cp /usr/local/lib/ha-framework/examples/ha-init.sh /etc/cont-init.d/10-init.sh
+```
+
+See the file for a complete example with comments explaining each section.
 Environment variable export to both shell and s6-overlay.
 
 ```bash
@@ -66,6 +91,7 @@ ha::config::require "database.host"
 ha::config::get "log_level" "info"
 ha::config::validate_port "web_port"
 ha::config::validate_url "api_url"
+ha::config::remove_deprecated "old_option"  # Remove stale config keys
 ```
 
 ### ha-dirs.sh
@@ -93,6 +119,23 @@ Common validation functions.
 ha::validate::port "8080"
 ha::validate::url "https://api.example.com"
 ha::validate::not_empty "${value}" "API_KEY"
+```
+
+### ha-init.sh
+Universal initialization utilities for add-on startup.
+
+```bash
+ha::init::banner "My App" "1.0.0"
+ha::init::timezone
+ha::init::log_level
+ha::init::ensure_dirs "/config/data" "/config/logs"
+ha::init::export_env "API_KEY" "api_key"
+ha::init::ingress "BASE_URL"
+ha::init::service_discovery "mysql"
+ha::init::cleanup_options "old_flag" "deprecated_setting"
+
+# Complete initialization sequence
+ha::init::run_all "My App"
 ```
 
 ### ha-template.sh

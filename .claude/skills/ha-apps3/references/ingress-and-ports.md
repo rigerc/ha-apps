@@ -214,12 +214,113 @@ ports_description:
 
 ### Host Network Application
 
+For applications requiring host networking (mDNS, DLNA, UDP discovery), use `ingress_port: 0` for dynamic port assignment:
+
 ```yaml
 host_network: true
 ingress: true
-ingress_port: 0  # Dynamic port assignment
-# ports is ignored when host_network is true
+ingress_port: 0  # Dynamic port assignment — Supervisor picks available port
+ingress_stream: true  # Often needed for media streaming
+# ports is ignored when host_network is true — all container ports are on host
 ```
+
+**Why `ingress_port: 0` matters:**
+- When `host_network: true`, the container shares the host's network namespace
+- Any hard-coded port number may conflict with services already running on the host
+- Setting `0` tells the Supervisor to dynamically assign an available port
+- The nginx ingress wrapper automatically reads the assigned port via the Supervisor API
+
+**Real-world example: Jellyfin NAS add-on**
+
+```yaml
+name: Jellyfin NAS
+host_network: true  # Required for DLNA/UPnP
+ingress: true
+ingress_port: 0  # Dynamic — avoids conflicts with host services
+ingress_stream: true  # Enable for media streaming with SSE/chunked responses
+init: false
+map:
+  - addon_config:rw
+  - homeassistant_config:rw  # May access HA config for integration
+  - media:rw  # Direct access to media files
+  - share:rw
+  - ssl
+panel_icon: mdi:billiards-rack
+panel_admin: false  # Allow all HA users to access
+options:
+  PGID: 0  # Run as root (or specify media user GID)
+  PUID: 0
+  data_location: /share/jellyfin
+# Note: ports ignored with host_network=true — app binds directly to host ports
+# Jellyfin typically uses: 8096 (HTTP), 8920 (HTTPS), 1900 (DLNA), 7359 (discovery)
+```
+
+**Common use cases for `host_network + ingress_port: 0`:**
+- **Media servers** (Jellyfin, Emby, Plex) — DLNA/UPnP requires host network access
+- **Home automation bridges** — mDNS discovery needs raw network access
+- **Network utilities** — Tools that need to bind to specific host IPs or broadcast
+
+### Complex Port Configuration with Dynamic Ingress
+
+Even without `host_network`, `ingress_port: 0` is useful when the add-on exposes multiple ports and you want to avoid conflicts with other add-ons' ingress ports:
+
+```yaml
+ingress: true
+ingress_port: 0  # Let Supervisor assign any available port
+ingress_stream: true
+ports:
+  1900/udp: null      # DLNA (disabled by default)
+  7359/udp: null      # Discovery (disabled by default)
+  8096/tcp: 8096      # Primary HTTP port
+  8920/tcp: 8920      # HTTPS port
+ports_description:
+  1900/udp: "DLNA (optional)"
+  7359/udp: "Client discovery (optional)"
+  8096/tcp: "Web interface"
+  8920/tcp: "HTTPS web interface"
+```
+
+**When to use `ingress_port: 0` without `host_network`:**
+- The add-on has many mapped ports (increases conflict risk)
+- You're building a generic scaffold/template add-on
+- You want to avoid manual port coordination across add-ons in the repo
+- The ingress port value itself doesn't matter (it's internal to the container)
+
+**Why `ingress_port: 0` matters:**
+- When `host_network: true`, the container shares the host's network namespace
+- Any hard-coded port number may conflict with services already running on the host
+- Setting `0` tells the Supervisor to dynamically assign an available port
+- The nginx ingress wrapper automatically reads the assigned port via the Supervisor API
+
+**Real-world example: Jellyfin NAS add-on**
+
+```yaml
+name: Jellyfin NAS
+host_network: true  # Required for DLNA/UPnP
+ingress: true
+ingress_port: 0  # Dynamic — avoids conflicts with host services
+ingress_stream: true  # Enable for media streaming with SSE/chunked responses
+init: false
+map:
+  - addon_config:rw
+  - homeassistant_config:rw  # May access HA config for integration
+  - media:rw  # Direct access to media files
+  - share:rw
+  - ssl
+panel_icon: mdi:billiards-rack
+panel_admin: false  # Allow all HA users to access
+options:
+  PGID: 0  # Run as root (or specify media user GID)
+  PUID: 0
+  data_location: /share/jellyfin
+# Note: ports ignored with host_network=true — app binds directly to host ports
+# Jellyfin typically uses: 8096 (HTTP), 8920 (HTTPS), 1900 (DLNA), 7359 (discovery)
+```
+
+**Common use cases for `host_network + ingress_port: 0`:**
+- **Media servers** (Jellyfin, Emby, Plex) — DLNA/UPnP requires host network access
+- **Home automation bridges** — mDNS discovery needs raw network access
+- **Network utilities** — Tools that need to bind to specific host IPs or broadcast
 
 ## Troubleshooting
 

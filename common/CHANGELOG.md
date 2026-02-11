@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.1.0 (Unreleased)
+
+### Features
+
+* **env:** add `ha::env::timezone()` for timezone configuration
+* **env:** add `ha::env::log_level()` for log level export
+* **env:** add `ha::env::ingress()` for ingress base URL export
+* **env:** add `ha::env::service_discovery()` for MariaDB/Redis service discovery
+* **config:** add `ha::config::remove_deprecated()` to clean up stale options
+* **init:** add `ha-init.sh` example template for add-on initialization
+
+## 1.0.0 (2026-02-11)
+
+### Features
+
+* **config:** add `ha::config::remove_deprecated()` to clean up stale options
+* **init:** add `ha-init.sh` universal initialization utilities
+
 ## 1.0.0 (2026-02-11)
 
 

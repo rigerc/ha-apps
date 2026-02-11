@@ -15,6 +15,7 @@
 #     ha::config::get "log_level" "info"
 #     ha::config::validate_port "web_port"
 #     ha::config::validate_url "api_url"
+#     ha::config::remove_deprecated "old_option"
 #
 # DESCRIPTION
 #   These utilities provide wrappers around bashio::config with consistent
@@ -305,4 +306,30 @@ ha::config::map_to_env() {
 
     export "${env_name}=${transformed}"
     printf '%s' "${transformed}" > "/var/run/s6/container_environment/${env_name}"
+}
+
+# ---------------------------------------------------------------------------
+# ha::config::remove_deprecated <key>
+#
+# Removes a deprecated configuration option from the Supervisor's stored options.
+# This prevents warnings about options that no longer exist in the schema.
+#
+# Use this function when removing configuration options from already-deployed
+# add-ons to clean up stale options and avoid Supervisor warnings like:
+#   "Option '<key>' does not exist in the schema for <App Name>"
+#
+# Example:
+#   ha::config::remove_deprecated "old_option"
+#   ha::config::remove_deprecated "deprecated_feature_flag"
+# ---------------------------------------------------------------------------
+ha::config::remove_deprecated() {
+    local key="${1:?Config key is required}"
+    local options
+
+    options="$(bashio::addon.options)"
+
+    if bashio::jq.exists "${options}" ".${key}"; then
+        bashio::log.info "Removing deprecated configuration option: ${key}"
+        bashio::addon.option "${key}"
+    fi
 }

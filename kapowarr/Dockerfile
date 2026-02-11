@@ -32,25 +32,20 @@ RUN apk add --no-cache \
 # Copy the application from the upstream image
 COPY --from=app-source /app /app
 
-# Install Python dependencies from requirements.txt
-# The upstream image installs these in site-packages, but we only copy /app
-# so we need to reinstall them in the new image
-RUN pip install --no-cache-dir -r /app/requirements.txt
-
 # Copy the rootfs overlay
 COPY rootfs /
 
-# Create the nginx servers directory
-RUN mkdir -p /etc/nginx/servers
-
-# Set execute permissions on all s6 and init scripts
-RUN chmod +x \
-    /etc/cont-init.d/*.sh \
-    /etc/services.d/kapowarr/run \
-    /etc/services.d/kapowarr/finish \
-    /etc/services.d/nginx/run \
-    /etc/services.d/nginx/finish \
-    /usr/local/lib/ha-log.sh
+# Install Python dependencies, create the nginx servers directory,
+# and set execute permissions on all s6 and init scripts
+RUN mkdir -p /etc/nginx/servers && \
+    pip install --no-cache-dir -r /app/requirements.txt && \
+    chmod +x \
+        /etc/cont-init.d/*.sh \
+        /etc/services.d/kapowarr/run \
+        /etc/services.d/kapowarr/finish \
+        /etc/services.d/nginx/run \
+        /etc/services.d/nginx/finish \
+        /usr/local/lib/ha-log.sh
 
 # Set the working directory
 WORKDIR /app

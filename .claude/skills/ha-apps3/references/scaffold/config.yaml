@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/frenck/action-addon-linter/main/src/config.schema.json
 # ==============================================================================
 # CUSTOMIZE: Replace all APP_NAME occurrences with your add-on's actual name
 #            (e.g., "My App", slug "my_app", icon "mdi:application")
@@ -17,7 +18,6 @@
 name: APP_NAME
 
 # CUSTOMIZE: Version of the HA add-on wrapper (not the upstream app version).
-# When using `image:`, this must match the Docker image tag exactly.
 version: 1.0.0
 
 # CUSTOMIZE: Unique identifier — lowercase letters, digits and underscores only.
@@ -74,7 +74,9 @@ ingress: true
 # Port nginx listens on inside the container for ingress traffic.
 # Dynamically overwritten at runtime by 20-nginx.sh, but keep a unique default
 # here to avoid conflicts during local builds.
-# For host_network add-ons, set to 0 and read the assigned port via the API.
+# For host_network add-ons, set to 0 for dynamic port assignment.
+# Setting to 0 is also useful when the add-on has many ports and you want to
+# avoid conflicts, or when combining ingress with complex port configurations.
 # CUSTOMIZE: choose a port not already used by another add-on in this repo.
 ingress_port: 8099
 

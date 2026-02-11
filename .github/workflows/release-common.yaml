@@ -1,6 +1,11 @@
 ---
 name: Release Common Framework
 on:
+  push:
+    branches: [main]
+    paths:
+      - "common/**"
+      - ".github/release-please-config.json"
   workflow_dispatch:
 permissions:
   contents: write

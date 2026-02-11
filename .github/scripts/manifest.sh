@@ -983,6 +983,12 @@ update_ci_workflow() {
       paths_json+=", \"${path}\""
     fi
   done < <(printf '%s\n' "${paths[@]}" | sort)
+  # Add common/** to paths (framework directory)
+  if [[ "${first}" == "true" ]]; then
+    paths_json="\"common/**\""
+  else
+    paths_json+=", \"common/**\""
+  fi
   paths_json+="]"
 
   # Apply the update using yq with double-quoted style

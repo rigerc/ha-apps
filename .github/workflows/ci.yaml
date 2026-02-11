@@ -10,6 +10,7 @@ on:
       - "kapowarr/**"
       - "profilarr/**"
       - "romm/**"
+      - "common/**"
   workflow_dispatch:
 permissions:
   contents: read
@@ -18,11 +19,37 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  filter:
+    name: "Filter Changes"
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.check.outputs.should_build }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check if build should run
+        id: check
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Get list of changed files
+          files=$(git diff --name-only ${{ github.event.pull_request.base.ref }}...HEAD)
+
+          # Check if any non-common files were changed
+          if echo "$files" | grep -qv "^common/"; then
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+          fi
   lint:
     name: "Lint"
     uses: ./.github/workflows/lint.yaml
   build:
     name: "Build"
+    needs: filter
+    if: needs.filter.outputs.should_build == 'true'
     uses: ./.github/workflows/builder.yaml
     with:
       base_ref: ${{ github.event.pull_request.base.ref }}

@@ -171,3 +171,114 @@ ha::env::export_multi() {
         fi
     done
 }
+
+# ---------------------------------------------------------------------------
+# ha::env::timezone [config_key] [default]
+#
+# Reads timezone configuration and exports it to the environment.
+# Default config key is "timezone" and default value is "UTC".
+#
+# Examples:
+#   ha::env::timezone
+#   ha::env::timezone "tz" "America/New_York"
+# ---------------------------------------------------------------------------
+ha::env::timezone() {
+    local config_key="${1:-timezone}"
+    local default_value="${2:-UTC}"
+    local timezone
+
+    timezone="$(bashio::config "${config_key}" "${default_value}")"
+
+    ha::env::export "TZ" "${timezone}"
+    bashio::log.info "Timezone: ${timezone}"
+}
+
+# ---------------------------------------------------------------------------
+# ha::env::log_level [config_key] [default] [env_name]
+#
+# Reads log level configuration and exports it as an environment variable.
+# Default config key is "log_level", default is "info", env_name is "LOG_LEVEL".
+#
+# Examples:
+#   ha::env::log_level
+#   ha::env::log_level "log_level" "debug" "APP_LOG_LEVEL"
+# ---------------------------------------------------------------------------
+ha::env::log_level() {
+    local config_key="${1:-log_level}"
+    local default_value="${2:-info}"
+    local env_name="${3:-LOG_LEVEL}"
+    local log_level
+
+    log_level="$(bashio::config "${config_key}" "${default_value}")"
+
+    ha::env::export "${env_name}" "${log_level}"
+    bashio::log.info "Log level: ${log_level}"
+}
+
+# ---------------------------------------------------------------------------
+# ha::env::ingress [env_name]
+#
+# Exports the ingress base URL to an environment variable.
+# Only exports if ingress is enabled for this add-on.
+# Default env_name is "INGRESS_ENTRY".
+#
+# Examples:
+#   ha::env::ingress
+#   ha::env::ingress "BASE_URL"
+#   ha::env::ingress "APP_BASE_URL"
+# ---------------------------------------------------------------------------
+ha::env::ingress() {
+    local env_name="${1:-INGRESS_ENTRY}"
+    local ingress_entry
+
+    if ! bashio::addon.ingress; then
+        bashio::log.debug "Ingress is not enabled"
+        return 0
+    fi
+
+    ingress_entry="$(bashio::addon.ingress_entry)"
+    ha::env::export "${env_name}" "${ingress_entry}"
+    bashio::log.info "Ingress base URL: ${ingress_entry}"
+}
+
+# ---------------------------------------------------------------------------
+# ha::env::service_discovery <service_name>
+#
+# Checks if a service is available and exports connection details as
+# environment variables with the service name prefix.
+#
+# Returns 0 if service is available, 1 otherwise.
+#
+# Examples:
+#   if ha::env::service_discovery "mysql"; then
+#       echo "Using MySQL service"
+#   fi
+# ---------------------------------------------------------------------------
+ha::env::service_discovery() {
+    local service_name="${1:?Service name is required}"
+    local prefix
+    prefix="$(echo "${service_name}" | tr '[:lower:]' '[:upper:]')"
+
+    if ! bashio::services.available "${service_name}"; then
+        bashio::log.debug "Service '${service_name}' is not available"
+        return 1
+    fi
+
+    # Export service connection details
+    local host port username password database
+
+    host="$(bashio::services "${service_name}" "host")"
+    port="$(bashio::services "${service_name}" "port")"
+    username="$(bashio::services "${service_name}" "username")"
+    password="$(bashio::services "${service_name}" "password")"
+    database="$(bashio::services "${service_name}" "database")"
+
+    ha::env::export "${prefix}_HOST" "${host}"
+    ha::env::export "${prefix}_PORT" "${port}"
+    ha::env::export "${prefix}_USERNAME" "${username}"
+    ha::env::export "${prefix}_PASSWORD" "${password}"
+    ha::env::export "${prefix}_DATABASE" "${database}"
+
+    bashio::log.info "Using ${service_name} service at ${host}:${port}"
+    return 0
+}

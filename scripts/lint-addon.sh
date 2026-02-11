@@ -9,9 +9,8 @@ set -euo pipefail
 #######################################
 # Constants
 #######################################
-readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC2155  # basename is safe, won't mask meaningful errors
 readonly SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
-readonly VERSION="1.0.0"
 
 # Schema URLs
 readonly CONFIG_SCHEMA_URL="https://raw.githubusercontent.com/frenck/action-addon-linter/main/src/config.schema.json"
@@ -90,7 +89,7 @@ EXAMPLES:
 EXIT CODES:
   0    No errors found
   1    Validation errors found
-  2    Missing dependencies (jq, yq)
+  2    Missing dependencies (jq, yq, check-jsonschema)
   3    Invalid path specified
 
 EOF
@@ -109,6 +108,11 @@ check_dependencies() {
 
   if ! command -v yq &> /dev/null; then
     error "yq is required but not installed. Install with: snap install yq"
+    deps_ok=false
+  fi
+
+  if ! command -v check-jsonschema &> /dev/null; then
+    error "check-jsonschema is required but not installed. Install with: pip install check-jsonschema"
     deps_ok=false
   fi
 
@@ -171,14 +175,56 @@ load_config_file() {
 }
 
 #######################################
-# Validate JSON against schema using jq
+# Validate JSON against schema using check-jsonschema
 #######################################
 validate_schema() {
   local config_json="$1"
   local schema_file="$2"
   local file_type="$3"
 
-  # Basic required fields check (simplified schema validation)
+  # Write JSON to temp file for validation
+  local temp_json
+  temp_json="$(mktemp)"
+
+  # Cleanup temp file on exit
+  trap 'rm -f "${temp_json}"' RETURN
+
+  echo "${config_json}" > "${temp_json}"
+
+  # Run check-jsonschema and capture output
+  local validation_output
+  if ! validation_output="$(check-jsonschema \
+    --schemafile "${schema_file}" \
+    "${temp_json}" 2>&1)"; then
+    # Check if schema file itself is invalid (upstream bug)
+    if [[ "${validation_output}" =~ "schemafile was not valid" ]]; then
+      warn "[${file_type}] Schema file is invalid, falling back to manual validation"
+      validate_schema_manual "${config_json}" "${file_type}"
+      return
+    fi
+
+    # Parse error messages and format them
+    while IFS= read -r line; do
+      [[ -z "${line}" ]] && continue
+      # Format: [file_type] validation error message
+      error "[${file_type}] ${line}"
+    done <<< "${validation_output}"
+    return 1
+  fi
+
+  if [[ "${verbose}" == "true" ]]; then
+    info "[${file_type}] Schema validation passed"
+  fi
+}
+
+#######################################
+# Manual schema validation (fallback)
+#######################################
+validate_schema_manual() {
+  local config_json="$1"
+  local file_type="$2"
+
+  # Basic required fields check
   local required_fields
   if [[ "${file_type}" == "config" ]]; then
     required_fields=("arch" "description" "name" "slug" "version")
@@ -479,7 +525,6 @@ check_community_rules() {
 #######################################
 lint_config() {
   local config_json
-  local config_file
 
   echo ""
   echo "=== Linting config.{json,yaml,yml} ==="
@@ -488,8 +533,6 @@ lint_config() {
     error "Configuration file not found in '${addon_path}'"
     return 1
   fi
-
-  config_file="${config_json}"
 
   # Run all checks
   validate_schema "${config_json}" "${CONFIG_SCHEMA_CACHE}" "config"
