@@ -40,9 +40,6 @@ declare env_dir="/var/run/s6/container_environment"
 printf '%s' "${timezone}" > "${env_dir}/TZ"
 log_debug "TZ persisted: ${timezone}"
 
-# Application log level
-printf '%s' "${log_level}" > "${env_dir}/APP_LOG_LEVEL"
-
 # ---------------------------------------------------------------------------
 # Prepare persistent data directories
 # ---------------------------------------------------------------------------
@@ -62,15 +59,5 @@ log_debug "Data directories ready"
 
 # /share is the shared storage mount
 mkdir -p /share/kapowarr
-
-# ---------------------------------------------------------------------------
-# Ingress: export the base URL so the app can construct correct URLs
-# ---------------------------------------------------------------------------
-if bashio::addon.ingress; then
-    declare ingress_entry
-    ingress_entry="$(bashio::addon.ingress_entry)"
-    printf '%s' "${ingress_entry}" > "${env_dir}/APP_BASE_URL"
-    log_info "Ingress base URL: ${ingress_entry}"
-fi
 
 log_info "Kapowarr setup complete"

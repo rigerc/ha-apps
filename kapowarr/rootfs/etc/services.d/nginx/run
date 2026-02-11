@@ -37,14 +37,6 @@ fi
 log_info "kapowarr backend is ready on ${backend_host}:${backend_port}"
 
 # ---------------------------------------------------------------------------
-# Final nginx configuration check before starting
-# ---------------------------------------------------------------------------
-if ! nginx -t 2>&1; then
-    log_error "nginx configuration test failed — check /etc/nginx/servers/ingress.conf"
-    exit 1
-fi
-
-# ---------------------------------------------------------------------------
 # Start nginx in the foreground
 # ---------------------------------------------------------------------------
 log_info "nginx starting in foreground mode"
