@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.8](https://github.com/rigerc/ha-apps/compare/kapowarr-1.4.7...kapowarr-1.4.8) (2026-02-11)
+
+
+### 🐛 Bug Fixes
+
+* **ha-log:** sync log level with bashio to enable debug/trace ([b00bc62](https://github.com/rigerc/ha-apps/commit/b00bc6243f0946a9ce93080ddfc4d3b25e97ca6f))
+
 ## [1.4.7](https://github.com/rigerc/ha-apps/compare/kapowarr-1.4.6...kapowarr-1.4.7) (2026-02-11)
 
 
