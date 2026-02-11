@@ -9,10 +9,9 @@
 
 set -e
 
-# Source the shared logging library
-# shellcheck source=/usr/local/lib/ha-log.sh
-# shellcheck disable=SC1091
-source /usr/local/lib/ha-log.sh
+# Source the shared logging library from HA framework
+# shellcheck source=/usr/local/lib/ha-framework/ha-log.sh
+source /usr/local/lib/ha-framework/ha-log.sh
 
 ha::log::init "nginx"
 

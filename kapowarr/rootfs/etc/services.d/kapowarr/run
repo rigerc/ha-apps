@@ -10,19 +10,18 @@
 # Redirect stderr to stdout
 exec 2>&1
 
-# Source the shared logging library
-# shellcheck source=/usr/local/lib/ha-log.sh
-source /usr/local/lib/ha-log.sh
+# Source the shared logging library from HA framework
+# shellcheck source=/usr/local/lib/ha-framework/ha-log.sh
+source /usr/local/lib/ha-framework/ha-log.sh
 
 ha::log::init "kapowarr"
 
 log_info "Starting Kapowarr..."
 
 # ---------------------------------------------------------------------------
-# Read configuration
+# Read configuration from s6 container environment (exported by 10-app-setup.sh)
 # ---------------------------------------------------------------------------
-declare log_level
-log_level="$(bashio::config 'log_level' 'info')"
+declare log_level="${LOG_LEVEL:-info}"
 log_info "Log level: ${log_level}"
 
 # ---------------------------------------------------------------------------

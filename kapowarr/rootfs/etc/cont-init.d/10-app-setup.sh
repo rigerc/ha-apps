@@ -9,10 +9,15 @@
 
 set -e
 
-# Source the shared logging library
-# shellcheck source=/usr/local/lib/ha-log.sh
-# shellcheck disable=SC1091
-source /usr/local/lib/ha-log.sh
+# Source the shared logging library from HA framework
+# shellcheck source=/usr/local/lib/ha-framework/ha-log.sh
+source /usr/local/lib/ha-framework/ha-log.sh
+
+# Source environment and directory helpers
+# shellcheck source=/usr/local/lib/ha-framework/ha-env.sh
+source /usr/local/lib/ha-framework/ha-env.sh
+# shellcheck source=/usr/local/lib/ha-framework/ha-dirs.sh
+source /usr/local/lib/ha-framework/ha-dirs.sh
 
 # Initialise short-form logging helpers
 ha::log::init "setup"
@@ -20,44 +25,17 @@ ha::log::init "setup"
 log_info "Setting up Kapowarr..."
 
 # ---------------------------------------------------------------------------
-# Read add-on options
+# Read and export add-on options to s6 container environment
 # ---------------------------------------------------------------------------
-declare log_level
-declare timezone
-
-log_level="$(bashio::config 'log_level' 'info')"
-timezone="$(bashio::config 'timezone' 'UTC')"
-
-log_debug "log_level = ${log_level}"
-log_debug "timezone  = ${timezone}"
-
-# ---------------------------------------------------------------------------
-# Persist environment variables for service scripts
-# ---------------------------------------------------------------------------
-declare env_dir="/var/run/s6/container_environment"
-
-# Timezone
-printf '%s' "${timezone}" > "${env_dir}/TZ"
-log_debug "TZ persisted: ${timezone}"
+ha::env::log_level "log_level" "info" "LOG_LEVEL"
+ha::env::timezone "timezone" "UTC"
 
 # ---------------------------------------------------------------------------
 # Prepare persistent data directories
 # ---------------------------------------------------------------------------
 ha::log::section "Directory setup"
 
-# /config is the addon_config mount (persistent)
-if [[ ! -d "/config" ]]; then
-    log_warn "/config directory not found — creating it"
-    mkdir -p /config
-fi
-
-# Create application-specific subdirectories
-mkdir -p /config/data
-mkdir -p /config/logs
-
-log_debug "Data directories ready"
-
-# /share is the shared storage mount
-mkdir -p /share/kapowarr
+ha::dirs::create_subdirs "/config" "data" "logs"
+ha::dirs::ensure "/share/kapowarr"
 
 log_info "Kapowarr setup complete"

@@ -67,6 +67,7 @@ Each library is idempotent — sourcing it multiple times is safe.
 - [ha-dirs.sh](#ha-dirssh) — Create directories, manage symlinks
 - [ha-secret.sh](#ha-secretsh) — Generate and persist cryptographic secrets
 - [ha-validate.sh](#ha-validatesh) — Validate values (ports, URLs, emails, ranges, etc.)
+- [ha-template.sh](#ha-templatesh) — Render Go templates (tempio) and sed-style substitutions
 
 ---
 
@@ -571,6 +572,106 @@ Recognizes: `true/yes/on/1/enabled` as true, `false/no/off/0/disabled/""` as fal
 
 ```bash
 ha::validate::ip_address "192.168.1.1"
+```
+
+---
+
+## ha-template.sh
+
+Template rendering for Go templates (via `tempio`) and sed-style substitutions. Requires `tempio` to be installed in the container for Go template rendering — sed substitution has no extra dependencies.
+
+### Find a template file
+
+Searches standard locations in order, returning the first match:
+
+1. `/config/${HOSTNAME}/templates/`
+2. `/etc/${HOSTNAME}/templates/`
+3. `/etc/nginx/templates/`
+4. `/usr/local/lib/ha-framework/templates/`
+
+```bash
+# Returns the full path, or exits with error if not found
+template_path="$(ha::template::find "ingress.gtpl")"
+
+# Search custom paths instead (first match wins)
+template_path="$(ha::template::find "config.gtpl" "/etc/myapp/templates/" "/config/myapp/")"
+```
+
+### Check if a template exists
+
+Returns 0/1 without exiting — useful for optional templates:
+
+```bash
+if ha::template::exists "ingress.gtpl"; then
+    ha::template::render "ingress.gtpl" /etc/nginx/servers/ingress.conf \
+        port="^8080"
+fi
+```
+
+Uses the same search order as `ha::template::find`.
+
+### Render a Go template (tempio)
+
+Renders a `.gtpl` file using `tempio`. The template file can be an absolute path or a name to be found via `ha::template::find`.
+
+Variables are passed as `key=value` pairs. Prefix numeric values with `^` to pass them as raw numbers rather than quoted strings — this is required for nginx port directives:
+
+```bash
+ha::template::render ingress.gtpl /etc/nginx/servers/ingress.conf \
+    ingress_interface="${ingress_interface}" \
+    ingress_port="^${ingress_port}" \
+    app_port="^${APP_PORT}"
+
+# Absolute path also works
+ha::template::render /etc/myapp/templates/config.gtpl /etc/myapp/config.yml \
+    db_host="${DB_HOST}" \
+    db_port="^${DB_PORT}" \
+    app_name="myapp"
+```
+
+If the output file ends in `.conf`, nginx configuration is validated automatically with `nginx -t` after rendering.
+
+### Render a Go template with JSON data
+
+Use when you have complex or nested data that is easier to pass as a JSON object:
+
+```bash
+json_data="$(bashio::var.json key1='value1' key2='value2' port='^8080')"
+ha::template::render_json template.gtpl /etc/output.conf "${json_data}"
+```
+
+### Sed-style substitution
+
+For simple templates where Go templates are overkill. Placeholders in the template file use `%%name%%` format:
+
+```
+# Template file content:
+listen %%port%%;
+server_name %%hostname%%;
+```
+
+```bash
+ha::template::substitute /etc/nginx/nginx.conf.template /etc/nginx/nginx.conf \
+    port="8080" \
+    hostname="myapp.local"
+```
+
+Substitution is performed in-place on a copy of the template — the original is not modified. Files ending in `.conf` are nginx-validated after substitution.
+
+### Validate nginx configuration
+
+```bash
+ha::template::validate_nginx /etc/nginx/servers/ingress.conf
+```
+
+Returns 0 if valid, 1 on failure (logs the nginx error output). Called automatically by `render`, `render_json`, and `substitute` when the output file ends in `.conf`.
+
+### Suppress log output
+
+```bash
+ha::template::set_quiet true
+ha::template::render "config.gtpl" /etc/myapp/config.yml key="value"
+ha::template::set_quiet false
 ```
 
 ---
