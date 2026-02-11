@@ -51,7 +51,7 @@ log_info "Ingress listening on ${ingress_interface}:${ingress_port} -> 127.0.0.1
 # ---------------------------------------------------------------------------
 # Validate the nginx configuration before the nginx service starts
 # ---------------------------------------------------------------------------
-if ! nginx -t 2>&1 | grep -q "syntax is ok"; then
+if ! nginx -t >/dev/null 2>&1; then
     log_error "nginx configuration test failed — check /etc/nginx/servers/ingress.conf"
     nginx -t 2>&1 || true
     exit 1
