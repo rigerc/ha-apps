@@ -72,10 +72,12 @@ server {
         # Rewrite static asset paths: /static/... -> /api/hassio_ingress/XXX/static/...
         sub_filter 'href="/static/'  'href="$http_x_ingress_path/static/';
         sub_filter 'src="/static/'   'src="$http_x_ingress_path/static/';
-        # Rewrite API paths: /api/... -> /api/hassio_ingress/XXX/api/...
-        sub_filter '"/api/'          '"$http_x_ingress_path/api/';
-        sub_filter "'/api/'          "'$http_x_ingress_path/api/';
-        sub_filter 'url:/api/'       'url:$http_x_ingress_path/api/';
+
+        # Rewrite API paths in JavaScript
+        # Match: href="/api, src="/api, and url:/api patterns
+        sub_filter 'href="/api'      'href="$http_x_ingress_path/api';
+        sub_filter 'src="/api'       'src="$http_x_ingress_path/api';
+        sub_filter 'url:/api'        'url:$http_x_ingress_path/api';
     }
 
     # ------------------------------------------------------------------
