@@ -37,7 +37,7 @@
   },
   {
     "slug": "kapowarr",
-    "version": "1.4.5",
+    "version": "1.4.6",
     "name": "Kapowarr",
     "description": "Comic book library manager with automated downloading, renaming, and conversion.",
     "arch": [
