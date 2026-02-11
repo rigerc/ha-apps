@@ -30,6 +30,10 @@ server {
     # ------------------------------------------------------------------
     # Main proxy location
     # ------------------------------------------------------------------
+    # Kapowarr's native url_base setting (set via DB at startup) handles
+    # all path prefixing for routes, static assets, API endpoints, and
+    # WebSocket paths. No nginx sub_filter rewriting is needed.
+    # ------------------------------------------------------------------
     location / {
         # Restrict access to the HA ingress subnet only
         allow 172.30.32.2;
@@ -52,32 +56,6 @@ server {
         proxy_connect_timeout 600s;
         proxy_send_timeout    600s;
         proxy_read_timeout    600s;
-
-        # ------------------------------------------------------------------
-        # Rewrite absolute paths for HA ingress
-        # ------------------------------------------------------------------
-        # HA ingress mounts the add-on under /api/hassio_ingress/<token>/.
-        # Kapowarr's Flask app uses absolute paths (/static/..., /api/...)
-        # which break when accessed via ingress. Use sub_filter to rewrite
-        # these paths to include the ingress prefix.
-        #
-        # Rewrite HTML, CSS, and JavaScript responses
-        sub_filter_types text/html text/css application/javascript;
-        sub_filter_once off;
-
-        # Rewrite the url_base meta tag: data-value="" -> data-value="/api/hassio_ingress/XXX"
-        # Kapowarr's JavaScript reads this to construct API URLs
-        sub_filter '<meta id="url_base" data-value=""'  '<meta id="url_base" data-value="$http_x_ingress_path"';
-
-        # Rewrite static asset paths: /static/... -> /api/hassio_ingress/XXX/static/...
-        sub_filter 'href="/static/'  'href="$http_x_ingress_path/static/';
-        sub_filter 'src="/static/'   'src="$http_x_ingress_path/static/';
-
-        # Rewrite API paths in JavaScript
-        # Match: href="/api, src="/api, and url:/api patterns
-        sub_filter 'href="/api'      'href="$http_x_ingress_path/api';
-        sub_filter 'src="/api'       'src="$http_x_ingress_path/api';
-        sub_filter 'url:/api'        'url:$http_x_ingress_path/api';
     }
 
     # ------------------------------------------------------------------

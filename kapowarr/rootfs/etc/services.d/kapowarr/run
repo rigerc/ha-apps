@@ -37,15 +37,30 @@ app_port="${APP_PORT:-5656}"
 log_info "Kapowarr will listen on 0.0.0.0:${app_port}"
 
 # ---------------------------------------------------------------------------
+# Resolve HA ingress path for Kapowarr's native url_base setting
+# ---------------------------------------------------------------------------
+# Kapowarr supports a url_base setting that wraps the Flask app with
+# DispatcherMiddleware, making all routes, static assets, API endpoints,
+# and WebSocket paths respect the prefix natively. This eliminates the
+# need for nginx sub_filter rewriting.
+#
+# The ingress path (e.g. /api/hassio_ingress/<token>) is stable across
+# container restarts and only changes on add-on reinstall.
+declare ingress_path
+ingress_path="$(bashio::addon.ingress_path)"
+log_info "Ingress path (url_base): ${ingress_path}"
+
+# ---------------------------------------------------------------------------
 # Change to the application directory
 # ---------------------------------------------------------------------------
 cd /app || bashio::exit.nok "Could not change to /app directory"
 
 # ---------------------------------------------------------------------------
-# Configure log level in database
-# Kapowarr stores log level as an integer in the config table.
-# Map string levels to Python logging integers.
+# Configure settings in database
+# Kapowarr stores settings in the config table as key/value pairs.
 # ---------------------------------------------------------------------------
+
+# Map log level string to Python logging integer
 declare log_level_int
 case "${log_level}" in
     trace)  log_level_int=5 ;;
@@ -58,26 +73,35 @@ esac
 
 declare db_file="/config/data/Kapowarr.db"
 
-# Update log level if database exists
+# Update settings if database already exists (subsequent starts)
 if [[ -f "${db_file}" ]]; then
-    sqlite3 "${db_file}" "UPDATE config SET value = ${log_level_int} WHERE key = 'log_level';" 2>/dev/null || true
-    log_debug "Updated log_level in database to ${log_level} (${log_level_int})"
+    sqlite3 "${db_file}" \
+        "UPDATE config SET value = ${log_level_int} WHERE key = 'log_level';" \
+        2>/dev/null || true
+    sqlite3 "${db_file}" \
+        "UPDATE config SET value = '${ingress_path}' WHERE key = 'url_base';" \
+        2>/dev/null || true
+    log_debug "Pre-start DB update: log_level=${log_level} (${log_level_int}), url_base=${ingress_path}"
 fi
 
 # ---------------------------------------------------------------------------
 # Start Kapowarr with database folder for persistent storage
-# Start in background so we can update the log level after DB initialization
+# Start in background so we can update settings after DB initialization
 # ---------------------------------------------------------------------------
 python3 /app/Kapowarr.py -d /config/data &
 kapowarr_pid=$!
 
-# Wait for Kapowarr to initialize the database (first run)
-# After it's up, update the log level and re-foreground the process
+# Wait for Kapowarr to initialize the database (first run creates it)
 sleep 3
 
 if [[ -f "${db_file}" ]]; then
-    sqlite3 "${db_file}" "UPDATE config SET value = ${log_level_int} WHERE key = 'log_level';" 2>/dev/null || true
-    log_debug "Verified log_level in database: ${log_level} (${log_level_int})"
+    sqlite3 "${db_file}" \
+        "UPDATE config SET value = ${log_level_int} WHERE key = 'log_level';" \
+        2>/dev/null || true
+    sqlite3 "${db_file}" \
+        "UPDATE config SET value = '${ingress_path}' WHERE key = 'url_base';" \
+        2>/dev/null || true
+    log_debug "Post-init DB update: log_level=${log_level} (${log_level_int}), url_base=${ingress_path}"
 fi
 
 # Re-foreground the process by waiting for it
