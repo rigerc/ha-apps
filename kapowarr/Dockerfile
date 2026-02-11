@@ -24,11 +24,18 @@ FROM mrcas/kapowarr:v1.2.0 AS app-source
 # ------------------------------------------------------------------------------
 FROM ${BUILD_FROM}
 
-# Install nginx for ingress
-RUN apk add --no-cache nginx
+# Install nginx for ingress and sqlite3 for database management
+RUN apk add --no-cache \
+    nginx \
+    sqlite
 
 # Copy the application from the upstream image
 COPY --from=app-source /app /app
+
+# Install Python dependencies from requirements.txt
+# The upstream image installs these in site-packages, but we only copy /app
+# so we need to reinstall them in the new image
+RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # Copy the rootfs overlay
 COPY rootfs /
