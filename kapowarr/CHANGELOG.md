@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.6](https://github.com/rigerc/ha-apps/compare/kapowarr-1.4.5...kapowarr-1.4.6) (2026-02-11)
+
+
+### 🐛 Bug Fixes
+
+* **nginx:** remove unused sub_filter rewrites for ingress paths and use url_base setting ([c98b16c](https://github.com/rigerc/ha-apps/commit/c98b16ce8ef9c6209c91c82626ad6993be075f24))
+
+
+### 🧰 Maintenance
+
+* update manifest and configs [skip ci] ([f5cbe00](https://github.com/rigerc/ha-apps/commit/f5cbe00c9b73fa6ee82ec3a17a4424c80b049c2e))
+
 ## [1.4.5](https://github.com/rigerc/ha-apps/compare/kapowarr-1.4.4...kapowarr-1.4.5) (2026-02-11)
 
 
