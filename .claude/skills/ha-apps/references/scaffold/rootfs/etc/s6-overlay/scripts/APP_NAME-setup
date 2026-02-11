@@ -1,13 +1,13 @@
 #!/usr/bin/with-contenv bashio
 # shellcheck shell=bash
 # ==============================================================================
-# 10-app-setup.sh — Application environment setup
+# APP_NAME-setup — Application environment setup
 #
 # Reads add-on options, prepares directories, and exports environment variables
-# that the application service (services.d/APP_NAME/run) will consume.
+# that the application service (s6-rc.d/APP_NAME/run) will consume.
 #
 # Runs ONCE during container initialisation, before any services start.
-# Numbering: 10 — runs after the banner (00) but before nginx (20).
+# Depends on: banner
 #
 # CUSTOMIZE: Adapt this script to the configuration requirements of the
 #            application you are wrapping.

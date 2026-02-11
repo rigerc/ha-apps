@@ -1,14 +1,14 @@
 #!/usr/bin/with-contenv bashio
 # shellcheck shell=bash
 # ==============================================================================
-# services.d/APP_NAME/run — Application service run script
+# s6-rc.d/APP_NAME/run — Application service run script
 #
 # s6-overlay v3 calls this script to START the application service.
 # The script MUST run the application in the FOREGROUND (no daemon mode, no &).
 # s6 supervises this process and automatically restarts it if it exits.
 #
 # "with-contenv" makes variables written to /var/run/s6/container_environment/
-# by the cont-init.d scripts available here as normal shell variables.
+# by the APP_NAME-setup oneshot available here as normal shell variables.
 #
 # CUSTOMIZE: Replace the exec line at the bottom with your application's
 #            startup command.

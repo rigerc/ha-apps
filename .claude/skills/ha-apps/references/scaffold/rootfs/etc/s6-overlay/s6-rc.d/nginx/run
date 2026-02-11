@@ -1,9 +1,9 @@
 #!/usr/bin/with-contenv bashio
 # shellcheck shell=bash
 # ==============================================================================
-# services.d/nginx/run — nginx service run script
+# s6-rc.d/nginx/run — nginx service run script
 #
-# s6-overlay starts nginx AFTER all cont-init.d scripts have completed.
+# s6-overlay starts nginx after the APP_NAME service supervision has started.
 # This script waits for the backend application to be ready before starting
 # nginx, so the proxy does not return 502 errors during startup.
 #
@@ -15,9 +15,9 @@
 # Redirect stderr to stdout so nginx errors appear in the HA add-on log
 exec 2>&1
 
-# Source the shared logging library
-# shellcheck source=/usr/local/lib/ha-log.sh
-source /usr/local/lib/ha-log.sh
+# Source the shared logging library from HA framework
+# shellcheck source=/usr/local/lib/ha-framework/ha-log.sh
+source /usr/local/lib/ha-framework/ha-log.sh
 
 ha::log::init "nginx"
 
@@ -45,14 +45,6 @@ if ! bashio::net.wait_for "${APP_PORT}" "${backend_host}" "${wait_timeout}"; the
 fi
 
 log_info "APP_NAME backend is ready on ${backend_host}:${APP_PORT}"
-
-# ---------------------------------------------------------------------------
-# Final nginx configuration check before starting
-# ---------------------------------------------------------------------------
-if ! nginx -t 2>&1; then
-    log_error "nginx configuration test failed — check /etc/nginx/servers/ingress.conf"
-    exit 1
-fi
 
 # ---------------------------------------------------------------------------
 # Start nginx in the foreground.

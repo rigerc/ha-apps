@@ -67,16 +67,18 @@ RUN apk add --no-cache curl && \
 
 # Create the nginx servers directory.
 # ingress.conf is not shipped as a static file; it is rendered at container start
-# by cont-init.d/20-nginx.sh using tempio from the template in nginx/templates/.
+# by the nginx-setup oneshot using tempio from the template in nginx/templates/.
 RUN mkdir -p /etc/nginx/servers
 
-# Set execute permissions on all s6 and init scripts in a single layer.
+# Set execute permissions on all s6-overlay v3 scripts in a single layer.
 RUN chmod +x \
-    /etc/cont-init.d/*.sh \
-    /etc/services.d/APP_NAME/run \
-    /etc/services.d/APP_NAME/finish \
-    /etc/services.d/nginx/run \
-    /etc/services.d/nginx/finish
+    /etc/s6-overlay/scripts/banner \
+    /etc/s6-overlay/scripts/APP_NAME-setup \
+    /etc/s6-overlay/scripts/nginx-setup \
+    /etc/s6-overlay/s6-rc.d/APP_NAME/run \
+    /etc/s6-overlay/s6-rc.d/APP_NAME/finish \
+    /etc/s6-overlay/s6-rc.d/nginx/run \
+    /etc/s6-overlay/s6-rc.d/nginx/finish
 
 # Set the working directory to the application root
 WORKDIR /app

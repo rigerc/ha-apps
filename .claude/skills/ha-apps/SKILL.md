@@ -73,11 +73,14 @@ cp -r .claude/skills/ha-apps3/references/scaffold/ myapp/
 The scaffold uses `APP_NAME` as a placeholder throughout. Replace every occurrence with the actual add-on slug/name (e.g., `myapp`):
 
 ```bash
-# Rename the services.d directory
-mv myapp/rootfs/etc/services.d/APP_NAME myapp/rootfs/etc/services.d/myapp
+# Rename all files and directories that contain APP_NAME in their name.
+# -depth processes children before parents, so directory renames are safe.
+find myapp/rootfs -depth -name '*APP_NAME*' | while read -r f; do
+    mv "$f" "${f//APP_NAME/myapp}"
+done
 
-# Replace the placeholder string in all text files
-grep -rl APP_NAME myapp/ | xargs sed -i 's/APP_NAME/myapp/g'
+# Replace APP_NAME in all text file contents
+grep -rl 'APP_NAME' myapp/ | xargs sed -i 's/APP_NAME/myapp/g'
 
 # Replace the port placeholder in Dockerfile ENV line only.
 # The ${APP_PORT} variable references in run scripts are correct as-is.
@@ -149,12 +152,13 @@ COPY rootfs /
 
 # Make all scripts executable in a single layer
 RUN chmod +x \
-    /etc/cont-init.d/*.sh \
-    /etc/services.d/myapp/run \
-    /etc/services.d/myapp/finish \
-    /etc/services.d/nginx/run \
-    /etc/services.d/nginx/finish \
-    /usr/local/lib/ha-log.sh
+    /etc/s6-overlay/scripts/banner \
+    /etc/s6-overlay/scripts/myapp-setup \
+    /etc/s6-overlay/scripts/nginx-setup \
+    /etc/s6-overlay/s6-rc.d/myapp/run \
+    /etc/s6-overlay/s6-rc.d/myapp/finish \
+    /etc/s6-overlay/s6-rc.d/nginx/run \
+    /etc/s6-overlay/s6-rc.d/nginx/finish
 
 ENV APP_PORT=8080 APP_HOST=0.0.0.0
 
@@ -174,9 +178,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 ```
 
-### 3d. `rootfs/etc/cont-init.d/10-app-setup.sh` — App Configuration
+### 3d. `rootfs/etc/s6-overlay/scripts/APP_NAME-setup` — App Configuration
 
-This init script runs once at container start, before any services. Customize it to:
+This oneshot init script runs once at container start, before any services. Customize it to:
 
 1. Read add-on options using `bashio::config`:
    ```bash
@@ -185,14 +189,14 @@ This init script runs once at container start, before any services. Customize it
 
 2. Export values to the s6 environment so service scripts can read them:
    ```bash
-   printf '%s\n' "${my_option}" > /var/run/s6/container_environment/MY_OPTION
+   printf '%s' "${my_option}" > /var/run/s6/container_environment/MY_OPTION
    ```
 
 3. Create directories the application needs at startup.
 
 All logging uses the shared `ha-log.sh` library (already sourced at the top of the script). Use `log_info`, `log_debug`, `log_warn`, `log_error` — no bashio calls needed for logging.
 
-### 3e. `rootfs/etc/services.d/myapp/run` — Service Start Script
+### 3e. `rootfs/etc/s6-overlay/s6-rc.d/myapp/run` — Service Start Script
 
 Replace the `exec` line at the bottom with the application's foreground start command. The script **must not** background the process — s6 supervises the PID directly:
 
@@ -208,7 +212,7 @@ Use `exec` (not just calling the binary) so the app replaces the shell process a
 
 ### nginx ingress (automatic)
 
-The nginx server block is rendered at container start by `20-nginx.sh` using **tempio** (a Go template tool pre-installed in all HA base images). The scaffold handles this automatically — no manual nginx configuration needed.
+The nginx server block is rendered at container start by the `nginx-setup` oneshot using **tempio** (a Go template tool pre-installed in all HA base images). The scaffold handles this automatically — no manual nginx configuration needed.
 
 Traffic flows: User clicks sidebar panel → HA ingress gateway → nginx → backend app.
 
@@ -273,7 +277,7 @@ curl -f http://localhost:8099/health
 - **`armv7`/`armhf`/`i386` are NOT supported** — only `aarch64` and `amd64`
 - **After changing `config.yaml` or `Dockerfile`** — run `.github/scripts/manifest.sh`
 - **`tempio` is pre-installed** — do not add it to the Dockerfile `apk add`; it's in all HA base images
-- **Port configuration via `ENV APP_PORT`** — Dockerfile `ENV APP_PORT` is the single source of truth; `20-nginx.sh` reads it via `$APP_PORT` and passes it to tempio
+- **Port configuration via `ENV APP_PORT`** — Dockerfile `ENV APP_PORT` is the single source of truth; `nginx-setup` reads it via `$APP_PORT` and passes it to tempio
 
 ---
 
@@ -285,8 +289,8 @@ Consult these files for detailed information:
 - `config.yaml` — fully annotated add-on manifest with all common options
 - `build.yaml` — base image selection with available flavours
 - `Dockerfile` — multi-stage pattern with inline comments
-- `rootfs/etc/cont-init.d/` — three annotated init scripts (banner, app setup, nginx)
-- `rootfs/etc/services.d/` — app and nginx service run/finish scripts
+- `rootfs/etc/s6-overlay/scripts/` — three annotated init oneshots (banner, app setup, nginx)
+- `rootfs/etc/s6-overlay/s6-rc.d/` — app and nginx service longruns with dependency declarations
 - `rootfs/etc/nginx/templates/ingress.gtpl` — Go template for nginx server block, rendered by tempio
 - `rootfs/etc/nginx/includes/` — shared nginx configuration snippets (proxy params, server params)
 - `rootfs/usr/local/lib/ha-log.sh` — shared logging library API
