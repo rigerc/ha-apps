@@ -2,7 +2,7 @@
 
 Shared helper scripts and utilities for Home Assistant add-ons. This framework provides consistent, tested functions for logging, configuration, environment management, and common setup patterns.
 
-## Installation
+## Installationn
 
 In your add-on's Dockerfile, add the framework installation after copying rootfs:
 

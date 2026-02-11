@@ -24,6 +24,6 @@ jobs:
           token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
           manifest-file: .github/.release-please-manifest.json
           config-file: .github/release-please-config.json
-          path: common
+          path: ./common
           release-type: simple
 
