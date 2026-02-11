@@ -47,7 +47,7 @@ log_info "Kapowarr will listen on 0.0.0.0:${app_port}"
 # The ingress path (e.g. /api/hassio_ingress/<token>) is stable across
 # container restarts and only changes on add-on reinstall.
 declare ingress_path
-ingress_path="$(bashio::addon.ingress_path)"
+ingress_path="$(bashio::addon.ingress_entry)"
 log_info "Ingress path (url_base): ${ingress_path}"
 
 # ---------------------------------------------------------------------------
