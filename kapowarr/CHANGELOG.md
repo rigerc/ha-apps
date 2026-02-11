@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.5.0](https://github.com/rigerc/ha-apps/compare/kapowarr-1.4.8...kapowarr-1.5.0) (2026-02-11)
+
+
+### ✨ Features
+
+* **kapowarr:** migrate to s6-overlay v3 service management ([a6d63b7](https://github.com/rigerc/ha-apps/commit/a6d63b7093073d53a1ed5191b5ee48d3474fd510))
+
+
+### 🐛 Bug Fixes
+
+* **kapowarr:** refactor ([1de216e](https://github.com/rigerc/ha-apps/commit/1de216e27ee44e809795fcb373dab6a48e2609fb))
+* make shell scripts executable [skip ci] ([520d98e](https://github.com/rigerc/ha-apps/commit/520d98e167f7cdf10efda3aa43ab1e228a35a4e2))
+
 ## [1.4.8](https://github.com/rigerc/ha-apps/compare/kapowarr-1.4.7...kapowarr-1.4.8) (2026-02-11)
 
 
