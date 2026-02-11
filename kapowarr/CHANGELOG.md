@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.4](https://github.com/rigerc/ha-apps/compare/kapowarr-1.4.3...kapowarr-1.4.4) (2026-02-11)
+
+
+### 🐛 Bug Fixes
+
+* **ingress:** add sub_filter rules for HA ingress compatibility ([c1fc22f](https://github.com/rigerc/ha-apps/commit/c1fc22f87b1229fe42437e46f219128454518b1f))
+
+
+### 🧰 Maintenance
+
+* update manifest and configs [skip ci] ([dfaf3c8](https://github.com/rigerc/ha-apps/commit/dfaf3c833d3a385d5a3b0a6028cd5fd188b358bb))
+
 ## [1.4.3](https://github.com/rigerc/ha-apps/compare/kapowarr-1.4.2...kapowarr-1.4.3) (2026-02-11)
 
 
