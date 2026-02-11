@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.1](https://github.com/rigerc/ha-apps/compare/kapowarr-1.6.0...kapowarr-1.6.1) (2026-02-11)
+
+
+### 🐛 Bug Fixes
+
+* **HA:** update HA framework source to single entrypoint ([b00ca47](https://github.com/rigerc/ha-apps/commit/b00ca4786810ab644551b2dce1dd2e134539b9f9))
+
 ## [1.6.0](https://github.com/rigerc/ha-apps/compare/kapowarr-1.5.0...kapowarr-1.6.0) (2026-02-11)
 
 
