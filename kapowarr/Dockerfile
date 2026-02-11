@@ -27,8 +27,7 @@ FROM ${BUILD_FROM}
 # Install nginx for ingress and sqlite3 for database management
 RUN apk add --no-cache \
     nginx \
-    sqlite \
-    curl
+    sqlite
 
 # Copy the application from the upstream image
 COPY --from=app-source /app /app

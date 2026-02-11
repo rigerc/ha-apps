@@ -10,9 +10,9 @@
 # Redirect stderr to stdout
 exec 2>&1
 
-# Source the shared logging library from HA framework
-# shellcheck source=/usr/local/lib/ha-framework/ha-log.sh
-source /usr/local/lib/ha-framework/ha-log.sh
+# Source the HA framework (loads all libraries)
+# shellcheck source=/usr/local/lib/ha-framework/ha-framework.sh
+source /usr/local/lib/ha-framework/ha-framework.sh
 
 ha::log::init "kapowarr"
 
