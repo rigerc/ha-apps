@@ -57,6 +57,141 @@ If discovery fails (network error, private image, etc.) the script prints the re
 
 ---
 
+## Step 1.5: Analyze Source Code Architecture
+
+After the initial discovery, analyze the upstream source code to understand how the application works internally. This deeper analysis reveals runtime requirements, configuration patterns, and integration points that automated discovery cannot detect.
+
+### When to Perform Source Code Analysis
+
+Perform source code analysis when:
+- The application has complex startup sequences or initialization requirements
+- The upstream documentation is incomplete or unclear
+- The app requires specific environment variables or configuration files
+- Need to understand how the app handles data persistence, logging, or networking
+- The app has multiple processes, services, or background workers
+
+### Source Code Analysis Checklist
+
+**1. Locate and read the main entry point**
+- Find `main()`, `app.py`, `index.js`, `Go()` function, or equivalent entry point
+- Identify command-line flags, environment variable parsing, and config file loading
+- Note required vs optional configuration parameters
+- Check for default values and sensible fallbacks
+
+**2. Understand configuration loading**
+- Search for `config`, `settings`, `env`, `getenv` patterns in the codebase
+- Identify configuration file formats (YAML, JSON, TOML, INI, environment-only)
+- Map config keys to the code paths that use them
+- Check for config validation and error handling
+
+**3. Trace data storage patterns**
+- Search for database connections, file I/O, volume mount points
+- Identify where the app stores persistent data (`/data`, `/config`, `/var/lib`)
+- Check for database migrations or schema initialization
+- Note required directory structures and permissions
+
+**4. Examine logging and monitoring**
+- Find log output statements (`print`, `log.Info`, `console.log`, etc.)
+- Identify log levels and destinations (stdout, file, syslog)
+- Check for health check endpoints (`/health`, `/ping`, `/status`)
+- Note any metrics or monitoring integration points
+
+**5. Analyze networking and ports**
+- Find the port binding or server start code
+- Check for multiple ports (UI port, API port, metrics port)
+- Identify hostname/interface binding (0.0.0.0, 127.0.0.1, localhost)
+- Look for WebSocket, SSE, or other protocol-specific requirements
+
+**6. Identify background processes**
+- Search for thread spawning, goroutines, child processes, or cron jobs
+- Check for separate worker processes or services
+- Note process supervision requirements and restart policies
+- Identify inter-process communication mechanisms
+
+### Common Implementation Patterns by Language
+
+**Go applications:**
+- Look for `cobra`, `viper`, or `flag` packages for CLI/config
+- Check `main.go` for service initialization sequence
+- Find `http.ListenAndServe` or similar for the web server start
+- Note `context` usage for graceful shutdown patterns
+
+**Python applications:**
+- Check for `click`, `argparse`, `typer` for CLI arguments
+- Look for `python-dotenv`, `pydantic`, or `configparser` for config
+- Find `uvicorn`, `gunicorn`, or `Flask.run()` for server startup
+- Examine `requirements.txt` or `pyproject.toml` for dependencies
+
+**Node.js applications:**
+- Look for `commander`, `yargs`, or `minimist` for CLI parsing
+- Check `dotenv`, `config`, or `convict` for configuration
+- Find `express.listen()`, `http.createServer`, or framework startup
+- Examine `package.json` for scripts and dependencies
+
+**Rust applications:**
+- Look for `clap` or `structopt` for CLI argument parsing
+- Check for `config`, `dotenv`, or `serde` for configuration
+- Find `tokio::runtime` or `actix_web::HttpServer` for async runtime
+- Examine `Cargo.toml` for features and dependencies
+
+### Mapping Analysis to Scaffold Configuration
+
+After completing the source code analysis:
+
+**config.yaml options/schema:**
+- Add entries for each required environment variable
+- Set sensible defaults matching the application's built-in defaults
+- Group related options logically (database, logging, networking)
+- Add validation for required vs optional values
+
+**10-app-setup.sh:**
+- Export discovered environment variables to `/var/run/s6/container_environment/`
+- Create required directories with proper ownership
+- Generate configuration files from templates if needed
+- Validate configuration before services start
+
+**myapp/run script:**
+- Construct the command-line arguments based on the analysis
+- Set required environment variables before exec
+- Configure logging output for capture by s6
+- Ensure the app runs in the foreground (no daemon mode)
+
+**Dockerfile:**
+- Install runtime dependencies discovered during analysis
+- Copy configuration templates or default files
+- Set build-time `ARG` values for version tracking
+- Configure health checks based on discovered endpoints
+
+### Analysis Tools and Techniques
+
+**Static analysis without cloning:**
+- Use GitHub's code search (`code?q=repo:user/repo+main`)
+- Browse key files directly on GitHub web interface
+- Review CI/CD workflows (`.github/workflows/`) for runtime commands
+- Check Dockerfiles or docker-compose for environment patterns
+
+**Local cloning when needed:**
+```bash
+git clone --depth 1 https://github.com/user/repo.git /tmp/repo-analysis
+cd /tmp/repo-analysis
+
+# Search for configuration patterns
+grep -r "getenv\|getenv\|os.Getenv" --include="*.py" --include="*.go" .
+grep -r "config\|settings" --include="*.yaml" --include="*.json" .
+
+# Find the main entry point
+find . -name "main.go" -o -name "app.py" -o -name "index.js" -o -name "main.rs"
+```
+
+**Container inspection:**
+```bash
+# Run the upstream image and explore
+docker run --rm --entrypoint sh UPSTREAM_IMAGE:TAG
+# Inside: inspect /app, examine processes, check environment
+```
+
+---
+
 ## Step 2: Copy and Rename the Scaffold
 
 Copy the scaffold into the target add-on directory:

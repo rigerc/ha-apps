@@ -7,7 +7,7 @@
 # Human-readable name shown in the HA add-on store
 name: Kapowarr
 
-version: 1.2.5
+version: 1.2.0
 
 # Unique identifier — lowercase letters, digits and underscores only.
 # Used in URLs, file paths, and API calls.
