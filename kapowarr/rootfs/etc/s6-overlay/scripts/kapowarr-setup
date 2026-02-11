@@ -1,7 +1,7 @@
 #!/usr/bin/with-contenv bashio
 # shellcheck shell=bash
 # ==============================================================================
-# 10-app-setup.sh — Kapowarr environment setup
+# kapowarr-setup — Kapowarr environment setup
 #
 # Reads add-on options, prepares directories, and exports environment variables
 # that the Kapowarr service will consume.

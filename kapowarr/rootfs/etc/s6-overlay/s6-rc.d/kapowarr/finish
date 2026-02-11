@@ -1,7 +1,7 @@
 #!/usr/bin/with-contenv bashio
 # shellcheck shell=bash
 # ==============================================================================
-# services.d/kapowarr/finish — Application service finish script
+# s6-rc.d/kapowarr/finish — Application service finish script
 #
 # s6-overlay calls this script when the 'run' script exits for any reason.
 #

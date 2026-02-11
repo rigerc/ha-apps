@@ -43,15 +43,17 @@ RUN curl -fsSL "https://raw.githubusercontent.com/rigerc/ha-apps/main/common/scr
     rm -f /tmp/install-framework.sh
 
 # Install Python dependencies, create the nginx servers directory,
-# and set execute permissions on all s6 and init scripts
+# and set execute permissions on all s6-overlay v3 scripts
 RUN mkdir -p /etc/nginx/servers && \
     pip install --no-cache-dir -r /app/requirements.txt && \
     chmod +x \
-        /etc/cont-init.d/*.sh \
-        /etc/services.d/kapowarr/run \
-        /etc/services.d/kapowarr/finish \
-        /etc/services.d/nginx/run \
-        /etc/services.d/nginx/finish
+        /etc/s6-overlay/scripts/banner \
+        /etc/s6-overlay/scripts/kapowarr-setup \
+        /etc/s6-overlay/scripts/nginx-setup \
+        /etc/s6-overlay/s6-rc.d/kapowarr/run \
+        /etc/s6-overlay/s6-rc.d/kapowarr/finish \
+        /etc/s6-overlay/s6-rc.d/nginx/run \
+        /etc/s6-overlay/s6-rc.d/nginx/finish
 
 # Set the working directory
 WORKDIR /app

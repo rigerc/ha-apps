@@ -1,7 +1,7 @@
 #!/usr/bin/with-contenv bashio
 # shellcheck shell=bash
 # ==============================================================================
-# 20-nginx.sh — nginx ingress configuration
+# nginx-setup — nginx ingress configuration
 #
 # Reads the ingress IP address and port from the HA supervisor API and renders
 # the nginx server block from a Go template using tempio.

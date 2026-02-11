@@ -1,7 +1,7 @@
 #!/usr/bin/with-contenv bashio
 # shellcheck shell=bash
 # ==============================================================================
-# services.d/kapowarr/run — Kapowarr service run script
+# s6-rc.d/kapowarr/run — Kapowarr service run script
 #
 # s6-overlay v3 calls this script to START the Kapowarr application service.
 # The script MUST run the application in the FOREGROUND.
@@ -19,7 +19,7 @@ ha::log::init "kapowarr"
 log_info "Starting Kapowarr..."
 
 # ---------------------------------------------------------------------------
-# Read configuration from s6 container environment (exported by 10-app-setup.sh)
+# Read configuration from s6 container environment (exported by kapowarr-setup)
 # ---------------------------------------------------------------------------
 declare log_level="${LOG_LEVEL:-info}"
 log_info "Log level: ${log_level}"

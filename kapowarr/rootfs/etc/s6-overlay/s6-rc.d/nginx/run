@@ -1,9 +1,9 @@
 #!/usr/bin/with-contenv bashio
 # shellcheck shell=bash
 # ==============================================================================
-# services.d/nginx/run — nginx service run script
+# s6-rc.d/nginx/run — nginx service run script
 #
-# s6-overlay starts nginx AFTER all cont-init.d scripts have completed.
+# s6-overlay starts nginx after the kapowarr service supervision has started.
 # This script waits for the backend application to be ready before starting
 # nginx, so the proxy does not return 502 errors during startup.
 # ==============================================================================
