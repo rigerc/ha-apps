@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.2](https://github.com/rigerc/ha-apps/compare/kapowarr-1.4.1...kapowarr-1.4.2) (2026-02-11)
+
+
+### 🐛 Bug Fixes
+
+* **nginx:** suppress nginx test output in container init script ([7286810](https://github.com/rigerc/ha-apps/commit/7286810e0534d90165e990e493cff8965ed78a3b))
+
+
+### 🧰 Maintenance
+
+* update manifest and configs [skip ci] ([db7087b](https://github.com/rigerc/ha-apps/commit/db7087b31fae41c722290f4388bcc077917e4981))
+
 ## [1.4.1](https://github.com/rigerc/ha-apps/compare/kapowarr-1.4.0...kapowarr-1.4.1) (2026-02-11)
 
 
