@@ -10,12 +10,12 @@
     ],
     "image": "ghcr.io/cleanuparr/cleanuparr",
     "tag": "2.5.1",
-    "latest_tag": "v2.5.1",
+    "latest_tag": "",
     "project": "https://github.com/Cleanuparr/Cleanuparr",
     "has_icon": true,
     "ingress": false,
-    "is_up_to_date": true,
-    "last_release": "cleanuparr-1.1.0"
+    "is_up_to_date": null,
+    "last_release": ""
   },
   {
     "slug": "huntarr",
@@ -28,16 +28,16 @@
     ],
     "image": "ghcr.io/plexguide/huntarr",
     "tag": "9.1.1",
-    "latest_tag": "9.2.3",
+    "latest_tag": "",
     "project": "https://github.com/plexguide/Huntarr.io",
     "has_icon": true,
     "ingress": true,
-    "is_up_to_date": false,
-    "last_release": "huntarr-1.1.0"
+    "is_up_to_date": null,
+    "last_release": ""
   },
   {
     "slug": "kapowarr",
-    "version": "1.4.6",
+    "version": "1.4.7",
     "name": "Kapowarr",
     "description": "Comic book library manager with automated downloading, renaming, and conversion.",
     "arch": [
@@ -46,12 +46,12 @@
     ],
     "image": "mrcas/kapowarr",
     "tag": "v1.2.0",
-    "latest_tag": "V1.2.0",
+    "latest_tag": "v1.2.0",
     "project": "https://github.com/Casvt/Kapowarr",
     "has_icon": true,
     "ingress": true,
-    "is_up_to_date": false,
-    "last_release": "kapowarr-1.4.7"
+    "is_up_to_date": true,
+    "last_release": ""
   },
   {
     "slug": "profilarr",
@@ -69,7 +69,7 @@
     "has_icon": true,
     "ingress": true,
     "is_up_to_date": false,
-    "last_release": "profilarr-1.1.0"
+    "last_release": ""
   },
   {
     "slug": "romm",
@@ -82,11 +82,11 @@
     ],
     "image": "rommapp/romm",
     "tag": "4.6.1",
-    "latest_tag": "4.6.1",
+    "latest_tag": "4.6.1-slim",
     "project": "https://github.com/rommapp/romm",
     "has_icon": true,
     "ingress": false,
-    "is_up_to_date": true,
-    "last_release": "romm-1.1.0"
+    "is_up_to_date": false,
+    "last_release": ""
   }
 ]
