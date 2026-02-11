@@ -1,4 +1,4 @@
-#!/usr/bin/with-contenv bashio
+#!/bin/bash
 # shellcheck shell=bash
 # ==============================================================================
 # install-framework.sh — Home Assistant Add-on Framework Installer
