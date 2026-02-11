@@ -67,19 +67,25 @@ _ha_log_level_num() {
 
 # Resolve the effective log level once and cache it.
 # Priority: HA_LOG_LEVEL env var > bashio config 'log_level' > "info"
+#
+# IMPORTANT: Also syncs the level to bashio's internal __BASHIO_LOG_LEVEL
+# so that bashio::log.debug/trace actually output when requested.
+# Without this, bashio silently filters debug/trace even when the add-on
+# option is set to debug (bashio defaults to INFO level 5, DEBUG is 6).
 _ha_log_resolve_level() {
+    local level="info"
+
     if [[ -n "${HA_LOG_LEVEL:-}" ]]; then
-        echo "${HA_LOG_LEVEL}"
-        return
+        level="${HA_LOG_LEVEL}"
+    elif configured_level="$(bashio::config 'log_level' 2>/dev/null)" && [[ -n "${configured_level}" ]]; then
+        level="${configured_level}"
     fi
 
-    # Attempt to read from add-on options (gracefully falls back if bashio unavailable)
-    local configured_level
-    if configured_level="$(bashio::config 'log_level' 2>/dev/null)"; then
-        echo "${configured_level}"
-    else
-        echo "info"
-    fi
+    # Sync to bashio's log level so bashio::log.debug/trace work
+    # This sets __BASHIO_LOG_LEVEL appropriately (debug=6, info=5, etc.)
+    bashio::log.level "${level}" 2>/dev/null || true
+
+    echo "${level}"
 }
 
 # Cache the resolved level in a global variable on first use
