@@ -1,0 +1,34 @@
+---
+# ==============================================================================
+# translations/en.yaml — English UI translations for add-on options
+#
+# These descriptions appear in the Home Assistant add-on configuration panel
+# next to each option.  Keep them short (one or two sentences).
+#
+# CUSTOMIZE: Update the descriptions to match your application's options.
+# Reference: https://developers.home-assistant.io/docs/add-ons/configuration/#translations
+# ==============================================================================
+configuration:
+  log_level:
+    name: "Log Level"
+    description: >-
+      Controls the verbosity of log output.
+      Use 'info' for normal operation, 'debug' for troubleshooting,
+      'warning' or 'error' for minimal output.
+
+  timezone:
+    name: "Timezone"
+    description: >-
+      The timezone for the application (e.g., 'America/New_York', 'Europe/London').
+      Defaults to UTC.
+
+  # CUSTOMIZE: add entries for each option defined in config.yaml schema.
+  # Example:
+  #
+  # username:
+  #   name: "Username"
+  #   description: "The username for accessing the APP_NAME web interface."
+  #
+  # password:
+  #   name: "Password"
+  #   description: "The password for accessing the APP_NAME web interface."

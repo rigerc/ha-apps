@@ -1,0 +1,49 @@
+# ==============================================================================
+# build.yaml — Home Assistant Add-on build configuration
+#
+# Specifies the base images used for each target architecture.
+# Base image reference:
+#   https://github.com/home-assistant/docker-base
+#
+# Available base image flavours (pick ONE set):
+#
+#   Alpine-based (smaller, preferred when upstream runs on Alpine):
+#     ghcr.io/home-assistant/{arch}-base:3.21
+#
+#   Alpine + Python (for Python applications):
+#     ghcr.io/home-assistant/{arch}-base-python:3.13-alpine3.21
+#
+#   Debian-based (use when upstream requires Debian / glibc):
+#     ghcr.io/home-assistant/{arch}-base-debian:bookworm
+#
+#   Debian + Python:
+#     ghcr.io/home-assistant/{arch}-base-python:3.13-bookworm
+#
+# All base images include: s6-overlay v3, bashio, curl, ca-certificates, tzdata
+# ==============================================================================
+
+# CUSTOMIZE: Replace the base images to match the upstream application runtime.
+# If the upstream image is Alpine-based or if the app only needs basic utilities,
+# use the Alpine variant.  If it needs Debian/glibc packages, use the Debian variant.
+build_from:
+  aarch64: ghcr.io/home-assistant/aarch64-base:3.21
+  amd64: ghcr.io/home-assistant/amd64-base:3.21
+  # armv7: ghcr.io/home-assistant/armv7-base:3.21  # CUSTOMIZE: uncomment if supporting armv7
+
+# OCI image labels — update all fields to match your add-on.
+labels:
+  # CUSTOMIZE: set to the upstream project's GitHub URL so manifest.sh can
+  # track upstream releases via the GitHub Releases API.
+  project: https://github.com/UPSTREAM_OWNER/UPSTREAM_REPO
+
+  maintainer: YOUR_GITHUB_USERNAME
+  org.opencontainers.image.authors: YOUR_GITHUB_USERNAME
+  org.opencontainers.image.licenses: MIT
+  org.opencontainers.image.title: "Home Assistant Unofficial Add-on: APP_NAME"
+  org.opencontainers.image.description: "APP_NAME wrapped as a Home Assistant add-on"
+  # CUSTOMIZE: update to point to your repository and add-on subdirectory
+  org.opencontainers.image.source: https://github.com/YOUR_ORG/YOUR_REPO/app_name
+  org.opencontainers.image.url: https://github.com/YOUR_ORG/YOUR_REPO
+  org.opencontainers.image.documentation: https://github.com/YOUR_ORG/YOUR_REPO/app_name/DOCS.md
+  # CUSTOMIZE: the Docker Hub or GHCR image name of the upstream application
+  io.hass.upstream.image: UPSTREAM_DOCKER_IMAGE

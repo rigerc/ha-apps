@@ -4,7 +4,7 @@
     "ENABLE_TOOL_SEARCH": "auto:5",
     "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "true",
     "DISABLE_TELEMETRY": "true",
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "true"
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
   "permissions": {
     "allow": [
@@ -56,10 +56,8 @@
     "defaultMode": "default"
   },
   "enableAllProjectMcpServers": true,
-  "disabledMcpjsonServers": [
-    "ref"
-  ],
+  "disabledMcpjsonServers": ["ref"],
   "enabledPlugins": {
-    "artifact@claude-plugins-official": true
+    "oh-my-claudecode@omc": false
   }
 }

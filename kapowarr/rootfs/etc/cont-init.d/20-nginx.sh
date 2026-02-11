@@ -1,9 +1,29 @@
 #!/usr/bin/with-contenv bashio
+# shellcheck shell=bash
+# ==============================================================================
+# Configure nginx for ingress
+# Runs during container initialization, before services start
+# ==============================================================================
 
-INGRESS_PORT=$(bashio::addon.ingress_port)
-bashio::log.info "Configuring nginx for ingress on port ${INGRESS_PORT}..."
+set -e
 
-sed -i "s/%%port%%/${INGRESS_PORT}/g" /etc/nginx/servers/ingress.conf
-sed -i "s/%%interface%%/127.0.0.1/g" /etc/nginx/servers/ingress.conf
+bashio::log.info "Configuring nginx..."
 
-bashio::log.info "Nginx configuration complete."
+#################
+# INGRESS SETUP #
+#################
+
+declare ingress_interface
+declare ingress_port
+
+# Get ingress configuration from Home Assistant
+ingress_port=$(bashio::addon.ingress_port)
+ingress_interface=$(bashio::addon.ip_address)
+
+# Update ingress configuration with actual values
+sed -i "s/%%port%%/${ingress_port}/g" /etc/nginx/servers/ingress.conf
+sed -i "s/%%interface%%/${ingress_interface}/g" /etc/nginx/servers/ingress.conf
+
+bashio::log.info "Ingress configured on ${ingress_interface}:${ingress_port}"
+bashio::log.info "Nginx will proxy requests to Kapowarr on 0.0.0.0:5656"
+bashio::log.info "Nginx configuration complete"

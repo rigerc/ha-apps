@@ -32,7 +32,9 @@
       "mcp__github__list_commits",
       "Bash(gh workflow run:*)",
       "Bash(.github/scripts/manifest.sh:*)",
-      "Bash(gh run watch:*)"
+      "Bash(gh run watch:*)",
+      "Bash(done)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   },
   "enableAllProjectMcpServers": true,

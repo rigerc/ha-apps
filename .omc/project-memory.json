@@ -1,0 +1,440 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1770763904505,
+  "projectRoot": "/mnt/d/dev/projects/ha-apps",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      }
+    ],
+    "frameworks": [],
+    "packageManager": "npm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {
+      "prepare": "husky"
+    }
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs",
+      "scripts"
+    ],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "cleanuparr": {
+      "path": "cleanuparr",
+      "purpose": null,
+      "fileCount": 7,
+      "lastAccessed": 1770763904384,
+      "keyFiles": [
+        "CHANGELOG.md",
+        "DOCS.md",
+        "Dockerfile",
+        "README.md",
+        "build.yaml"
+      ]
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 15,
+      "lastAccessed": 1770763904398,
+      "keyFiles": [
+        "IMPLEMENTATION-SUMMARY.md",
+        "NEW-WORKFLOW.md",
+        "WORKFLOW-CREATING-HA-ADDONS.md",
+        "WORKFLOW-QUICK-START.md",
+        "WORKFLOW-SYSTEM.md"
+      ]
+    },
+    "huntarr": {
+      "path": "huntarr",
+      "purpose": null,
+      "fileCount": 7,
+      "lastAccessed": 1770763904412,
+      "keyFiles": [
+        "CHANGELOG.md",
+        "DOCS.md",
+        "Dockerfile",
+        "README.md",
+        "build.yaml"
+      ]
+    },
+    "kapowarr": {
+      "path": "kapowarr",
+      "purpose": null,
+      "fileCount": 7,
+      "lastAccessed": 1770763904423,
+      "keyFiles": [
+        "CHANGELOG.md",
+        "DOCS.md",
+        "Dockerfile",
+        "README.md",
+        "build.yaml"
+      ]
+    },
+    "profilarr": {
+      "path": "profilarr",
+      "purpose": null,
+      "fileCount": 8,
+      "lastAccessed": 1770763904440,
+      "keyFiles": [
+        "CHANGELOG.md",
+        "DOCS.md",
+        "Dockerfile",
+        "README.md",
+        "build.yaml"
+      ]
+    },
+    "romm": {
+      "path": "romm",
+      "purpose": null,
+      "fileCount": 8,
+      "lastAccessed": 1770763904448,
+      "keyFiles": [
+        "CHANGELOG.md",
+        "DOCS.md",
+        "Dockerfile",
+        "README.md",
+        "build.yaml"
+      ]
+    },
+    "scripts": {
+      "path": "scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 1,
+      "lastAccessed": 1770763904459,
+      "keyFiles": [
+        "lint-addon.sh"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "kapowarr/rootfs/etc/nginx/nginx.conf",
+      "accessCount": 6,
+      "lastAccessed": 1770767904932,
+      "type": "file"
+    },
+    {
+      "path": "kapowarr/rootfs/etc/nginx/servers/ingress.conf",
+      "accessCount": 5,
+      "lastAccessed": 1770768021496,
+      "type": "file"
+    },
+    {
+      "path": "kapowarr/rootfs/etc/cont-init.d/20-nginx.sh",
+      "accessCount": 4,
+      "lastAccessed": 1770767910280,
+      "type": "file"
+    },
+    {
+      "path": "docs/ingress_examples/taskcafe/rootfs/etc/cont-init.d/nginx.sh",
+      "accessCount": 3,
+      "lastAccessed": 1770767929126,
+      "type": "file"
+    },
+    {
+      "path": "docs/ingress_examples/wireguard-ui/rootfs/etc/nginx/servers/ingress.conf",
+      "accessCount": 3,
+      "lastAccessed": 1770767929544,
+      "type": "file"
+    },
+    {
+      "path": "docs/ingress_examples/taskcafe/rootfs/etc/nginx/servers/ingress.conf",
+      "accessCount": 3,
+      "lastAccessed": 1770767929858,
+      "type": "file"
+    },
+    {
+      "path": "docs/ingress_examples/wireguard-ui/rootfs/etc/cont-init.d/nginx.sh",
+      "accessCount": 3,
+      "lastAccessed": 1770767930107,
+      "type": "file"
+    },
+    {
+      "path": "docs/Kapowarr-1.2.0",
+      "accessCount": 2,
+      "lastAccessed": 1770767219293,
+      "type": "directory"
+    },
+    {
+      "path": "docs/Kapowarr-1.2.0/backend/internals/settings.py",
+      "accessCount": 2,
+      "lastAccessed": 1770767287063,
+      "type": "file"
+    },
+    {
+      "path": "docs/ingress_examples/ingress-proxy/rootfs/etc/nginx/nginx.conf",
+      "accessCount": 2,
+      "lastAccessed": 1770767904512,
+      "type": "file"
+    },
+    {
+      "path": "kapowarr/rootfs/etc/services.d/nginx/run",
+      "accessCount": 1,
+      "lastAccessed": 1770765044413,
+      "type": "file"
+    },
+    {
+      "path": "kapowarr/config.yaml",
+      "accessCount": 1,
+      "lastAccessed": 1770765044507,
+      "type": "file"
+    },
+    {
+      "path": "profilarr/rootfs/etc/nginx/nginx.conf",
+      "accessCount": 1,
+      "lastAccessed": 1770765812794,
+      "type": "file"
+    },
+    {
+      "path": "profilarr/rootfs/etc/nginx/servers/ingress.conf",
+      "accessCount": 1,
+      "lastAccessed": 1770765817941,
+      "type": "file"
+    },
+    {
+      "path": "profilarr/rootfs/etc/services.d/nginx/run",
+      "accessCount": 1,
+      "lastAccessed": 1770765818308,
+      "type": "file"
+    },
+    {
+      "path": "huntarr/config.yaml",
+      "accessCount": 1,
+      "lastAccessed": 1770765828941,
+      "type": "file"
+    },
+    {
+      "path": "romm/config.yaml",
+      "accessCount": 1,
+      "lastAccessed": 1770765829082,
+      "type": "file"
+    },
+    {
+      "path": "romm/rootfs/etc/nginx/templates/default.conf.template",
+      "accessCount": 1,
+      "lastAccessed": 1770765829370,
+      "type": "file"
+    },
+    {
+      "path": "huntarr/rootfs/etc/services.d/huntarr/run",
+      "accessCount": 1,
+      "lastAccessed": 1770765849329,
+      "type": "file"
+    },
+    {
+      "path": "huntarr/rootfs/etc/cont-init.d/01-setup.sh",
+      "accessCount": 1,
+      "lastAccessed": 1770765849557,
+      "type": "file"
+    },
+    {
+      "path": "profilarr/rootfs/etc/cont-init.d/20-nginx.sh",
+      "accessCount": 1,
+      "lastAccessed": 1770766149905,
+      "type": "file"
+    },
+    {
+      "path": "docs/Kapowarr-1.2.0/Kapowarr.py",
+      "accessCount": 1,
+      "lastAccessed": 1770767197881,
+      "type": "file"
+    },
+    {
+      "path": "docs/Kapowarr-1.2.0/docker-compose.yml",
+      "accessCount": 1,
+      "lastAccessed": 1770767203421,
+      "type": "file"
+    },
+    {
+      "path": "docs/Kapowarr-1.2.0/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1770767203548,
+      "type": "file"
+    },
+    {
+      "path": "docs/Kapowarr-1.2.0/requirements.txt",
+      "accessCount": 1,
+      "lastAccessed": 1770767203661,
+      "type": "file"
+    },
+    {
+      "path": "docs/Kapowarr-1.2.0/Dockerfile",
+      "accessCount": 1,
+      "lastAccessed": 1770767203784,
+      "type": "file"
+    },
+    {
+      "path": "docs/Kapowarr-1.2.0/backend/internals/server.py",
+      "accessCount": 1,
+      "lastAccessed": 1770767208486,
+      "type": "file"
+    },
+    {
+      "path": "docs/Kapowarr-1.2.0/backend/base/definitions.py",
+      "accessCount": 1,
+      "lastAccessed": 1770767218766,
+      "type": "file"
+    },
+    {
+      "path": "docs/Kapowarr-1.2.0/pyproject.toml",
+      "accessCount": 1,
+      "lastAccessed": 1770767218984,
+      "type": "file"
+    },
+    {
+      "path": "docs/Kapowarr-1.2.0/frontend/ui.py",
+      "accessCount": 1,
+      "lastAccessed": 1770767297543,
+      "type": "file"
+    },
+    {
+      "path": "docs/ingress_examples/ingress-proxy/config.yaml",
+      "accessCount": 1,
+      "lastAccessed": 1770767658977,
+      "type": "file"
+    },
+    {
+      "path": "docs/ingress_examples/paperless-ngx-ingress/config.yaml",
+      "accessCount": 1,
+      "lastAccessed": 1770767661604,
+      "type": "file"
+    },
+    {
+      "path": "docs/ingress_examples/taskcafe/config.yaml",
+      "accessCount": 1,
+      "lastAccessed": 1770767665002,
+      "type": "file"
+    },
+    {
+      "path": "docs/ingress_examples/wireguard-ui/config.yaml",
+      "accessCount": 1,
+      "lastAccessed": 1770767667989,
+      "type": "file"
+    },
+    {
+      "path": "docs/ingress_examples/ingress-proxy/rootfs/etc/cont-init.d/nginx.sh",
+      "accessCount": 1,
+      "lastAccessed": 1770767699512,
+      "type": "file"
+    },
+    {
+      "path": "docs/ingress_examples/ingress-proxy/rootfs/etc/nginx/templates/direct.gtpl",
+      "accessCount": 1,
+      "lastAccessed": 1770767706475,
+      "type": "file"
+    },
+    {
+      "path": "docs/ingress_examples/ingress-proxy/rootfs/etc/nginx/includes/proxy_params.conf",
+      "accessCount": 1,
+      "lastAccessed": 1770767710516,
+      "type": "file"
+    },
+    {
+      "path": "docs/ingress_examples/ingress-proxy/rootfs/etc/nginx/includes/server_params.conf",
+      "accessCount": 1,
+      "lastAccessed": 1770767717365,
+      "type": "file"
+    },
+    {
+      "path": "docs/ingress_examples/ingress-proxy/rootfs/etc/nginx/includes/upstream.conf",
+      "accessCount": 1,
+      "lastAccessed": 1770767722918,
+      "type": "file"
+    },
+    {
+      "path": "docs/ingress_examples/paperless-ngx-ingress/rootfs/etc/nginx/conf.d/default.conf",
+      "accessCount": 1,
+      "lastAccessed": 1770767735946,
+      "type": "file"
+    },
+    {
+      "path": "docs/ingress_examples/paperless-ngx-ingress/rootfs/etc/nginx/conf.d/default/templates/location.conf",
+      "accessCount": 1,
+      "lastAccessed": 1770767742477,
+      "type": "file"
+    },
+    {
+      "path": "docs/ingress_examples/paperless-ngx-ingress/rootfs/etc/nginx/conf.d/ingress/templates/location.conf",
+      "accessCount": 1,
+      "lastAccessed": 1770767749955,
+      "type": "file"
+    },
+    {
+      "path": "docs/ingress_examples/paperless-ngx-ingress/rootfs/etc/nginx/conf.d/ingress/templates/headers.remote-user-from-ingress.conf",
+      "accessCount": 1,
+      "lastAccessed": 1770767756700,
+      "type": "file"
+    },
+    {
+      "path": "docs/ingress_examples/paperless-ngx-ingress/rootfs/etc/nginx/conf.d/ingress/templates/headers.remote-user-admin.conf",
+      "accessCount": 1,
+      "lastAccessed": 1770767762698,
+      "type": "file"
+    },
+    {
+      "path": "docs/ingress_examples/ingress-proxy/Dockerfile",
+      "accessCount": 1,
+      "lastAccessed": 1770767788687,
+      "type": "file"
+    },
+    {
+      "path": "docs/ingress_examples/paperless-ngx-ingress/Dockerfile",
+      "accessCount": 1,
+      "lastAccessed": 1770767794010,
+      "type": "file"
+    },
+    {
+      "path": "docs/ingress_examples/ingress-proxy/rootfs/etc/services.d/nginx/run",
+      "accessCount": 1,
+      "lastAccessed": 1770767800508,
+      "type": "file"
+    },
+    {
+      "path": "docs/ingress_examples/ingress-proxy/rootfs/etc/services.d/nginx/finish",
+      "accessCount": 1,
+      "lastAccessed": 1770767805401,
+      "type": "file"
+    },
+    {
+      "path": "docs/ingress_examples/paperless-ngx-ingress/rootfs/etc/s6-overlay/s6-rc.d/nginx/run",
+      "accessCount": 1,
+      "lastAccessed": 1770767814841,
+      "type": "file"
+    },
+    {
+      "path": "docs/ingress_examples/paperless-ngx-ingress/rootfs/etc/nginx/conf.d/ingress.template",
+      "accessCount": 1,
+      "lastAccessed": 1770767823340,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

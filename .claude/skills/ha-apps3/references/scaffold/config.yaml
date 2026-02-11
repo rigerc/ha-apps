@@ -1,0 +1,109 @@
+# ==============================================================================
+# CUSTOMIZE: Replace all APP_NAME occurrences with your add-on's actual name
+#            (e.g., "My App", slug "my_app", icon "mdi:application")
+#
+# config.yaml — Home Assistant Add-on manifest
+# Full schema reference:
+#   https://developers.home-assistant.io/docs/add-ons/configuration
+# ==============================================================================
+
+# Human-readable name shown in the HA add-on store
+name: APP_NAME
+
+# CUSTOMIZE: Pin to the upstream application version you are wrapping.
+# format: <upstream_version>-<addon_revision>  (e.g., "1.2.3-1")
+version: 1.0.0
+
+# CUSTOMIZE: Unique identifier — lowercase letters, digits and underscores only.
+# Used in URLs, file paths, and API calls.  Must be globally unique if published.
+slug: app_name
+
+# Short description shown in the add-on store card (one line, no markdown)
+description: >-
+  APP_NAME wrapped as a Home Assistant add-on with ingress support.
+
+# Link to the source repository (used in store UI)
+url: https://github.com/YOUR_ORG/YOUR_REPO
+
+# Target CPU architectures.  Remove any that are not supported by the upstream
+# application.  aarch64 + amd64 is the recommended minimum set.
+arch:
+  - aarch64
+  - amd64
+  # - armv7     # CUSTOMIZE: uncomment if upstream supports 32-bit ARM
+
+# REQUIRED for s6-overlay v3 base images — disables the legacy HA init wrapper
+# https://developers.home-assistant.io/blog/2022/05/12/s6-overlay-base-images/
+init: false
+
+# Controls when the add-on is started relative to the HA boot sequence.
+# "services" = after the supervisor and core; appropriate for most add-ons.
+startup: services
+
+# "manual" means the add-on does NOT start automatically on HA boot.
+# Change to "auto" for add-ons that should always run.
+boot: manual
+
+# ---------------------------------------------------------------------------
+# Ingress — embedded web UI inside Home Assistant
+# ---------------------------------------------------------------------------
+
+# Enable ingress (the add-on's web UI appears as a sidebar panel in HA)
+ingress: true
+
+# The port nginx inside the container listens on for HA ingress traffic.
+# This is dynamically replaced at runtime by 20-nginx.sh, so keep a unique
+# default port here to avoid conflicts with other add-ons during local builds.
+# CUSTOMIZE: choose a port not already used by another add-on.
+ingress_port: 8099
+
+# Sidebar icon — must be a valid MDI icon name: https://pictogrammers.com/library/mdi/
+# CUSTOMIZE: pick an icon that represents your app.
+panel_icon: mdi:application
+
+# CUSTOMIZE: optional — override the sidebar panel title (defaults to add-on name)
+# panel_title: APP_NAME
+
+# ---------------------------------------------------------------------------
+# Filesystem mounts
+# ---------------------------------------------------------------------------
+# "addon_config" maps to /addon_configs/<slug>/ on the host — persistent config.
+# "share"        maps to /share/ — files accessible by multiple add-ons.
+# Read the full list at:
+#   https://developers.home-assistant.io/docs/add-ons/configuration/#map
+map:
+  - addon_config:rw   # persistent configuration directory → /config
+  - share:rw          # shared storage → /share
+
+# ---------------------------------------------------------------------------
+# User-visible options (shown in the add-on configuration UI)
+# ---------------------------------------------------------------------------
+# CUSTOMIZE: add/remove options to match your application's configuration needs.
+options:
+  log_level: info
+  timezone: UTC
+  # EXAMPLE additional options (uncomment and adapt as needed):
+  # username: ""
+  # password: ""
+  # custom_option: "default_value"
+
+# Schema defines the type of each option.  Supported types:
+#   str, str?, password, password?, bool, bool?, int, int(min,max), port,
+#   list(a|b|c), match(...)?
+# Reference: https://developers.home-assistant.io/docs/add-ons/configuration/#options--schema
+schema:
+  log_level: list(trace|debug|info|warning|error)
+  timezone: str
+  # EXAMPLE schemas:
+  # username: str?
+  # password: password?
+  # custom_option: str?
+
+# ---------------------------------------------------------------------------
+# Optional: expose a host port (only needed if clients outside HA need direct
+# access beyond ingress — most web-only add-ons do NOT need this)
+# ---------------------------------------------------------------------------
+# ports:
+#   APP_PORT/tcp: APP_PORT
+# ports_description:
+#   APP_PORT/tcp: APP_NAME web interface

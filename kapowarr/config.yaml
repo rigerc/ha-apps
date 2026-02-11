@@ -1,6 +1,7 @@
-name: Kapowarr
-version: 1.1.2
-slug: kapowarr
+name: Kapowarrr
+#version: 1.1.2
+version: dev
+slug: kapowarr-dev
 description: |
   Comic book library manager. Build and manage a digital library of comics
   with automated downloading, renaming, and conversion. Supports downloading
@@ -25,4 +26,4 @@ options:
 schema:
   log_level: list(trace|debug|info|warning|error)
   timezone: str
-image: ghcr.io/rigerc/ha-apps-kapowarr-{arch}
+#image: ghcr.io/rigerc/ha-apps-kapowarr-{arch}
