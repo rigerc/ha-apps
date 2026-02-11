@@ -30,22 +30,29 @@ set -e
 # Source the framework libraries
 # ---------------------------------------------------------------------------
 # shellcheck source=ha-log.sh
+# shellcheck disable=SC1091
 source /usr/local/lib/ha-framework/ha-log.sh
 
 # shellcheck source=ha-env.sh
+# shellcheck disable=SC1091
 source /usr/local/lib/ha-framework/ha-env.sh
 
 # shellcheck source=ha-config.sh
+# shellcheck disable=SC1091
 source /usr/local/lib/ha-framework/ha-config.sh
 
 # shellcheck source=ha-dirs.sh
+# shellcheck disable=SC1091
 source /usr/local/lib/ha-framework/ha-dirs.sh
 
 # ---------------------------------------------------------------------------
-# CUSTOMIZE: Set your add-on name here
+# Add-on metadata - read from Supervisor
 # ---------------------------------------------------------------------------
-readonly ADDON_NAME="My Addon"
-readonly ADDON_SLUG="my_addon"
+# shellcheck disable=SC2034
+ADDON_NAME="$(bashio::addon.name)"
+readonly ADDON_NAME
+# shellcheck disable=SC2034
+readonly ADDON_SLUG="my_addon"  # CUSTOMIZE: Set your add-on slug here
 
 # ---------------------------------------------------------------------------
 # Initialize short-form logging helpers

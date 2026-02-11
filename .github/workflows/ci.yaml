@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
     types: [labeled, unlabeled, opened, synchronize, reopened]
-    branches: main
+    branches: ["main"]
     paths:
       - "cleanuparr/**"
       - "huntarr/**"
@@ -28,6 +28,18 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47
+        with:
+          files: |
+            cleanuparr/**
+            huntarr/**
+            kapowarr/**
+            profilarr/**
+            romm/**
+
       - name: Check if build should run
         id: check
         run: |
@@ -36,11 +48,8 @@ jobs:
             exit 0
           fi
 
-          # Get list of changed files
-          files=$(git diff --name-only ${{ github.event.pull_request.base.ref }}...HEAD)
-
-          # Check if any non-common files were changed
-          if echo "$files" | grep -qv "^common/"; then
+          # Check if any app files (non-common) were changed
+          if [[ "${{ steps.changed-files.outputs.any_changed }}" == "true" ]]; then
             echo "should_build=true" >> "$GITHUB_OUTPUT"
           else
             echo "should_build=false" >> "$GITHUB_OUTPUT"

@@ -27,7 +27,7 @@ set -e
 
 # Installation directory
 readonly FRAMEWORK_DIR="/usr/local/lib/ha-framework"
-readonly VERSION_FILE="${FRAMEWORK_DIR}/.version"
+readonly VERSION_FILE="${FRAMEWORK_DIR}/version.txt"
 
 # Colors for output (disabled in container, but useful for local testing)
 readonly COLOR_RESET=""
