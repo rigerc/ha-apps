@@ -13,8 +13,23 @@ if ! bashio::config.has_value 'database.password'; then
     bashio::exit.nok "Database password is required!"
 fi
 
-if ! bashio::config.has_value 'auth_secret_key'; then
-    bashio::exit.nok "Auth secret key is required! Generate with: openssl rand -hex 32"
+# ---------------------------------------------------------------------------
+# Auto-generate auth_secret_key if not provided
+# ---------------------------------------------------------------------------
+# The secret key is used by romm to sign session tokens. It must remain
+# stable across restarts so existing sessions stay valid. We persist the
+# generated key to /data/.auth_secret_key (HA persistent storage).
+declare auth_secret_key_file="/data/.auth_secret_key"
+
+if bashio::config.has_value 'auth_secret_key'; then
+    bashio::log.info "Using auth_secret_key from add-on configuration"
+elif [[ -f "${auth_secret_key_file}" ]]; then
+    bashio::log.info "Using previously generated auth_secret_key"
+else
+    bashio::log.info "No auth_secret_key configured — generating one automatically"
+    openssl rand -hex 32 > "${auth_secret_key_file}"
+    chmod 600 "${auth_secret_key_file}"
+    bashio::log.info "Auth secret key generated and saved to ${auth_secret_key_file}"
 fi
 
 # Create required directories with proper ownership
@@ -95,7 +110,12 @@ export_env DB_USER "$(bashio::config 'database.user')"
 export_env DB_PASSWD "$(bashio::config 'database.password')"
 
 # Export auth configuration
-export_env ROMM_AUTH_SECRET_KEY "$(bashio::config 'auth_secret_key')"
+# Prefer user-configured value; fall back to auto-generated file
+if bashio::config.has_value 'auth_secret_key'; then
+    export_env ROMM_AUTH_SECRET_KEY "$(bashio::config 'auth_secret_key')"
+else
+    export_env ROMM_AUTH_SECRET_KEY "$(cat /data/.auth_secret_key)"
+fi
 
 # Export metadata provider credentials (optional)
 if bashio::config.has_value 'metadata_providers.screenscraper_user'; then

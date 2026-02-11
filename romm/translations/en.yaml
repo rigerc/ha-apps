@@ -30,7 +30,7 @@ configuration:
 
   auth_secret_key:
     name: "Authentication Secret Key"
-    description: "Secret key for session authentication. **Required** - Generate with: openssl rand -hex 32"
+    description: "Secret key for session authentication. Leave empty to auto-generate (recommended). A stable key is persisted automatically across restarts."
 
   metadata_providers:
     name: "Metadata Providers"

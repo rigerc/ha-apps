@@ -60,7 +60,7 @@ schema:
     name: str
     user: str
     password: password
-  auth_secret_key: str
+  auth_secret_key: str?
   metadata_providers:
     screenscraper_user: str?
     screenscraper_password: password?
