@@ -1,801 +1,310 @@
 ---
 name: ha-apps
-description: Creates Home Assistant add-ons from existing Docker images with ingress support. Use when user asks to "wrap a Docker app for HA", "create HA add-on from Docker image", "analyze Docker image for add-on", "make ingress add-on", or wants to convert existing containerized applications into Home Assistant add-ons with web UI integration.
+description: This skill should be used when user asks to "create a Home Assistant add-on", "scaffold an add-on", "wrap a Docker image for HA", "convert a Docker app to Home Assistant", "configure ingress for an add-on", "add ports to an add-on", "choose a base image for an HA add-on", "set up a sidebar panel in Home Assistant", "should I use ingress or ports", "add a webui button", "test an add-on locally", or "analyze a Docker image for add-on creation". Also activates when user mentions config.yaml, build.yaml, ingress_port, ports_description, s6-overlay, or bashio in the context of Home Assistant add-on development.
 ---
 
-# Home Assistant Add-on Creator (from Docker Images)
+# Home Assistant Add-on Creator
 
-Specialized skill for creating Home Assistant add-ons from existing Docker images with automatic ingress (embedded web UI) support.
+Skill for creating production-quality Home Assistant add-ons that wrap existing Docker images with ingress (embedded sidebar web UI) support. Uses opinionated scaffold in `references/scaffold/` which targets s6-overlay v3 base images with nginx reverse proxy.
 
-## What This Skill Does
+## Purpose
 
-This skill helps you:
-1. **Analyze Docker images** - Use the discovery script to extract configuration from existing Docker images
-2. **Scaffold add-on structure** - Generate complete add-on directory with all required files
-3. **Configure ingress** - Set up nginx reverse proxy for embedded Home Assistant web UI
-4. **Apply best practices** - Follow Home Assistant add-on standards with s6-overlay v3 process supervision
+Wrap any containerized application as a Home Assistant add-on that:
+- Appears as a sidebar panel (ingress) without exposing host ports
+- Runs under s6-overlay v3 process supervision
+- Reads configuration through HA add-on options UI
+- Persists data to `/config` (addon_config mount)
+- Supports aarch64 and amd64 architectures
 
-## When to Use This Skill
+## Workflow Overview
 
-Use this skill when:
-- Converting an existing Docker application to a Home Assistant add-on
-- Creating an add-on with a web interface that should appear in the Home Assistant sidebar
-- Wrapping third-party containerized services for Home Assistant
-- Building add-ons that need ingress (embedded UI) support
-- Analyzing a Docker image to understand its structure for add-on creation
+1. **Discover** — analyze source image or repository
+2. **Scaffold** — copy template and rename placeholders
+3. **Configure** — customize five key files
+4. **Test** — build and run locally, then install in HA
 
-## Quick Start Workflow
+**Docker requirement:** Steps 1 and 5 require a working `docker` CLI. Before running either step, check that `docker` is available (e.g., `command -v docker`). If Docker is not installed or not accessible (common in WSL without Docker Desktop integration), inform the user that Docker is unavailable and wait for instructions. Do not skip discovery or fabricate results — the user may provide information manually, run commands elsewhere, or fix Docker setup first.
 
-### 1. Discover Docker Image Configuration
+---
 
-First, analyze the target Docker image to understand its structure:
+## Step 1: Discover Source Application
 
-```bash
-# Run the discovery script
-bash .claude/skills/ha-apps/scripts/discover.sh <docker-image>
-
-# Examples:
-bash .claude/skills/ha-apps/scripts/discover.sh linuxserver/plex:latest
-bash .claude/skills/ha-apps/scripts/discover.sh ghcr.io/user/myapp:v1.0
-bash .claude/skills/ha-apps/scripts/discover.sh https://github.com/user/repo
-```
-
-The discovery script will output:
-- Base image and OS information
-- Exposed ports
-- Environment variables
-- Volume mounts
-- Entrypoint and CMD
-- Package installations
-- Architecture support
-
-### 2. Create Add-on Directory Structure
-
-Use the scaffold template as a starting point:
+Run the discovery script against a Docker image or GitHub repository:
 
 ```bash
-# Copy scaffold to your add-on directory
-cp -r .claude/skills/ha-apps/scaffold/ /path/to/addons/myapp/
+bash .claude/skills/ha-apps3/scripts/discover.sh <docker-image-or-github-url>
 
-# Or for ingress-enabled add-on:
-cp -r .claude/skills/ha-apps/templates/ingress-nginx-s6-v3/ /path/to/addons/myapp/
+# Examples
+bash .claude/skills/ha-apps3/scripts/discover.sh ghcr.io/someuser/myapp:latest
+bash .claude/skills/ha-apps3/scripts/discover.sh https://github.com/someuser/myapp
 ```
 
-### 3. Configure the Add-on
+Record from the output:
+- **Upstream image + tag** — goes in the first `FROM` line of the Dockerfile
+- **Internal port** — the port the app listens on; nginx proxies ingress to this
+- **Environment variables** — become `options`/`schema` entries in `config.yaml`
+- **Volumes** — become `map:` entries
+- **Base OS** — determines which HA base image to use (Alpine vs Debian)
+- **Multi-arch support** — determines which architectures to list in `config.yaml`
 
-Edit the key configuration files based on discovery output:
+If discovery fails (network error, private image, etc.), the script prints the reason and suggests next steps. Read the output, address the issue, and re-run. For private images, pull them locally with `docker pull` first.
 
-#### config.yaml
-```yaml
-name: "My Application"
-version: "1.0.0"
-slug: "my_application"
-description: "My application wrapped for Home Assistant"
-arch:
-  - amd64
-  - aarch64
+---
 
-# Enable ingress for embedded web UI
-ingress: true
-ingress_port: 8099
-panel_icon: "mdi:application"
+## Step 1.5: Analyze Source Code Architecture
 
-# Map discovered ports (if not using ingress)
-# ports:
-#   8080/tcp: 8080
+After initial discovery, analyze upstream source code to understand runtime requirements, configuration patterns, and integration points that automated discovery cannot detect.
 
-# Map discovered volumes
-map:
-  - type: addon_config
-    path: /config
-  - ssl
-  - share
+This is especially important for applications with complex startup sequences or incomplete documentation.
 
-# API access
-homeassistant_api: true
-hassio_api: true
+**MUST read:** Before customizing the scaffold, you MUST read `references/source-code-analysis.md` to understand how to analyze the upstream application's source code for configuration patterns, data storage, logging, networking, and background processes.
 
-# Options from discovery
-options:
-  port: 8080
-  ssl: false
+---
 
-schema:
-  port: port
-  ssl: bool
+## Step 2: Copy and Rename Scaffold
+
+Copy the scaffold into the target add-on directory:
+
+```bash
+# Destination is the add-on's directory inside the monorepo
+cp -r .claude/skills/ha-apps3/references/scaffold/ myapp/
 ```
 
-#### Dockerfile
+The scaffold uses `APP_NAME` as a placeholder throughout. Replace every occurrence with the actual add-on slug/name (e.g., `myapp`):
 
-For **ingress-enabled** add-ons (using the ingress-nginx-s6-v3 template):
+```bash
+# Rename the services.d directory
+mv myapp/rootfs/etc/services.d/APP_NAME myapp/rootfs/etc/services.d/myapp
+
+# Replace the placeholder string in all text files
+grep -rl APP_NAME myapp/ | xargs sed -i 's/APP_NAME/myapp/g'
+
+# Replace the port placeholder in Dockerfile ENV line only.
+# The ${APP_PORT} variable references in run scripts are correct as-is.
+sed -i '/^ENV APP_PORT=/s/APP_PORT/8080/g' myapp/Dockerfile
+```
+
+---
+
+## Step 3: Customize Five Key Files
+
+### 3a. `config.yaml` — Add-on Manifest
+
+Open `references/scaffold/config.yaml` as a reference. Update these fields:
+
+| Field | What to set |
+|-------|-------------|
+| `name` | Human-readable display name |
+| `version` | `<upstream_version>-1` (e.g., `2.5.1-1`) |
+| `slug` | Lowercase, underscores only (e.g., `my_app`) |
+| `description` | One-line description |
+| `arch` | Remove architectures not supported by upstream |
+| `ingress_port` | Pick an unused port (default `8099`); unique across add-ons |
+| `panel_icon` | MDI icon name from https://pictogrammers.com/library/mdi/ |
+| `options` / `schema` | Add entries for each upstream environment variable to expose |
+
+Keep `init: false` — this is required for s6-overlay v3 base images.
+
+For `map:`, `addon_config:rw` gives the app a persistent `/config` directory. Add `share:rw` only if the app needs access to shared storage.
+
+### 3b. `build.yaml` — Base Images
+
+Choose the base image family based on the upstream OS detected during discovery. Set `labels.project` to the upstream GitHub URL — this is required by the repository's `manifest.sh` to track upstream versions.
+
+**All three base image families share a common foundation:**
+- **s6-overlay v3** (3.1.6.2) — process supervision and init system
+- **bashio** (0.17.5) — bash library for HA Supervisor API interaction
+- **tempio** (2024.11.2) — Go template engine for rendering config files at startup
+- **bash**, **curl**, **jq**, **ca-certificates**, **tzdata**
+- **Entrypoint:** `/init` (s6-overlay)
+
+#### Quick Selection Guide
+
+| Base Image | When to use | Image Tag |
+|-------------|---------------|------------|
+| **Alpine** | Upstream is Alpine-based, static binary (Go/Rust), or musl-compatible | `ghcr.io/home-assistant/{arch}-base:3.21` |
+| **Alpine + Python** | Python app that doesn't need glibc-linked C extensions | `ghcr.io/home-assistant/{arch}-base-python:3.13-alpine3.21` |
+| **Debian** | Requires glibc (.NET, Java, Node.js native modules) | `ghcr.io/home-assistant/{arch}-base-debian:bookworm` |
+
+**MUST read:** Before choosing a base image for `build.yaml`, you MUST read `references/base-images.md` to understand the differences between Alpine, Debian, and Alpine+Python base images — their package managers, included tools, and when to use each variant.
+
+### 3c. `Dockerfile` — Multi-Stage Build
+
+The scaffold uses a multi-stage pattern:
 
 ```dockerfile
-ARG BUILD_FROM
+# Stage 1: upstream image (tracked by manifest.sh — keep on ONE line)
+FROM UPSTREAM_IMAGE:UPSTREAM_VERSION AS app-source
+
+# Stage 2: HA wrapper
 FROM ${BUILD_FROM}
 
-# Install s6-overlay v3
-ARG S6_OVERLAY_VERSION="3.2.2.0"
-ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
-ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz
-
-# Install nginx for ingress
 RUN apk add --no-cache nginx
 
-# Install your application
-RUN apk add --no-cache \
-    python3 \
-    your-app-dependencies
+# Copy the application binary/files from stage 1
+COPY --from=app-source /app /app
 
-# Copy rootfs (includes nginx config and s6 services)
+# Overlay rootfs (init scripts, service definitions, nginx config)
 COPY rootfs /
 
-# Set up entrypoint
-ENTRYPOINT ["/init"]
+# Make all scripts executable in a single layer
+RUN chmod +x \
+    /etc/cont-init.d/*.sh \
+    /etc/services.d/myapp/run \
+    /etc/services.d/myapp/finish \
+    /etc/services.d/nginx/run \
+    /etc/services.d/nginx/finish \
+    /usr/local/lib/ha-log.sh
+
+ENV APP_PORT=8080 APP_HOST=0.0.0.0
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8099/health || exit 1
+
+ARG BUILD_ARCH
+LABEL io.hass.type="addon" io.hass.arch="${BUILD_ARCH}"
 ```
 
-For **basic** add-ons (using the scaffold template):
+The first `FROM ... AS app-source` line must be on a single line — `manifest.sh` parses it to track the upstream version. If the upstream application is not distributed as a Docker image, install it directly in stage 2 using `apk`/`apt-get`/`pip`/`wget`.
 
+For Debian base images, replace `apk add` with:
 ```dockerfile
-ARG BUILD_FROM
-FROM ${BUILD_FROM}
-
-# Install your application and dependencies
-RUN apk add --no-cache \
-    bash \
-    your-app-dependencies
-
-# Copy rootfs structure
-COPY rootfs /
-
-# Standard entrypoint for HA add-ons
-CMD ["/run.sh"]
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nginx \
+    && rm -rf /var/lib/apt/lists/*
 ```
 
-## Directory Structure
+### 3d. `rootfs/etc/cont-init.d/10-app-setup.sh` — App Configuration
 
-### Ingress-Enabled Add-on (templates/ingress-nginx-s6-v3/)
+This init script runs once at container start, before any services. Customize it to:
 
-```
-myapp/
-├── config.yaml                          # Add-on configuration
-├── Dockerfile                           # Container build instructions
-├── build.yaml                           # Multi-arch build config
-├── DOCS.md                              # Add-on documentation
-├── README.md                            # GitHub README
-├── rootfs/
-│   ├── etc/
-│   │   ├── cont-init.d/                # Init scripts (run once at startup)
-│   │   │   ├── 10-banner.sh           # Show startup banner
-│   │   │   ├── 20-nginx.sh            # Configure nginx
-│   │   │   └── 30-app.sh              # Configure your app
-│   │   ├── services.d/                 # S6 service definitions
-│   │   │   ├── app/
-│   │   │   │   ├── run                # Run your application
-│   │   │   │   └── finish             # Handle app exit
-│   │   │   └── nginx/
-│   │   │       ├── run                # Run nginx
-│   │   │       └── finish             # Handle nginx exit
-│   │   └── nginx/
-│   │       ├── nginx.conf             # Main nginx config
-│   │       ├── servers/
-│   │       │   └── ingress.conf       # Ingress proxy config
-│   │       └── includes/              # Reusable nginx configs
-│   └── usr/local/bin/
-│       └── myapp                      # Your application binary
-└── translations/
-    └── en.yaml                         # UI translations
-```
+1. Read add-on options using `bashio::config`:
+   ```bash
+   my_option="$(bashio::config 'my_option' 'default_value')"
+   ```
 
-### Basic Add-on (scaffold/)
+2. Export values to the s6 environment so service scripts can read them:
+   ```bash
+   printf '%s\n' "${my_option}" > /var/run/s6/container_environment/MY_OPTION
+   ```
 
-```
-myapp/
-├── config.yaml                          # Add-on configuration
-├── Dockerfile                           # Container build instructions
-├── build.yaml                           # Multi-arch build config
-├── DOCS.md                              # Add-on documentation
-├── README.md                            # GitHub README
-├── run.sh                               # Main startup script
-├── rootfs/
-│   ├── etc/
-│   │   ├── cont-init.d/                # Init scripts
-│   │   │   ├── 00-banner.sh
-│   │   │   └── 01-setup.sh
-│   │   └── services.d/                 # S6 services (optional)
-│   │       └── example-app/
-│   │           ├── run
-│   │           └── finish
-│   └── usr/bin/
-│       └── example-app                 # Your application
-└── translations/
-    └── en.yaml
-```
+3. Create directories the application needs at startup.
 
-## Key Components Explained
+All logging uses the shared `ha-log.sh` library (already sourced at the top of the script). Use `log_info`, `log_debug`, `log_warn`, `log_error` — no bashio calls needed for logging.
 
-### S6-Overlay v3 Process Supervision
+### 3e. `rootfs/etc/services.d/myapp/run` — Service Start Script
 
-S6-overlay provides proper init system for containers:
-
-**Init stages:**
-1. **cont-init.d/** - One-time initialization scripts (numbered 00-99)
-2. **services.d/** - Long-running supervised services
-3. **cont-finish.d/** - Cleanup scripts on shutdown
-
-**Service structure** (`services.d/myapp/`):
-- `run` - Script to start your service (must run in foreground)
-- `finish` - Optional cleanup when service exits
-
-Example service run script:
-```bash
-#!/command/execlineb -P
-with-contenv
-s6-setuidgid abc
-/usr/local/bin/myapp --config /config/myapp.conf
-```
-
-See `@references/s6-overlay.md` for detailed documentation.
-
-### Bashio Helper Functions
-
-Bashio provides convenient bash functions for Home Assistant add-ons:
+Replace the `exec` line at the bottom with the application's foreground start command. The script **must not** background the process — s6 supervises the PID directly:
 
 ```bash
-#!/usr/bin/env bashio
-
-# Logging
-bashio::log.info "Starting application..."
-bashio::log.warning "Port already in use"
-bashio::log.error "Failed to start"
-
-# Read add-on options
-PORT=$(bashio::config 'port')
-SSL=$(bashio::config 'ssl')
-
-# Check if option exists
-if bashio::config.has_value 'ssl_cert'; then
-    CERT=$(bashio::config 'ssl_cert')
-fi
-
-# API calls
-bashio::api.supervisor GET /info
-bashio::services.publish "mqtt" \
-    "host=core-mosquitto" \
-    "port=1883"
+# Replace the placeholder exec line with, e.g.:
+exec /app/myapp \
+    --host 0.0.0.0 \
+    --port "${APP_PORT}" \
+    --config /config
 ```
 
-See `@references/bashio-reference.md` for complete API reference.
+Use `exec` (not just calling the binary) so the app replaces the shell process and receives signals correctly.
 
-### Ingress Configuration
+### nginx ingress (automatic)
 
-**What is ingress?**
-Ingress allows your add-on's web UI to be embedded directly in Home Assistant, accessible via the sidebar without exposing ports.
+The nginx server block is rendered at container start by `20-nginx.sh` using **tempio** (a Go template tool pre-installed in all HA base images). The scaffold handles this automatically — no manual nginx configuration needed.
 
-**How it works:**
-1. Your app runs on internal port (e.g., 8080)
-2. Nginx proxies from ingress port (8099) to your app
-3. Home Assistant routes `/api/hassio_ingress/<addon>/` to your nginx
-4. Users access via Home Assistant UI sidebar
+Traffic flows: User clicks sidebar panel → HA ingress gateway → nginx → backend app.
 
-**Nginx ingress configuration** (`rootfs/etc/nginx/servers/ingress.conf`):
+**MUST read:** Before configuring ingress, ports, or webui, you MUST read `references/ingress-and-ports.md` to understand the traffic flow, decision guide for ingress vs ports, supported protocols, and security score implications.
 
-```nginx
-server {
-    listen 8099 default_server;
+---
 
-    location / {
-        allow 172.30.32.2;
-        deny all;
+## Step 4: Update `translations/en.yaml`
 
-        proxy_pass http://127.0.0.1:8080;
-        proxy_set_header Host $http_host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-**Init script to configure nginx** (`rootfs/etc/cont-init.d/20-nginx.sh`):
-
-```bash
-#!/usr/bin/env bashio
-
-bashio::log.info "Configuring nginx..."
-
-# Get ingress configuration
-INGRESS_PORT=$(bashio::addon.ingress_port)
-bashio::log.info "Ingress will be available on port ${INGRESS_PORT}"
-
-# Update nginx config
-sed -i "s/listen 8099/listen ${INGRESS_PORT}/g" /etc/nginx/servers/ingress.conf
-```
-
-### Build Configuration
-
-**build.yaml** - Multi-architecture builds:
+Add an entry for every option in `config.yaml` schema under `configuration`, and for every port in `ports` under `network`:
 
 ```yaml
-build_from:
-  amd64: "ghcr.io/home-assistant/amd64-base:3.19"
-  aarch64: "ghcr.io/home-assistant/aarch64-base:3.19"
-
-args:
-  S6_OVERLAY_VERSION: "3.2.2.0"
+configuration:
+  my_option:
+    name: "My Option"
+    description: "One-sentence description shown in the HA UI."
+network:
+  8080/tcp: "Web interface"
+  1883/tcp: "MQTT broker (optional)"
 ```
 
-Home Assistant base images come with:
-- Proper init system
-- bashio pre-installed
-- Common utilities
-- Multi-arch support
+The `network` key provides the same function as `ports_description` in `config.yaml`. Use one or the other — if both are present, `translations/en.yaml` takes precedence. Translations support localization (create `de.yaml`, `fr.yaml`, etc.), while `ports_description` does not.
 
-### Configuration Schema
+---
 
-Define user-configurable options in `config.yaml`:
+## Step 5: Test Locally
 
-```yaml
-options:
-  port: 8080
-  log_level: info
-  ssl: false
-  certfile: fullchain.pem
-  keyfile: privkey.pem
+Build the add-on (substitute the correct base image):
 
-schema:
-  port: port                              # Port number (1-65535)
-  log_level: list(trace|debug|info|warning|error)
-  ssl: bool
-  certfile: str?                          # Optional string
-  keyfile: str?
-```
-
-Access in scripts:
 ```bash
-PORT=$(bashio::config 'port')
-LOG_LEVEL=$(bashio::config 'log_level')
+docker build \
+  --build-arg BUILD_FROM=ghcr.io/home-assistant/amd64-base:3.21 \
+  --build-arg BUILD_ARCH=amd64 \
+  -t local/myapp:test \
+  myapp/
 ```
 
-See `@references/config-reference.md` for all schema types.
+Run it:
 
-## Common Patterns
-
-### Pattern 1: Simple Web Application
-
-For apps with a single web interface:
-
-1. Use ingress template
-2. Configure nginx to proxy to your app's port
-3. Set `ingress: true` in config.yaml
-4. Add init script to start your app
-
-### Pattern 2: Service with Optional Web UI
-
-For apps that can run headless or with UI:
-
-1. Use basic scaffold
-2. Make ingress conditional:
-```yaml
-# config.yaml
-options:
-  enable_ui: true
-
-schema:
-  enable_ui: bool
-```
-
-3. In init script:
-```bash
-if bashio::config.true 'enable_ui'; then
-    # Enable nginx
-    bashio::log.info "Enabling web UI"
-fi
-```
-
-### Pattern 3: Multi-Service Application
-
-For apps with multiple components:
-
-1. Create multiple service directories in `services.d/`
-2. Use dependencies in s6-rc format (see v3_example/)
-3. Each service gets its own run/finish scripts
-
-```
-services.d/
-├── database/
-│   ├── run
-│   └── finish
-├── backend/
-│   ├── run
-│   └── finish
-└── frontend/
-    ├── run
-    └── finish
-```
-
-## Discovery Script Details
-
-The discovery script (`scripts/discover.sh`) analyzes:
-
-**For Docker images:**
-```bash
-bash discover.sh linuxserver/plex:latest
-```
-- Pulls image and inspects metadata
-- Extracts environment variables, volumes, ports
-- Analyzes Docker history for package installations
-- Detects base OS and architecture
-
-**For GitHub repositories:**
-```bash
-bash discover.sh https://github.com/user/repo
-```
-- Clones repository
-- Finds and analyzes Dockerfile
-- Extracts docker-compose configuration
-- Searches for documentation
-
-**Output includes:**
-- Architecture support recommendations
-- Port mappings for config.yaml
-- Volume mapping suggestions
-- Base image information
-- Package dependencies to install
-- Environment variables to expose as options
-
-## Testing Your Add-on
-
-### Local Testing
-
-1. Build the add-on:
-```bash
-docker build -t local/myapp .
-```
-
-2. Run with Home Assistant:
 ```bash
 docker run --rm \
-  -v /path/to/config:/config \
-  -v /path/to/data:/data \
+  -v "$(pwd)/test-data:/config" \
   -p 8099:8099 \
-  local/myapp
+  local/myapp:test
 ```
 
-3. Check logs:
-```bash
-docker logs -f <container-id>
-```
-
-### Development in Home Assistant
-
-1. Add local add-on repository:
-   - Go to Supervisor → Add-on Store → ⋮ → Repositories
-   - Add your repository path
-
-2. Install and test:
-   - Install add-on from local repository
-   - Configure options
-   - Start add-on
-   - Check logs in Supervisor → Add-on → Log tab
-
-### Common Issues
-
-**Add-on won't start:**
-- Check Dockerfile builds successfully
-- Verify ENTRYPOINT or CMD is correct
-- Check service run scripts are executable
-- Review logs for error messages
-
-**Ingress not working:**
-- Verify `ingress: true` in config.yaml
-- Check nginx is listening on correct port
-- Ensure your app accepts connections from 127.0.0.1
-- Check nginx logs in add-on logs
-
-**Options not being read:**
-- Verify schema matches options structure
-- Check bashio::config calls use correct keys
-- Ensure default values are valid
-
-## Advanced Topics
-
-### Custom S6 Services (v3 format)
-
-The `v3_example/` directory shows s6-rc service format:
-
-```
-s6-overlay/s6-rc.d/
-├── myapp/                    # Service definition
-│   ├── type                  # "longrun" or "oneshot"
-│   ├── run                   # Start script
-│   ├── finish                # Exit handler
-│   └── dependencies.d/       # Service dependencies
-│       └── base              # Wait for base services
-└── user/
-    └── contents.d/
-        └── myapp             # Register service
-```
-
-### Environment Variables
-
-Expose configuration as environment variables:
+Check that nginx starts, the backend becomes ready, and the ingress health endpoint responds:
 
 ```bash
-#!/usr/bin/env bashio
-
-# Read options
-export APP_PORT=$(bashio::config 'port')
-export APP_LOG_LEVEL=$(bashio::config 'log_level')
-export APP_DATA_DIR="/data"
-
-# Start app with environment
-exec /usr/local/bin/myapp
+curl -f http://localhost:8099/health
 ```
 
-### Volume Permissions
-
-Handle volume ownership in init script:
-
-```bash
-#!/usr/bin/env bashio
-
-# Ensure directories exist with correct permissions
-mkdir -p /data/app
-chown -R abc:abc /data/app
-
-# Or use bashio helpers
-bashio::fs.directory_exists "/config/app" || mkdir -p "/config/app"
-```
-
-### Multi-Architecture Support
-
-Build for multiple architectures:
-
-```yaml
-# build.yaml
-build_from:
-  amd64: "ghcr.io/home-assistant/amd64-base:3.19"
-  aarch64: "ghcr.io/home-assistant/aarch64-base:3.19"
-  armv7: "ghcr.io/home-assistant/armv7-base:3.19"
-```
-
-Use build arguments for arch-specific downloads:
-
-```dockerfile
-ARG TARGETARCH
-RUN case "${TARGETARCH}" in \
-    amd64) ARCH=x86_64 ;; \
-    aarch64) ARCH=aarch64 ;; \
-    armv7) ARCH=armv7 ;; \
-    esac && \
-    wget https://example.com/app-${ARCH}.tar.gz
-```
-
-## Reference Documentation
-
-This skill includes comprehensive reference documentation:
-
-- **bashio-reference.md** - Complete bashio API reference with examples
-- **s6-overlay.md** - Official s6-overlay v3 documentation
-- **dockerfile-ref.md** - Dockerfile instruction reference
-- **config-reference.md** - Complete config.yaml schema reference
-
-## Example: Creating a Plex Add-on
-
-Let's walk through creating a Plex Media Server add-on:
-
-### 1. Discover Plex Image
-
-```bash
-bash scripts/discover.sh linuxserver/plex:latest
-```
-
-Output shows:
-- Base: Ubuntu
-- Ports: 32400/tcp, 1900/udp, etc.
-- Volumes: /config, /movies, /tv
-- Environment: PUID, PGID, TZ
-
-### 2. Create Add-on Structure
-
-```bash
-cp -r templates/ingress-nginx-s6-v3/ ~/addons/plex/
-cd ~/addons/plex/
-```
-
-### 3. Configure config.yaml
-
-```yaml
-name: "Plex Media Server"
-version: "1.0.0"
-slug: "plex"
-description: "Plex Media Server for Home Assistant"
-arch:
-  - amd64
-  - aarch64
-
-ingress: true
-ingress_port: 8099
-panel_icon: "mdi:plex"
-
-map:
-  - type: addon_config
-    path: /config
-  - type: media
-    path: /media
-    read_only: false
-
-options:
-  claim_token: ""
-
-schema:
-  claim_token: str?
-```
-
-### 4. Update Dockerfile
-
-```dockerfile
-ARG BUILD_FROM
-FROM ${BUILD_FROM}
-
-# Install s6-overlay
-ARG S6_OVERLAY_VERSION="3.2.2.0"
-ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
-ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz
-
-# Install nginx and dependencies
-RUN apk add --no-cache nginx curl
-
-# Install Plex
-RUN curl -o /tmp/plexmediaserver.tar.gz \
-    https://downloads.plex.tv/plex-media-server-new/1.32.0.6100/linux/PlexMediaServer-1.32.0.6100-x86_64.tar.gz && \
-    tar -xzf /tmp/plexmediaserver.tar.gz -C /opt
-
-COPY rootfs /
-
-ENTRYPOINT ["/init"]
-```
-
-### 5. Configure Nginx (rootfs/etc/nginx/servers/ingress.conf)
-
-```nginx
-server {
-    listen 8099;
-
-    location / {
-        allow 172.30.32.2;
-        deny all;
-
-        proxy_pass http://127.0.0.1:32400;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header Host $host;
-    }
-}
-```
-
-### 6. Create Plex Service (rootfs/etc/services.d/plex/run)
-
-```bash
-#!/command/execlineb -P
-with-contenv
-s6-setuidgid abc
-/opt/plexmediaserver/Plex\ Media\ Server
-```
-
-### 7. Add Init Script (rootfs/etc/cont-init.d/30-plex.sh)
-
-```bash
-#!/usr/bin/env bashio
-
-bashio::log.info "Configuring Plex Media Server..."
-
-# Get claim token if provided
-if bashio::config.has_value 'claim_token'; then
-    CLAIM_TOKEN=$(bashio::config 'claim_token')
-    bashio::log.info "Using claim token for Plex setup"
-    export PLEX_CLAIM="${CLAIM_TOKEN}"
-fi
-
-# Set Plex preferences
-export PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR="/config"
-```
-
-### 8. Test
-
-```bash
-# Build
-docker build -t local/plex .
-
-# Run
-docker run --rm \
-  -v $(pwd)/test-config:/config \
-  -v $(pwd)/test-media:/media \
-  -p 8099:8099 \
-  local/plex
-```
-
-### 9. Access via Home Assistant
-
-After installing in HA:
-- Add-on appears in sidebar with Plex icon
-- Click to access Plex web interface
-- All traffic proxied through Home Assistant ingress
-- No need to expose port 32400
-
-## Tips and Best Practices
-
-1. **Always use ingress** for web UIs - Better user experience and security
-2. **Use bashio helpers** - Cleaner code and better error handling
-3. **Follow s6 best practices** - Proper process supervision and init
-4. **Test multi-arch** - Build and test on both amd64 and aarch64
-5. **Document options** - Clear descriptions in DOCS.md
-6. **Version properly** - Semantic versioning (1.0.0, 1.1.0, 2.0.0)
-7. **Include translations** - At minimum English in translations/en.yaml
-8. **Handle secrets safely** - Use options schema with password type
-9. **Log appropriately** - Use bashio logging for consistency
-10. **Clean up temp files** - Remove downloads in Dockerfile
-
-## Resources
-
-- [Home Assistant Add-on Documentation](https://developers.home-assistant.io/docs/add-ons)
-- [S6-Overlay Documentation](https://github.com/just-containers/s6-overlay)
-- [Bashio GitHub](https://github.com/hassio-addons/bashio)
-- [Home Assistant Base Images](https://github.com/home-assistant/docker-base)
-- [Add-on Example Repository](https://github.com/home-assistant/addons-example)
-
-## Troubleshooting
-
-### Add-on won't install
-- Check config.yaml syntax is valid YAML
-- Verify all required fields are present
-- Check image exists and is accessible
-
-### Ingress shows 502 error
-- Ensure your app is listening on 127.0.0.1 or 0.0.0.0
-- Check nginx is running: `ps aux | grep nginx`
-- Verify proxy_pass port matches your app's port
-
-### Options not applying
-- Check schema matches options structure exactly
-- Use `bashio::config 'key'` not environment variables
-- Verify default values in options are valid
-
-### Service won't start
-- Make run script executable: `chmod +x run`
-- Check script has proper shebang
-- Ensure service runs in foreground (no & or daemon mode)
-- Check dependencies in dependencies.d/ exist
-
-### Logs show permission errors
-- Use s6-setuidgid in service run scripts
-- Set correct ownership in init scripts
-- Check volume permissions on host
-
-## Next Steps
-
-After creating your add-on:
-
-1. **Test thoroughly** - Install in Home Assistant and test all features
-2. **Write documentation** - Complete DOCS.md with all options and usage
-3. **Create repository** - Set up GitHub repository for add-on
-4. **Configure CI/CD** - Use GitHub Actions for automated builds
-5. **Publish** - Share with community via add-on repository
-6. **Maintain** - Keep dependencies updated and respond to issues
-
-## Summary
-
-This skill provides everything needed to create professional Home Assistant add-ons from Docker images:
-
-- **Discovery script** to analyze existing images
-- **Scaffold templates** for quick setup
-- **Ingress template** for embedded web UIs
-- **Reference docs** for all HA add-on technologies
-- **Examples and patterns** for common scenarios
-
-Use the discovery script to understand your target application, choose the appropriate template (basic or ingress), customize the configuration, and test thoroughly before publishing.
+---
+
+## Critical Gotchas
+
+- **`init: false` is required** — s6-overlay v3 base images will not start without this
+- **First `FROM` line must be single-line** — `manifest.sh` parses it with a regex
+- **`build.yaml labels.project`** — must be the upstream GitHub URL for version tracking
+- **nginx `daemon off;`** — already set in `nginx.conf`; do not remove it
+- **Services run in foreground** — never use `&` or daemon flags in `run` scripts
+- **`armv7`/`armhf`/`i386` are NOT supported** — only `aarch64` and `amd64`
+- **After changing `config.yaml` or `Dockerfile`** — run `.github/scripts/manifest.sh`
+- **`tempio` is pre-installed** — do not add it to the Dockerfile `apk add`; it's in all HA base images
+- **Port configuration via `ENV APP_PORT`** — Dockerfile `ENV APP_PORT` is the single source of truth; `20-nginx.sh` reads it via `$APP_PORT` and passes it to tempio
+
+---
+
+## Reference Files
+
+Consult these files for detailed information:
+
+**Scaffold templates** (`references/scaffold/`):
+- `config.yaml` — fully annotated add-on manifest with all common options
+- `build.yaml` — base image selection with available flavours
+- `Dockerfile` — multi-stage pattern with inline comments
+- `rootfs/etc/cont-init.d/` — three annotated init scripts (banner, app setup, nginx)
+- `rootfs/etc/services.d/` — app and nginx service run/finish scripts
+- `rootfs/etc/nginx/templates/ingress.gtpl` — Go template for nginx server block, rendered by tempio
+- `rootfs/etc/nginx/includes/` — shared nginx configuration snippets (proxy params, server params)
+- `rootfs/usr/local/lib/ha-log.sh` — shared logging library API
+
+**HA add-on documentation** (`references/`):
+- **`base-images.md`** — detailed base image selection guide (Alpine, Debian, Alpine+Python)
+- **`bashio-reference.md`** — all bashio helper functions with examples
+- **`configuration.md`** — complete `config.yaml` option reference with all keys
+- **`ingress-and-ports.md`** — ingress, ports, and webUI configuration with decision guide
+- **`s6-overlay.md`** — s6-overlay v3 init stages, service scripting, environment
+- **`security.md`** — AppArmor profiles, privilege levels, network isolation
+- **`source-code-analysis.md`** — source code analysis patterns by language (Go, Python, Node.js, Rust)
+- **`testing.md`** — local testing, integration testing, CI setup
+- **`publishing.md`** — publishing to the community add-on store
+- **`repository.md`** — setting up a custom add-on repository
+- **`communication.md`** — inter-add-on communication, service discovery
+- **`presentation.md`** — icons, logos, panel customization
+- **`tutorial.md`** — official HA add-on development tutorial
+
+**Discovery script** (`scripts/discover.sh`):
+- Analyzes Docker images and GitHub repos — run this first to understand the upstream

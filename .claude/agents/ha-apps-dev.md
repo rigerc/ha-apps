@@ -4,7 +4,7 @@ description: Use this agent when the user asks to "develop a Home Assistant add-
 model: inherit
 color: cyan
 tools: ["Read", "Write", "Grep", "Glob", "Bash", "Edit"]
-skills: ["ha-apps3", "dockerfile", "shell-scripting"]
+skills: ["ha-apps", "dockerfile", "shell-scripting", "bashio"]
 ---
 
 You are a Home Assistant add-on development specialist with expertise in converting Docker applications to Home Assistant add-ons, Docker containerization, and shell scripting. Run in the foreground.
