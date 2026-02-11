@@ -5,80 +5,165 @@
 # config.yaml — Home Assistant Add-on manifest
 # Full schema reference:
 #   https://developers.home-assistant.io/docs/add-ons/configuration
+#
+# This scaffold includes EVERY config.yaml key with guidance.
+# Active (uncommented) keys are the recommended defaults for an ingress add-on.
+# Commented keys show the default value and when to enable them.
 # ==============================================================================
+
+# =========================== REQUIRED FIELDS ==================================
 
 # Human-readable name shown in the HA add-on store
 name: APP_NAME
 
-# CUSTOMIZE: This is the version for the HA add-on itself, not the upstream application.  Use semantic versioning.
+# CUSTOMIZE: Version of the HA add-on wrapper (not the upstream app version).
+# When using `image:`, this must match the Docker image tag exactly.
 version: 1.0.0
 
 # CUSTOMIZE: Unique identifier — lowercase letters, digits and underscores only.
-# Used in URLs, file paths, and API calls.  Must be globally unique if published.
+# Used in URLs, file paths, and API calls.  Must be unique within the repository.
 slug: app_name
 
 # Short description shown in the add-on store card (one line, no markdown)
 description: >-
   APP_NAME wrapped as a Home Assistant add-on with ingress support.
 
-# Link to the source repository (used in store UI)
-url: https://github.com/YOUR_ORG/YOUR_REPO
-
-# CUSTOMIZE: Docker image name pattern for builds.  {arch} is replaced by the target architecture (e.g., "amd64").
-image: ghcr.io/rigerc/ha-apps-[app_name]-{arch}
-
-# Target CPU architectures.  Remove any that are not supported by the upstream
-# application.  aarch64 + amd64 is the recommended minimum set.
+# Target CPU architectures.  Remove any not supported by the upstream app.
+# aarch64 + amd64 is the recommended minimum.  Other options: armhf, armv7, i386
 arch:
   - aarch64
   - amd64
 
-# REQUIRED for s6-overlay v3 base images — disables the legacy HA init wrapper
+# =========================== BUILD / IMAGE ====================================
+
+# CUSTOMIZE: Docker image name pattern.  {arch} is replaced at build time.
+# Required when publishing pre-built images.  Omit for local-only add-ons.
+image: ghcr.io/rigerc/ha-apps-[app_name]-{arch}
+
+# =========================== LIFECYCLE ========================================
+
+# REQUIRED for s6-overlay v3 base images — disables the legacy HA init wrapper.
+# Without this the add-on will fail to start.
 # https://developers.home-assistant.io/blog/2022/05/12/s6-overlay-base-images/
 init: false
 
-# Controls when the add-on is started relative to the HA boot sequence.
-# "services" = after the supervisor and core; appropriate for most add-ons.
+# Boot sequence position.  Values (earliest → latest):
+#   initialize → system → services → application (default) → once
+# "services" starts before HA Core; "application" starts after.
+# "once" is for one-shot tasks that exit after completion.
 startup: services
 
-# "manual" means the add-on does NOT start automatically on HA boot.
-# Change to "auto" for add-ons that should always run.
+# Auto-start behavior on HA boot.
+#   auto         — system controls start at boot (default)
+#   manual       — user must start manually each time
+#   manual_only  — manual only, user cannot change to auto
 boot: manual
 
-# ---------------------------------------------------------------------------
-# Ingress — embedded web UI inside Home Assistant
-# ---------------------------------------------------------------------------
+# Seconds before the Supervisor kills the container if it hasn't stopped.
+# timeout: 10
+
+# =========================== INGRESS ==========================================
+# Ingress embeds the web UI as an HA sidebar panel.  Traffic flows through the
+# HA ingress gateway (172.30.32.2) on the internal Docker network — no host
+# ports are exposed.  HA handles authentication automatically.
+# Enabling ingress adds +2 to the add-on security score (base is 5).
 
 # Enable ingress (the add-on's web UI appears as a sidebar panel in HA)
 ingress: true
 
-# The port nginx inside the container listens on for HA ingress traffic.
-# This is dynamically replaced at runtime by 20-nginx.sh, so keep a unique
-# default port here to avoid conflicts with other add-ons during local builds.
-# CUSTOMIZE: choose a port not already used by another add-on.
+# Port nginx listens on inside the container for ingress traffic.
+# Dynamically overwritten at runtime by 20-nginx.sh, but keep a unique default
+# here to avoid conflicts during local builds.
+# For host_network add-ons, set to 0 and read the assigned port via the API.
+# CUSTOMIZE: choose a port not already used by another add-on in this repo.
 ingress_port: 8099
 
-# Sidebar icon — must be a valid MDI icon name: https://pictogrammers.com/library/mdi/
+# URL entry point path appended after the ingress token URL.
+# Change when the app serves its UI at a sub-path (e.g., /ui, /dashboard).
+# ingress_entry: /
+
+# Enable streaming mode — disables buffering at the ingress gateway.
+# Set to true for apps with heavy SSE, chunked transfers, or long-poll responses.
+# ingress_stream: false
+
+# Sidebar icon — must be a valid MDI icon name.
+# Browse icons at https://pictogrammers.com/library/mdi/
 # CUSTOMIZE: pick an icon that represents your app.
 panel_icon: mdi:application
 
-# CUSTOMIZE: optional — override the sidebar panel title (defaults to add-on name)
+# Override the sidebar panel title (defaults to add-on name).
 # panel_title: APP_NAME
 
-# ---------------------------------------------------------------------------
-# Filesystem mounts
-# ---------------------------------------------------------------------------
-# "addon_config" maps to /addon_configs/<slug>/ on the host — persistent config.
-# "share"        maps to /share/ — files accessible by multiple add-ons.
-# Read the full list at:
-#   https://developers.home-assistant.io/docs/add-ons/configuration/#map
-map:
-  - addon_config:rw   # persistent configuration directory → /config
-  - share:rw          # shared storage → /share
+# Restrict sidebar panel to admin users only.
+# Set to false to show the panel to all HA users.
+# panel_admin: true
 
-# ---------------------------------------------------------------------------
-# User-visible options (shown in the add-on configuration UI)
-# ---------------------------------------------------------------------------
+# =========================== NETWORK ==========================================
+# Ports and ingress are INDEPENDENT — they use separate network paths.
+# Ingress: HA internal Docker network (172.30.32.2 gateway), no host ports.
+# Ports:   Docker host port bindings (-p flag), accessible from the LAN.
+#
+# OMIT `ports` entirely for ingress-only add-ons (most secure, +2 score).
+# Add `ports` only when external clients need direct access to the service.
+#
+# Format: "container-port/protocol": host-port
+#   number — exposed immediately on host:number, user can remap in UI
+#   null   — disabled by default, user can enable in the HA Network panel
+#
+# ports:
+#   APP_PORT/tcp: null
+#
+# ports_description:
+#   APP_PORT/tcp: APP_NAME web interface
+#
+# Or provide descriptions via translations/en.yaml `network` key instead.
+
+# "Open Web UI" button on the add-on info page (opens new browser tab).
+# Requires `ports` — the [PORT:x] container port must be listed above.
+# [HOST] = HA host address.  [PORT:x] = host port mapped from container port x.
+# [PROTO:option] = https when the named boolean option is true, else http.
+# webui: http://[HOST]:[PORT:APP_PORT]
+
+# Run the container on the host network namespace.
+# All container ports are directly on the host; `ports` mappings are ignored.
+# Use only when the app needs mDNS, DLNA, or raw network access.
+# With ingress, combine with ingress_port: 0 for dynamic port assignment.
+# host_network: false
+
+# =========================== FILESYSTEM MOUNTS ================================
+# Bind-mount HA directories into the container.
+# Values: homeassistant_config, addon_config, ssl, addons, backup,
+#         share, media, all_addon_configs, data
+# Append :rw for write access (default is read-only).
+# Optional `path:` property overrides the mount point inside the container.
+# The `data` directory (/data) is always mapped and writable.
+map:
+  - addon_config:rw   # persistent config → /config inside the container
+  - share:rw          # shared storage → /share (for media files, downloads, etc.)
+
+# =========================== USER OPTIONS =====================================
+# `options` defines defaults shown in the HA add-on configuration UI.
+# `schema` validates user input.  Keys must match between both dicts.
+#
+# To make an option required with no default: set its value to null in options
+# (or omit from options and define only in schema without a ? suffix).
+# To make an option truly optional: use ? suffix in schema and omit from options.
+#
+# Schema types:
+#   str, str?, str(min,max)         — string, optional string, bounded length
+#   bool, bool?                     — boolean
+#   int, int?, int(min,max)         — integer, optional, bounded range
+#   float, float?, float(min,max)   — float
+#   port                            — valid port number (1-65535)
+#   password, password?             — masked input in the UI
+#   email                           — email address
+#   url                             — URL
+#   list(val1|val2|...)             — dropdown of allowed values
+#   match(REGEX), match(REGEX)?     — regex pattern match
+#   device, device(subsystem=tty)   — device path, optionally filtered
+#
+# Nested objects and lists are supported (max depth: 2).
+#
 # CUSTOMIZE: add/remove options to match your application's configuration needs.
 options:
   log_level: info
@@ -88,10 +173,6 @@ options:
   # password: ""
   # custom_option: "default_value"
 
-# Schema defines the type of each option.  Supported types:
-#   str, str?, password, password?, bool, bool?, int, int(min,max), port,
-#   list(a|b|c), match(...)?
-# Reference: https://developers.home-assistant.io/docs/add-ons/configuration/#options--schema
 schema:
   log_level: list(trace|debug|info|warning|error)
   timezone: str
@@ -100,11 +181,152 @@ schema:
   # password: password?
   # custom_option: str?
 
-# ---------------------------------------------------------------------------
-# Optional: expose a host port (only needed if clients outside HA need direct
-# access beyond ingress — most web-only add-ons do NOT need this)
-# ---------------------------------------------------------------------------
-# ports:
-#   APP_PORT/tcp: APP_PORT
-# ports_description:
-#   APP_PORT/tcp: APP_NAME web interface
+# =========================== HA / SUPERVISOR API ==============================
+
+# Link shown on the add-on info page (e.g., docs, forum thread).
+url: https://github.com/YOUR_ORG/YOUR_REPO
+
+# Pin a minimum required HA Core version.  The add-on will not start on older
+# versions.  Use when the add-on depends on Core APIs introduced in a specific
+# release.
+# homeassistant: "2024.1.0"
+
+# Allow the add-on to call the Supervisor REST API at http://supervisor.
+# Read the SUPERVISOR_TOKEN env var for auth.  Combine with hassio_role.
+# hassio_api: false
+
+# Role-based access to Supervisor API endpoints.
+# default | homeassistant | backup | manager | admin
+# hassio_role: default
+
+# Allow the add-on to call the HA Core REST API via http://supervisor/core/api.
+# Read the SUPERVISOR_TOKEN env var for bearer auth.
+# homeassistant_api: false
+
+# Allow the add-on to authenticate users against the HA user backend.
+# Use instead of add-on-specific login credentials.
+# auth_api: false
+
+# =========================== HARDWARE / PRIVILEGES ============================
+# Each option below reduces the security score.  Use only when required.
+
+# Device paths to map into the container.  E.g., ["/dev/ttyUSB0"]
+# devices: []
+
+# Privileged capabilities.  Available:
+#   BPF, CHECKPOINT_RESTORE, DAC_READ_SEARCH, IPC_LOCK, NET_ADMIN, NET_RAW,
+#   PERFMON, SYS_ADMIN, SYS_MODULE, SYS_NICE, SYS_PTRACE, SYS_RAWIO,
+#   SYS_RESOURCE, SYS_TIME
+# privileged: []
+
+# Full hardware access (like Docker --privileged).  Protected add-ons only.
+# Prefer `devices`, `uart`, `usb`, `gpio` over this.
+# full_access: false
+
+# Map GPIO (/sys/class/gpio) into the container.
+# gpio: false
+
+# Map raw USB access (/dev/bus/usb) with plug-and-play support.
+# usb: false
+
+# Auto-map all UART/serial devices from the host.
+# uart: false
+
+# Mount the host udev database (read-only) into the container.
+# udev: false
+
+# Map /device-tree into the container.
+# devicetree: false
+
+# Map host kernel modules and config (read-only), grants SYS_MODULE.
+# kernel_modules: false
+
+# Mount host system journal (read-only).  Check /var/log/journal first,
+# fall back to /run/log/journal.
+# journald: false
+
+# Give the container access to the host scheduler, grants SYS_NICE.
+# realtime: false
+
+# Use the container's /tmp as tmpfs (memory-backed).
+# tmpfs: false
+
+# =========================== NAMESPACE SHARING ================================
+# host_ipc: false    # Share IPC namespace with host
+# host_dbus: false   # Map host D-Bus service into the container
+# host_pid: false    # Share PID namespace (incompatible with s6-overlay)
+# host_uts: false    # Share UTS namespace (hostname)
+
+# =========================== AUDIO / VIDEO ====================================
+# audio: false   # Map PulseAudio into the container (install alsa-plugins-pulse on Alpine)
+# video: false   # Map all video devices into the container
+
+# =========================== STDIN ============================================
+# Enable STDIN for use with the hassio.addon_stdin service action.
+# stdin: false
+
+# =========================== DOCKER API =======================================
+# Read-only access to the Docker API.  Protected add-ons only.
+# docker_api: false
+
+# =========================== BACKUP ==========================================
+
+# Backup strategy.
+#   hot  — backup while running (default); supports pre/post commands
+#   cold — stop the add-on before backup (pre/post are ignored)
+# backup: hot
+
+# Shell command to run inside the container before/after a backup.
+# backup_pre: ""
+# backup_post: ""
+
+# Glob patterns for files/paths to exclude from backups.
+# backup_exclude: []
+
+# =========================== WATCHDOG =========================================
+# DEPRECATED — prefer HEALTHCHECK in the Dockerfile instead.
+# The Supervisor watchdog polls this URL and restarts the add-on if it fails.
+# Uses the same [HOST]:[PORT:x] syntax as webui.
+# For TCP-only checks: tcp://[HOST]:[PORT:80]
+# watchdog: "http://[HOST]:[PORT:APP_PORT]/health"
+
+# =========================== SERVICES / DISCOVERY =============================
+# Service integration with other add-ons (mqtt, mysql).
+# Format: "service:function" where function is provide | want | need
+# services: []
+
+# Services this add-on provides for HA discovery.
+# discovery: []
+
+# =========================== ENVIRONMENT VARIABLES ============================
+# Static environment variables set at container start.
+# For dynamic values from user options, use cont-init.d scripts with bashio instead.
+# environment: {}
+
+# =========================== PUBLISHING / STORE ===============================
+
+# Require the user to have "Advanced" mode enabled to see this add-on.
+# advanced: false
+
+# Release stage: stable | experimental | deprecated
+# experimental/deprecated add-ons only show in the store with advanced mode on.
+# stage: stable
+
+# List of versions that require manual update (skip auto-update).
+# breaking_versions: []
+
+# Image signing with Codenotary CAS (email of signer).
+# codenotary: ""
+
+# AppArmor: true (default profile), false (disable), or "profile-name".
+# Place custom profiles in apparmor.txt next to config.yaml.
+# apparmor: true
+
+# Legacy mode for images without hass.io labels.
+# legacy: false
+
+# =========================== RESOURCE LIMITS ==================================
+# ulimits — dictionary of resource limits.  Each value is either a plain integer
+# or { soft: N, hard: N }.  Must not exceed the host's hard limit.
+# ulimits:
+#   nofile: 524288

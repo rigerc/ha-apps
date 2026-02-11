@@ -1,14 +1,6 @@
 ---
 name: ha-apps3
-description: >-
-  This skill should be used when the user asks to "create a Home Assistant add-on",
-  "wrap a Docker image for HA", "create an HA add-on", "scaffold an add-on",
-  "add ingress to an add-on", "make a sidebar panel in Home Assistant",
-  "convert a Docker app to Home Assistant", "wrap an application for Supervisor",
-  "analyze a Docker image for add-on creation", or mentions add-on, addon,
-  Home Assistant Supervisor, ingress, bashio, or s6-overlay in the context of
-  building or wrapping applications.
-version: 1.0.0
+description: This skill should be used when the user asks to "create a Home Assistant add-on", "scaffold an add-on", "wrap a Docker image for HA", "convert a Docker app to Home Assistant", "configure ingress for an add-on", "add ports to an add-on", "choose a base image for an HA add-on", "set up a sidebar panel in Home Assistant", "should I use ingress or ports", "add a webui button", "test an add-on locally", or "analyze a Docker image for add-on creation". Also activates when the user mentions config.yaml, build.yaml, ingress_port, ports_description, s6-overlay, or bashio in the context of Home Assistant add-on development.
 ---
 
 # Home Assistant Add-on Creator
@@ -30,6 +22,8 @@ Wrap any containerized application as a Home Assistant add-on that:
 2. **Scaffold** — copy the template and rename placeholders
 3. **Configure** — customize the five key files
 4. **Test** — build and run locally, then install in HA
+
+**Docker requirement:** Steps 1 and 5 require a working `docker` CLI. Before running either step, check that `docker` is available (e.g., `command -v docker`). If Docker is not installed or not accessible (common in WSL without Docker Desktop integration), inform the user that Docker is unavailable and wait for instructions. Do not skip discovery or fabricate results — the user may provide the information manually, run the commands elsewhere, or fix the Docker setup first.
 
 ---
 
@@ -240,26 +234,93 @@ For `map:`, `addon_config:rw` gives the app a persistent `/config` directory. Ad
 
 ### 3b. `build.yaml` — Base Images
 
-Choose the base image family based on the upstream OS detected during discovery:
+Choose the base image family based on the upstream OS detected during discovery. Set `labels.project` to the upstream GitHub URL — this is required by the repository's `manifest.sh` to track upstream versions.
+
+**All three base image families share a common foundation:**
+- **s6-overlay v3** (3.1.6.2) — process supervision and init system
+- **bashio** (0.17.5) — bash library for HA Supervisor API interaction
+- **tempio** (2024.11.2) — Go template engine for rendering config files at startup
+- **bash**, **curl**, **jq**, **ca-certificates**, **tzdata**
+- **Entrypoint:** `/init` (s6-overlay)
+
+#### Alpine — preferred for most add-ons
 
 ```yaml
-# Alpine-based (preferred — smaller, faster)
 build_from:
   aarch64: ghcr.io/home-assistant/aarch64-base:3.21
   amd64: ghcr.io/home-assistant/amd64-base:3.21
+```
 
-# Debian-based (when upstream requires glibc)
+Built on `alpine:3.21`. Smallest image size. Use for Go binaries, Rust binaries, static applications, or anything that runs on musl libc.
+
+| Component | Detail |
+|-----------|--------|
+| C library | **musl libc** — binaries compiled against glibc will not run |
+| Shell | `/bin/ash` (BusyBox) — bash is installed but ash is the default `SHELL` |
+| Package manager | `apk` |
+| Extra packages | `bind-tools` (dig, nslookup, host), `libstdc++`, `xz` |
+| Extra tools | **jemalloc 5.3.0** (memory allocator, compiled from source) |
+| Env vars | `LANG=C.UTF-8`, `UV_EXTRA_INDEX_URL=...musllinux-index/`, s6 tuning vars |
+| Available tags | `3.13` through `3.21` |
+
+**When to choose Alpine:** The upstream image is Alpine-based, the app is a static binary (Go, Rust), or the app has no glibc-specific dependencies. Produces the smallest images (typically 30–80 MB smaller than Debian).
+
+#### Debian — when glibc is required
+
+```yaml
 build_from:
   aarch64: ghcr.io/home-assistant/aarch64-base-debian:bookworm
   amd64: ghcr.io/home-assistant/amd64-base-debian:bookworm
+```
 
-# Alpine + Python (for Python apps)
+Built on `debian:bookworm-slim`. Use when the upstream application requires glibc, links to Debian-specific shared libraries, or ships pre-compiled `.deb` packages.
+
+| Component | Detail |
+|-----------|--------|
+| C library | **glibc** — full GNU C library compatibility |
+| Shell | `/bin/bash` (set as default `SHELL`) |
+| Package manager | `apt-get` |
+| Extra packages | `xz-utils` |
+| NOT included | `bind-tools`, `libstdc++`, jemalloc (install via `apt-get` if needed) |
+| Env vars | `LANG=C.UTF-8`, `DEBIAN_FRONTEND=noninteractive`, `CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt`, s6 tuning vars |
+| Available tags | `bookworm`, `trixie` (+ dated versions like `bookworm-2026.02.0`) |
+
+**When to choose Debian:** The upstream image is Debian/Ubuntu-based, the app requires glibc (e.g., .NET, Java, Node.js native modules), or the app uses Debian packages for installation. Existing add-ons in this repo (huntarr, profilarr, cleanuparr) use `trixie`.
+
+**Dockerfile difference:** Replace `apk add --no-cache` with:
+```dockerfile
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nginx \
+    && rm -rf /var/lib/apt/lists/*
+```
+
+#### Alpine + Python — for Python applications
+
+```yaml
 build_from:
   aarch64: ghcr.io/home-assistant/aarch64-base-python:3.13-alpine3.21
   amd64: ghcr.io/home-assistant/amd64-base-python:3.13-alpine3.21
 ```
 
-All HA base images include: s6-overlay v3, bashio, curl, ca-certificates, tzdata. Set `labels.project` to the upstream GitHub URL — this is required by the repository's `manifest.sh` to track upstream versions.
+Built on top of the Alpine base with CPython compiled from source with full optimizations (`--enable-optimizations`, `--with-lto`).
+
+| Component | Detail |
+|-----------|--------|
+| Everything from Alpine | musl libc, jemalloc, bind-tools, libstdc++, etc. |
+| Python | **3.13.12** compiled from source with LTO and PGO |
+| pip | **25.3** (via `ensurepip`) |
+| Symlinks | `python → python3`, `idle → idle3`, `pydoc → pydoc3` |
+| pip.conf | `extra-index-url = wheels.home-assistant.io/musllinux-index/`, `prefer-binary = true` |
+| Available tags | `3.12-alpine3.{16..21}`, `3.13-alpine3.21`, `3.14-alpine3.21` |
+
+**When to choose Alpine + Python:** The upstream is a Python application (Flask, FastAPI, Django, etc.) that does not require glibc-linked C extensions. The pre-configured pip.conf points to HA's musl wheel index, so common scientific/compiled packages install without building from source.
+
+**No Debian + Python variant exists.** If a Python app requires glibc (e.g., for numpy, scipy, or other C extensions that lack musl wheels), use the Debian base and install Python separately:
+```dockerfile
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-pip python3-venv \
+    && rm -rf /var/lib/apt/lists/*
+```
 
 ### 3c. `Dockerfile` — Multi-Stage Build
 
@@ -375,18 +436,91 @@ The nginx server block is rendered at container start by `20-nginx.sh` using **t
 | `ingress_stream` | `false` | Set to `true` for apps with heavy server-sent events (SSE) or chunked streaming — disables nginx buffering at the gateway level |
 | `panel_admin` | `true` | Set to `false` to show the sidebar panel for non-admin users too |
 
+### Ports, webui, and their interaction with ingress
+
+The `ports`, `ports_description`, and `webui` options in `config.yaml` control host-level network access. They are **independent** of ingress — each can be used alone or combined.
+
+#### How `ports` works
+
+`ports` maps container ports to host ports, identical to Docker's `-p` flag. Format: `"container-port/protocol": host-port`.
+
+```yaml
+ports:
+  8080/tcp: 8080      # exposed on host:8080, user can change in UI
+  1883/tcp: null       # disabled by default, user can enable in UI
+```
+
+Setting the host port to a number exposes it immediately. Setting it to `null` disables the mapping by default — the user sees the port in the HA Network configuration panel and can choose to enable and remap it. Omitting `ports` entirely means no host ports are exposed.
+
+#### How `ports_description` works
+
+`ports_description` provides human-readable labels for each port, displayed in the HA Network configuration UI where users can change port numbers:
+
+```yaml
+ports_description:
+  8080/tcp: "Web interface"
+  1883/tcp: "MQTT broker (optional)"
+```
+
+Keys must exactly match those in `ports`. Alternatively, provide descriptions via `translations/en.yaml` under the `network` key (see Step 4 below).
+
+#### How `webui` works
+
+`webui` creates an "Open Web UI" button on the add-on's info page. It opens a new browser tab pointing directly to the host port — completely separate from ingress.
+
+```yaml
+webui: http://[HOST]:[PORT:8080]/dashboard
+```
+
+`[HOST]` resolves to the HA host's address. `[PORT:8080]` resolves to whatever host port the user has mapped container port 8080 to. The `[PROTO:option_name]` variant switches to `https` when a boolean option is `true`:
+
+```yaml
+webui: "[PROTO:ssl]://[HOST]:[PORT:8080]"
+```
+
+`webui` requires `ports` — the referenced container port must be listed in the `ports` dict. Without `ports`, the button has no port to link to.
+
+#### Decision guide: ingress vs ports vs both
+
+Choose the access pattern based on what the application needs:
+
+| Pattern | config.yaml | When to use |
+|---------|-------------|-------------|
+| **Ingress only** | `ingress: true`, no `ports` | Web-only app accessed exclusively through HA sidebar. Most secure (+2 security score). No external access. |
+| **Ingress + ports (disabled)** | `ingress: true`, `ports` with `null` values | Sidebar primary, but user can optionally expose a port for external API clients or mobile apps. |
+| **Ingress + ports (enabled)** | `ingress: true`, `ports` with number values | Sidebar + direct host access. For apps that external services need to reach (e.g., Sonarr calling Huntarr's API). |
+| **Ports + webui (no ingress)** | `ports` with number values, `webui` URL | App that cannot run behind a sub-path proxy (no base URL support). "Open Web UI" button on info page. |
+| **Ports only (non-web)** | `ports` with number values, no `ingress` | Services with no web UI (syslog receiver, MQTT broker, metrics exporter). |
+| **Host network + ingress** | `host_network: true`, `ingress: true`, `ingress_port: 0` | App needing host networking (mDNS, DLNA). `ports` is ignored when `host_network` is `true`. Use `ingress_port: 0` for dynamic port assignment. |
+
+**Default recommendation for this scaffold:** Use **ingress only** (no `ports`). This is the most secure pattern, produces the highest security score, and keeps the user experience clean — the app appears as a sidebar panel with no extra network configuration needed.
+
+Add `ports` only when there is a concrete requirement:
+- External services or automation tools need to call the app's API directly
+- The app exposes non-HTTP protocols (UDP, raw TCP) that cannot go through ingress
+- Users specifically need direct host access (e.g., mobile apps that connect to the service)
+
+**Ingress and ports use separate network paths.** Ingress traffic flows through the HA internal Docker network (`172.30.32.2` gateway) and never touches host ports. Port-mapped traffic flows through Docker's port binding on the host interface. Enabling both does not create conflicts — they operate independently.
+
+**The `watchdog` option** can monitor the add-on's health via either path. For ingress add-ons, use the internal container port: `http://[HOST]:[PORT:8080]/health`. The `[PORT:8080]` syntax references the container port and resolves it correctly whether or not it's mapped to a host port.
+
 ---
 
 ## Step 4: Update `translations/en.yaml`
 
-Add an entry for every option added to `config.yaml schema`:
+Add an entry for every option in `config.yaml schema` under `configuration`, and for every port in `ports` under `network`:
 
 ```yaml
 configuration:
   my_option:
     name: "My Option"
     description: "One-sentence description shown in the HA UI."
+network:
+  8080/tcp: "Web interface"
+  1883/tcp: "MQTT broker (optional)"
 ```
+
+The `network` key provides the same function as `ports_description` in `config.yaml`. Use one or the other — if both are present, `translations/en.yaml` takes precedence. Translations support localization (create `de.yaml`, `fr.yaml`, etc.), while `ports_description` does not.
 
 ---
 

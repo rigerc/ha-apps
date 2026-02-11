@@ -7,19 +7,21 @@
 #
 # Available base image flavours (pick ONE set):
 #
-#   Alpine-based (smaller, preferred when upstream runs on Alpine):
+#   Alpine (smallest — musl libc, jemalloc, bind-tools, libstdc++):
 #     ghcr.io/home-assistant/{arch}-base:3.21
 #
-#   Alpine + Python (for Python applications):
+#   Alpine + Python (Alpine base + CPython 3.13 compiled with LTO/PGO, pip):
 #     ghcr.io/home-assistant/{arch}-base-python:3.13-alpine3.21
 #
-#   Debian-based (use when upstream requires Debian / glibc):
+#   Debian (glibc, apt-get — use when upstream requires glibc):
 #     ghcr.io/home-assistant/{arch}-base-debian:bookworm
+#     ghcr.io/home-assistant/{arch}-base-debian:trixie
 #
-#   Debian + Python:
-#     ghcr.io/home-assistant/{arch}-base-python:3.13-bookworm
+# All base images include: s6-overlay v3, bashio, tempio, bash, curl, jq,
+#                          ca-certificates, tzdata
 #
-# All base images include: s6-overlay v3, bashio, curl, ca-certificates, tzdata
+# NOTE: There is no Debian + Python base image. For Python apps that need
+#       glibc, use the Debian base and install python3 via apt-get.
 # ==============================================================================
 
 # CUSTOMIZE: Replace the base images to match the upstream application runtime.
