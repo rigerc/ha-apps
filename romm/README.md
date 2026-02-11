@@ -27,7 +27,7 @@ This add-on provides the following configuration options:
 
 | Option | Description |
 |--------|-------------|
-| **Authentication Secret Key** | Secret key for session authentication. **Required** - Generate with: openssl rand -hex 32 |
+| **Authentication Secret Key** | Secret key for session authentication. Leave empty to auto-generate (recommended). A stable key is persisted automatically across restarts. |
 | **Database Configuration** | MariaDB/MySQL database connection settings. ROMM requires an external database. |
 | **Database Host** | Hostname or IP address of your MariaDB/MySQL server (e.g., 'core-mariadb' for HA add-on). |
 | **Database Name** | Name of the database to use for ROMM data. |
