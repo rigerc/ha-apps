@@ -820,6 +820,7 @@ update_release_please_config() {
         "package-name": $name,
         "component": $slug,
         "changelog-path": "CHANGELOG.md",
+        "exclude-paths": ["README.md"],
         "extra-files": [
           {
             "type": "yaml",
