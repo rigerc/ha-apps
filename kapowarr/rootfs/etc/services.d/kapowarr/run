@@ -42,8 +42,44 @@ log_info "Kapowarr will listen on 0.0.0.0:${app_port}"
 cd /app || bashio::exit.nok "Could not change to /app directory"
 
 # ---------------------------------------------------------------------------
-# Start Kapowarr
-# Kapowarr is a Python Flask application. The entry point is Kapowarr.py
-# It reads configuration from environment variables and command-line args.
+# Configure log level in database
+# Kapowarr stores log level as an integer in the config table.
+# Map string levels to Python logging integers.
 # ---------------------------------------------------------------------------
-exec python3 /app/Kapowarr.py
+declare log_level_int
+case "${log_level}" in
+    trace)  log_level_int=5 ;;
+    debug)  log_level_int=10 ;;
+    info)   log_level_int=20 ;;
+    warning) log_level_int=30 ;;
+    error)  log_level_int=40 ;;
+    *)      log_level_int=20 ;;
+esac
+
+declare db_file="/config/data/Kapowarr.db"
+
+# Update log level if database exists
+if [[ -f "${db_file}" ]]; then
+    sqlite3 "${db_file}" "UPDATE config SET value = ${log_level_int} WHERE key = 'log_level';" 2>/dev/null || true
+    log_debug "Updated log_level in database to ${log_level} (${log_level_int})"
+fi
+
+# ---------------------------------------------------------------------------
+# Start Kapowarr with database folder for persistent storage
+# Start in background so we can update the log level after DB initialization
+# ---------------------------------------------------------------------------
+python3 /app/Kapowarr.py -d /config/data &
+kapowarr_pid=$!
+
+# Wait for Kapowarr to initialize the database (first run)
+# After it's up, update the log level and re-foreground the process
+sleep 3
+
+if [[ -f "${db_file}" ]]; then
+    sqlite3 "${db_file}" "UPDATE config SET value = ${log_level_int} WHERE key = 'log_level';" 2>/dev/null || true
+    log_debug "Verified log_level in database: ${log_level} (${log_level_int})"
+fi
+
+# Re-foreground the process by waiting for it
+# This replaces the current shell with Kapowarr for proper signal handling
+exec wait $kapowarr_pid

@@ -24,6 +24,9 @@ description: >-
 # Link to the source repository (used in store UI)
 url: https://github.com/YOUR_ORG/YOUR_REPO
 
+# CUSTOMIZE: Docker image name pattern for builds.  {arch} is replaced by the target architecture (e.g., "amd64").
+image: ghcr.io/rigerc/ha-apps-[app_name]-{arch}
+
 # Target CPU architectures.  Remove any that are not supported by the upstream
 # application.  aarch64 + amd64 is the recommended minimum set.
 arch:

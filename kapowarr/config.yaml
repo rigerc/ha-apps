@@ -5,6 +5,7 @@ description: >-
   Comic book library manager with automated downloading, renaming, and
   conversion.
 url: https://github.com/Casvt/Kapowarr
+image: ghcr.io/rigerc/ha-apps-kapowarr-{arch}
 arch:
   - aarch64
   - amd64

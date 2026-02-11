@@ -15,6 +15,7 @@ readonly ADDON_DISPLAY_NAME="kapowarr"
 
 # Source the shared logging library
 # shellcheck source=/usr/local/lib/ha-log.sh
+# shellcheck disable=SC1091
 source /usr/local/lib/ha-log.sh
 
 # Print startup banner

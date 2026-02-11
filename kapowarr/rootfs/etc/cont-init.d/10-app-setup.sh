@@ -11,6 +11,7 @@ set -e
 
 # Source the shared logging library
 # shellcheck source=/usr/local/lib/ha-log.sh
+# shellcheck disable=SC1091
 source /usr/local/lib/ha-log.sh
 
 # Initialise short-form logging helpers
