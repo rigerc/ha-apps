@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.1](https://github.com/rigerc/ha-apps/compare/kapowarr-1.7.0...kapowarr-1.7.1) (2026-02-12)
+
+
+### 🐛 Bug Fixes
+
+* initialize bashio log level early in setup scripts ([5c29e73](https://github.com/rigerc/ha-apps/commit/5c29e73a69618ef0ed96afdd5d48ca5c7d82fe31))
+
 ## [1.7.0](https://github.com/rigerc/ha-apps/compare/kapowarr-1.6.1...kapowarr-1.7.0) (2026-02-11)
 
 
