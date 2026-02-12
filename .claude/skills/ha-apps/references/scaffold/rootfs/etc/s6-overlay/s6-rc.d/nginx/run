@@ -15,13 +15,7 @@
 # Redirect stderr to stdout so nginx errors appear in the HA add-on log
 exec 2>&1
 
-# Source the full HA framework (loads all libraries including ha-log.sh)
-# shellcheck source=/usr/local/lib/ha-framework/ha-framework.sh
-source /usr/local/lib/ha-framework/ha-framework.sh
-
-ha::log::init "nginx"
-
-log_info "Starting nginx ingress proxy..."
+bashio::log.info "Starting nginx ingress proxy..."
 
 # ---------------------------------------------------------------------------
 # Wait for the backend application to be ready
@@ -36,20 +30,20 @@ log_info "Starting nginx ingress proxy..."
 readonly backend_host="localhost"
 readonly wait_timeout=300
 
-log_info "Waiting for APP_NAME backend on ${backend_host}:${APP_PORT} (timeout: ${wait_timeout}s)..."
+bashio::log.info "Waiting for APP_NAME backend on ${backend_host}:${APP_PORT} (timeout: ${wait_timeout}s)..."
 
 if ! bashio::net.wait_for "${APP_PORT}" "${backend_host}" "${wait_timeout}"; then
-    log_error "APP_NAME backend did not become ready within ${wait_timeout}s"
-    log_error "Check the APP_NAME service logs for startup errors"
+    bashio::log.error "APP_NAME backend did not become ready within ${wait_timeout}s"
+    bashio::log.error "Check the APP_NAME service logs for startup errors"
     exit 1
 fi
 
-log_info "APP_NAME backend is ready on ${backend_host}:${APP_PORT}"
+bashio::log.info "APP_NAME backend is ready on ${backend_host}:${APP_PORT}"
 
 # ---------------------------------------------------------------------------
 # Start nginx in the foreground.
 # "daemon off;" in nginx.conf ensures nginx does not fork into the background.
 # 'exec' replaces this shell with the nginx process so s6 can supervise it.
 # ---------------------------------------------------------------------------
-log_info "nginx starting in foreground mode"
+bashio::log.info "nginx starting in foreground mode"
 exec nginx

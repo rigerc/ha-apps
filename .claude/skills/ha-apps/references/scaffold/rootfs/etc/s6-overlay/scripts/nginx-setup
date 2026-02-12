@@ -11,13 +11,7 @@
 
 set -e
 
-# Source the full HA framework (loads all libraries including ha-log.sh)
-# shellcheck source=/usr/local/lib/ha-framework/ha-framework.sh
-source /usr/local/lib/ha-framework/ha-framework.sh
-
-ha::log::init "nginx"
-
-log_info "Configuring nginx ingress..."
+bashio::log.info "Configuring nginx ingress..."
 
 # ---------------------------------------------------------------------------
 # Obtain ingress coordinates from the HA supervisor
@@ -30,14 +24,14 @@ ingress_interface="$(bashio::addon.ip_address)"
 ingress_port="$(bashio::addon.ingress_port)"
 app_port="${APP_PORT:-APP_PORT}"
 
-log_debug "ingress_interface = ${ingress_interface}"
-log_debug "ingress_port      = ${ingress_port}"
-log_debug "app_port          = ${app_port}"
+bashio::log.debug "ingress_interface = ${ingress_interface}"
+bashio::log.debug "ingress_port      = ${ingress_port}"
+bashio::log.debug "app_port          = ${app_port}"
 
 # ---------------------------------------------------------------------------
 # Render the nginx server block from the Go template using tempio.
 # ---------------------------------------------------------------------------
-log_info "Rendering /etc/nginx/servers/ingress.conf via tempio..."
+bashio::log.info "Rendering /etc/nginx/servers/ingress.conf via tempio..."
 
 bashio::var.json \
     ingress_interface "${ingress_interface}" \
@@ -47,16 +41,16 @@ bashio::var.json \
         -template /etc/nginx/templates/ingress.gtpl \
         -out /etc/nginx/servers/ingress.conf
 
-log_info "Ingress listening on ${ingress_interface}:${ingress_port} -> 127.0.0.1:${app_port}"
+bashio::log.info "Ingress listening on ${ingress_interface}:${ingress_port} -> 127.0.0.1:${app_port}"
 
 # ---------------------------------------------------------------------------
 # Validate the nginx configuration before the nginx service starts
 # ---------------------------------------------------------------------------
 if ! nginx -t >/dev/null 2>&1; then
-    log_error "nginx configuration test failed — check /etc/nginx/servers/ingress.conf"
+    bashio::log.error "nginx configuration test failed — check /etc/nginx/servers/ingress.conf"
     nginx -t 2>&1 || true
     exit 1
 fi
 
-log_info "nginx configuration is valid"
-log_info "nginx ingress setup complete"
+bashio::log.info "nginx configuration is valid"
+bashio::log.info "nginx ingress setup complete"

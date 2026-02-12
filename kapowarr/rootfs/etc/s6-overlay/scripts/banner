@@ -12,12 +12,11 @@
 # CUSTOMIZE: update the display name to match your add-on
 readonly ADDON_DISPLAY_NAME="kapowarr"
 
-# Source the shared logging library from HA framework
-# shellcheck source=/usr/local/lib/ha-framework/ha-framework.sh
-source /usr/local/lib/ha-framework/ha-framework.sh
-
 # Print startup banner
-ha::log::banner "${ADDON_DISPLAY_NAME}"
+bashio::log.info "---"
+bashio::log.info "${ADDON_DISPLAY_NAME}"
+bashio::log.info "Initializing add-on..."
+bashio::log.info "---"
 
 # Log the configured log level so it is visible near the top of every log
 _configured_level="$(bashio::config 'log_level' 'info')"

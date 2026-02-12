@@ -10,19 +10,13 @@
 # Redirect stderr to stdout
 exec 2>&1
 
-# Source the HA framework (loads all libraries)
-# shellcheck source=/usr/local/lib/ha-framework/ha-framework.sh
-source /usr/local/lib/ha-framework/ha-framework.sh
-
-ha::log::init "kapowarr"
-
-log_info "Starting Kapowarr..."
+bashio::log.info "Starting Kapowarr..."
 
 # ---------------------------------------------------------------------------
 # Read configuration from s6 container environment (exported by kapowarr-setup)
 # ---------------------------------------------------------------------------
 declare log_level="${LOG_LEVEL:-info}"
-log_info "Log level: ${log_level}"
+bashio::log.info "Log level: ${log_level}"
 
 # ---------------------------------------------------------------------------
 # Set runtime environment variables
@@ -33,7 +27,7 @@ export TZ="${TZ:-UTC}"
 declare app_port
 app_port="${APP_PORT:-5656}"
 
-log_info "Kapowarr will listen on 0.0.0.0:${app_port}"
+bashio::log.info "Kapowarr will listen on 0.0.0.0:${app_port}"
 
 # ---------------------------------------------------------------------------
 # Resolve HA ingress path for Kapowarr's native url_base setting
@@ -47,7 +41,7 @@ log_info "Kapowarr will listen on 0.0.0.0:${app_port}"
 # container restarts and only changes on add-on reinstall.
 declare ingress_path
 ingress_path="$(bashio::addon.ingress_entry)"
-log_info "Ingress path (url_base): ${ingress_path}"
+bashio::log.info "Ingress path (url_base): ${ingress_path}"
 
 # ---------------------------------------------------------------------------
 # Change to the application directory
@@ -80,7 +74,7 @@ if [[ -f "${db_file}" ]]; then
     sqlite3 "${db_file}" \
         "UPDATE config SET value = '${ingress_path}' WHERE key = 'url_base';" \
         2>/dev/null || true
-    log_debug "Pre-start DB update: log_level=${log_level} (${log_level_int}), url_base=${ingress_path}"
+    bashio::log.debug "Pre-start DB update: log_level=${log_level} (${log_level_int}), url_base=${ingress_path}"
 fi
 
 # ---------------------------------------------------------------------------
@@ -100,7 +94,7 @@ if [[ -f "${db_file}" ]]; then
     sqlite3 "${db_file}" \
         "UPDATE config SET value = '${ingress_path}' WHERE key = 'url_base';" \
         2>/dev/null || true
-    log_debug "Post-init DB update: log_level=${log_level} (${log_level_int}), url_base=${ingress_path}"
+    bashio::log.debug "Post-init DB update: log_level=${log_level} (${log_level_int}), url_base=${ingress_path}"
 fi
 
 # Re-foreground the process by waiting for it

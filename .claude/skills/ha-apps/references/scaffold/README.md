@@ -48,36 +48,22 @@ marked with `# CUSTOMIZE:` comments.
 | `rootfs/etc/nginx/includes/server_params.conf` | Security headers |
 | `rootfs/etc/nginx/includes/resolver.conf` | Docker DNS resolver |
 | `rootfs/etc/nginx/includes/mime.types` | MIME type map |
-| `rootfs/usr/local/lib/ha-log.sh` | Shared logging library |
+## Logging
 
-## Logging Framework
+The scaffold uses **bashio** logging functions, which are provided by the HA base image:
 
-The scaffold includes a shared logging library (`ha-log.sh`) that provides:
-
-- **Log levels**: trace, debug, info, warning, error — controlled by the `log_level` option
-- **Timestamps**: ISO 8601 format on every message
-- **Component prefixes**: `[setup]`, `[nginx]`, `[APP_NAME]` etc.
-- **File logging**: opt-in via `HA_LOG_FILE` environment variable with automatic rotation
-- **Short-form helpers**: call `ha::log::init "component"` once, then use `log_info`, `log_debug`, etc.
+- **Log levels**: trace, debug, info, notice, warning, error, fatal — controlled by the `log_level` option
+- **Formatted output**: bashio handles timestamps and formatting automatically
 
 ### Usage in scripts
 
 ```bash
 #!/usr/bin/with-contenv bashio
 
-source /usr/local/lib/ha-log.sh
-
-# One-time init — generates log_info, log_debug, log_warn, log_error shortcuts
-ha::log::init "my-component"
-
-log_info  "Server started on port 8080"
-log_debug "Processing request: GET /"
-log_warn  "Config not found, using defaults"
-log_error "Failed to connect to database"
-
-# Or use the full API with explicit component name
-ha::log::info  "nginx" "Proxy started"
-ha::log::error "APP_NAME" "Fatal startup error"
+bashio::log.info    "Server started on port 8080"
+bashio::log.debug   "Processing request: GET /"
+bashio::log.warning "Config not found, using defaults"
+bashio::log.error   "Failed to connect to database"
 ```
 
 ## Architecture
