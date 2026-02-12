@@ -16,6 +16,7 @@ bashio::log.info "Starting Kapowarr..."
 # Read configuration from s6 container environment (exported by kapowarr-setup)
 # ---------------------------------------------------------------------------
 declare log_level="${LOG_LEVEL:-info}"
+bashio::log.level "${log_level}"
 bashio::log.info "Log level: ${log_level}"
 
 # ---------------------------------------------------------------------------

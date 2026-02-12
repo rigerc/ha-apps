@@ -27,6 +27,9 @@ declare timezone
 log_level="$(bashio::config 'log_level' 'info')"
 timezone="$(bashio::config 'timezone' 'UTC')"
 
+# Initialize bashio log level early so debug calls work
+bashio::log.level "${log_level}"
+
 bashio::log.debug "log_level = ${log_level}"
 bashio::log.debug "timezone  = ${timezone}"
 
@@ -46,7 +49,6 @@ bashio::log.debug "TZ persisted: ${timezone}"
 
 # Application log level
 printf '%s' "${log_level}" > /var/run/s6/container_environment/LOG_LEVEL
-bashio::log.level "${log_level}"
 
 # CUSTOMIZE: export additional environment variables here, for example:
 # printf '%s' "$(bashio::config 'username')" > /var/run/s6/container_environment/APP_USERNAME

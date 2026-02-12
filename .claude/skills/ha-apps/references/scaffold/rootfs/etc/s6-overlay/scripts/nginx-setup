@@ -11,6 +11,9 @@
 
 set -e
 
+# Initialize bashio log level from s6 container environment (set by APP_NAME-setup)
+bashio::log.level "${LOG_LEVEL:-info}"
+
 bashio::log.info "Configuring nginx ingress..."
 
 # ---------------------------------------------------------------------------
