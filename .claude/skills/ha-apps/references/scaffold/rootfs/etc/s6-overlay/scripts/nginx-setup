@@ -12,7 +12,10 @@
 set -e
 
 # Initialize bashio log level from s6 container environment (set by APP_NAME-setup)
-bashio::log.level "${LOG_LEVEL:-info}"
+# NOTE: Uses APP_LOG_LEVEL, not LOG_LEVEL. Bashio reads LOG_LEVEL during init and
+# expects a numeric value (0-8). Writing the string "debug" to LOG_LEVEL corrupts
+# __BASHIO_LOG_LEVEL causing "unbound variable" errors in arithmetic comparisons.
+bashio::log.level "${APP_LOG_LEVEL:-info}"
 
 bashio::log.info "Configuring nginx ingress..."
 

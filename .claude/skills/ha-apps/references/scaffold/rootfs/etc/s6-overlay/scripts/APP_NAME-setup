@@ -47,8 +47,11 @@ bashio::log.debug "timezone  = ${timezone}"
 printf '%s' "${timezone}" > /var/run/s6/container_environment/TZ
 bashio::log.debug "TZ persisted: ${timezone}"
 
-# Application log level
-printf '%s' "${log_level}" > /var/run/s6/container_environment/LOG_LEVEL
+# Application log level — use APP_LOG_LEVEL, NOT LOG_LEVEL.
+# Bashio reads LOG_LEVEL at init (bashio.sh:35) and expects a numeric value (0-8).
+# Writing a string like "debug" corrupts __BASHIO_LOG_LEVEL, causing
+# "unbound variable" errors in arithmetic comparisons in subsequent services.
+printf '%s' "${log_level}" > /var/run/s6/container_environment/APP_LOG_LEVEL
 
 # CUSTOMIZE: export additional environment variables here, for example:
 # printf '%s' "$(bashio::config 'username')" > /var/run/s6/container_environment/APP_USERNAME
