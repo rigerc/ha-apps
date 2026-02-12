@@ -14,7 +14,8 @@ configuration:
     description: >-
       Controls the verbosity of log output.
       Use 'info' for normal operation, 'debug' for troubleshooting,
-      'warning' or 'error' for minimal output.
+      'trace' for extremely verbose output, or 'warning'/'error'/'fatal' for less output.
+      'off' disables logging entirely; 'all' shows everything.
 
   timezone:
     name: "Timezone"

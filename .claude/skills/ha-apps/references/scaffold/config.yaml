@@ -176,7 +176,7 @@ options:
   # custom_option: "default_value"
 
 schema:
-  log_level: list(trace|debug|info|warning|error)
+  log_level: list(all|trace|debug|info|notice|warning|error|fatal|critical|off)
   timezone: str
   # EXAMPLE schemas:
   # username: str?

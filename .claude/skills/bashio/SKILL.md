@@ -350,6 +350,68 @@ For comprehensive documentation of all bashio functions:
 - **`references/api-functions.md`** - Supervisor API calls
 - **`references/service-discovery.md`** - Service integration patterns
 
+### Bashio Source Code
+
+The complete bashio library source code is available in `references/lib/` for detailed reference:
+
+**Core Libraries:**
+- **`lib/bashio`** - Main bashio entry point
+- **`lib/bashio.sh`** - Core library loader
+- **`lib/const.sh`** - Constants and definitions
+
+**Configuration & Options:**
+- **`lib/config.sh`** - Configuration reading functions (`bashio::config.*`)
+- **`lib/options.sh`** - Options.json parsing
+
+**Logging:**
+- **`lib/log.sh`** - All logging functions (`bashio::log.*`)
+- **`lib/debug.sh`** - Debug logging helpers
+- **`lib/trace.sh`** - Trace-level logging
+
+**Add-on & Supervisor API:**
+- **`lib/addons.sh`** - Add-on information functions (`bashio::addon.*`)
+- **`lib/core.sh`** - Home Assistant core functions (`bashio::core.*`)
+- **`lib/supervisor.sh`** - Supervisor API calls
+- **`lib/api.sh`** - Generic API request helpers
+
+**Services & Discovery:**
+- **`lib/services.sh`** - Service discovery (`bashio::services.*`)
+- **`lib/discovery.sh`** - Service discovery helpers
+
+**Network & Hardware:**
+- **`lib/net.sh`** - Network utilities (`bashio::net.*`)
+- **`lib/network.sh`** - Network interface functions
+- **`lib/dns.sh`** - DNS operations
+- **`lib/hardware.sh`** - Hardware information
+- **`lib/host.sh`** - Host system functions
+
+**File System:**
+- **`lib/fs.sh`** - File system operations (`bashio::fs.*`)
+
+**Utilities:**
+- **`lib/jq.sh`** - JSON parsing with jq (`bashio::jq.*`)
+- **`lib/string.sh`** - String manipulation
+- **`lib/color.sh`** - Terminal color codes
+- **`lib/exit.sh`** - Exit code helpers
+- **`lib/var.sh`** - Variable operations
+- **`lib/cache.sh`** - Caching functions
+- **`lib/cli.sh`** - CLI argument parsing
+- **`lib/os.sh`** - Operating system detection
+- **`lib/info.sh`** - System information
+- **`lib/observer.sh`** - Observer pattern utilities
+
+**Home Assistant Features:**
+- **`lib/audio.sh`** - Audio subsystem functions
+- **`lib/multicast.sh`** - Multicast operations
+- **`lib/repositories.sh`** - Repository management
+
+**When to consult the source:**
+- Need exact parameter details for a function
+- Want to understand function implementation
+- Debugging unexpected behavior
+- Looking for additional functions not covered in this guide
+- Need to see available options for complex functions
+
 ### Example Files
 
 Working examples in `examples/`:
@@ -360,9 +422,10 @@ Working examples in `examples/`:
 
 ### Official Resources
 
-- [Bashio GitHub Repository](https://github.com/hassio-addons/bashio)
+- [Bashio GitHub Repository](https://github.com/hassio-addons/bashio) - Official source and documentation
 - [Home Assistant Add-ons Documentation](https://developers.home-assistant.io/docs/addons/)
 - [s6-overlay Documentation](https://github.com/just-containers/s6-overlay)
+- **`references/lib/`** - Complete bashio source code copied from `docs/bashio/lib/` for offline reference
 
 ## Best Practices
 
