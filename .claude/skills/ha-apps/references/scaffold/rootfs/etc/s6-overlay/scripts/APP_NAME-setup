@@ -15,14 +15,7 @@
 
 set -e
 
-# Source the full HA framework (loads all libraries including ha-log.sh)
-# shellcheck source=/usr/local/lib/ha-framework/ha-framework.sh
-source /usr/local/lib/ha-framework/ha-framework.sh
-
-# Initialise short-form logging helpers (log_info, log_debug, log_warn, log_error)
-ha::log::init "setup"
-
-log_info "Setting up APP_NAME..."
+bashio::log.info "Setting up APP_NAME..."
 
 # ---------------------------------------------------------------------------
 # Read add-on options
@@ -34,8 +27,8 @@ declare timezone
 log_level="$(bashio::config 'log_level' 'info')"
 timezone="$(bashio::config 'timezone' 'UTC')"
 
-log_debug "log_level = ${log_level}"
-log_debug "timezone  = ${timezone}"
+bashio::log.debug "log_level = ${log_level}"
+bashio::log.debug "timezone  = ${timezone}"
 
 # ---------------------------------------------------------------------------
 # Persist environment variables for service scripts
@@ -43,40 +36,41 @@ log_debug "timezone  = ${timezone}"
 # s6-overlay v3 reads /var/run/s6/container_environment/* and makes those
 # variables available via "with-contenv" (the shebang in service run scripts).
 #
-# Use ha::env::export for generic variables, ha::env::log_level for log level,
-# ha::env::timezone for TZ, and ha::env::ingress for the ingress entry URL.
+# Use printf to write values to /var/run/s6/container_environment/<VAR_NAME>
+# to persist them for service scripts.
 # ---------------------------------------------------------------------------
 
 # Timezone
-ha::env::timezone "${timezone}"
-log_debug "TZ persisted: ${timezone}"
+printf '%s' "${timezone}" > /var/run/s6/container_environment/TZ
+bashio::log.debug "TZ persisted: ${timezone}"
 
 # Application log level
-ha::env::log_level "${log_level}"
+printf '%s' "${log_level}" > /var/run/s6/container_environment/LOG_LEVEL
+bashio::log.level "${log_level}"
 
 # CUSTOMIZE: export additional environment variables here, for example:
-# ha::env::export "APP_USERNAME" "$(bashio::config 'username')"
-# ha::env::export "APP_PASSWORD" "$(bashio::config 'password')"
+# printf '%s' "$(bashio::config 'username')" > /var/run/s6/container_environment/APP_USERNAME
+# printf '%s' "$(bashio::config 'password')" > /var/run/s6/container_environment/APP_PASSWORD
 
 # ---------------------------------------------------------------------------
 # Prepare persistent data directories
 # CUSTOMIZE: create any directories the application needs to exist at startup
 # ---------------------------------------------------------------------------
-ha::log::section "Directory setup"
+bashio::log.info "--- Directory setup ---"
 
 # /config is the addon_config mount (persistent, survives restarts and updates)
-# ha::dirs::ensure creates the directory (and its parents) if it does not exist
-ha::dirs::ensure "/config"
+# mkdir -p creates the directory (and its parents) if it does not exist
+mkdir -p /config
 
 # Create application-specific subdirectories inside /config
 # CUSTOMIZE: adjust these paths to match what your application expects
-ha::dirs::create_subdirs "/config" "data" "logs"
+mkdir -p /config/data /config/logs
 
-log_debug "Data directories ready"
+bashio::log.debug "Data directories ready"
 
 # /share is the shared storage mount
 # CUSTOMIZE: uncomment if the app needs to write to /share
-# ha::dirs::ensure "/share/APP_NAME"
+# mkdir -p /share/APP_NAME
 
 # ---------------------------------------------------------------------------
 # Ingress: export the base URL so the app can construct correct URLs
@@ -84,8 +78,8 @@ log_debug "Data directories ready"
 if bashio::addon.ingress; then
     declare ingress_entry
     ingress_entry="$(bashio::addon.ingress_entry)"
-    ha::env::ingress "${ingress_entry}"
-    log_info "Ingress base URL: ${ingress_entry}"
+    printf '%s' "${ingress_entry}" > /var/run/s6/container_environment/INGRESS_ENTRY
+    bashio::log.info "Ingress base URL: ${ingress_entry}"
 fi
 
-log_info "APP_NAME setup complete"
+bashio::log.info "APP_NAME setup complete"

@@ -57,13 +57,6 @@ COPY --from=app-source /app /app
 # Copy the rootfs overlay — this overlays /etc and /usr/local inside the container
 COPY rootfs /
 
-# Install common HA framework from GitHub
-# NOTE: curl is already provided by the HA base image.
-RUN curl -fsSL "https://raw.githubusercontent.com/rigerc/ha-apps/main/common/scripts/install-framework.sh" -o /tmp/install-framework.sh && \
-    chmod +x /tmp/install-framework.sh && \
-    /tmp/install-framework.sh --github main && \
-    rm -f /tmp/install-framework.sh
-
 # Create the nginx servers directory and set execute permissions on all
 # s6-overlay v3 scripts in a single layer.
 # ingress.conf is not shipped as a static file; it is rendered at container start

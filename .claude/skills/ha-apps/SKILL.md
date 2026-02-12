@@ -194,7 +194,7 @@ This oneshot init script runs once at container start, before any services. Cust
 
 3. Create directories the application needs at startup.
 
-All logging uses the shared `ha-log.sh` library (already sourced at the top of the script). Use `log_info`, `log_debug`, `log_warn`, `log_error` — no bashio calls needed for logging.
+All logging uses bashio directly: `bashio::log.info`, `bashio::log.debug`, `bashio::log.warning`, `bashio::log.error`
 
 ### 3e. `rootfs/etc/s6-overlay/s6-rc.d/myapp/run` — Service Start Script
 

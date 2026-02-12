@@ -9,27 +9,24 @@
 
 set -e
 
-# Source the HA framework (loads all libraries)
-# shellcheck source=/usr/local/lib/ha-framework/ha-framework.sh
-source /usr/local/lib/ha-framework/ha-framework.sh
-
-# Initialise short-form logging helpers
-ha::log::init "setup"
-
-log_info "Setting up Kapowarr..."
+bashio::log.info "Setting up Kapowarr..."
 
 # ---------------------------------------------------------------------------
 # Read and export add-on options to s6 container environment
 # ---------------------------------------------------------------------------
-ha::env::log_level "log_level" "info" "LOG_LEVEL"
-ha::env::timezone "timezone" "UTC"
+log_level="$(bashio::config 'log_level' 'info')"
+bashio::log.level "${log_level}"
+printf '%s' "${log_level}" > /var/run/s6/container_environment/LOG_LEVEL
+
+timezone="$(bashio::config 'timezone' 'UTC')"
+printf '%s' "${timezone}" > /var/run/s6/container_environment/TZ
 
 # ---------------------------------------------------------------------------
 # Prepare persistent data directories
 # ---------------------------------------------------------------------------
-ha::log::section "Directory setup"
+bashio::log.info "--- Directory setup ---"
 
-ha::dirs::create_subdirs "/config" "data" "logs"
-ha::dirs::ensure "/share/kapowarr"
+mkdir -p /config/data /config/logs
+mkdir -p /share/kapowarr
 
-log_info "Kapowarr setup complete"
+bashio::log.info "Kapowarr setup complete"

@@ -11,12 +11,11 @@
 
 readonly ADDON_DISPLAY_NAME="APP_NAME"
 
-# Source the full HA framework (loads all libraries including ha-log.sh)
-# shellcheck source=/usr/local/lib/ha-framework/ha-framework.sh
-source /usr/local/lib/ha-framework/ha-framework.sh
-
 # Print startup banner
-ha::log::banner "${ADDON_DISPLAY_NAME}"
+bashio::log.info "---"
+bashio::log.info "${ADDON_DISPLAY_NAME}"
+bashio::log.info "Initializing add-on..."
+bashio::log.info "---"
 
 # Log the configured log level so it is visible near the top of every log
 _configured_level="$(bashio::config 'log_level' 'info')"

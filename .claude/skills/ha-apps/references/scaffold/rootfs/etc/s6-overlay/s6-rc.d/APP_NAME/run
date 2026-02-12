@@ -17,13 +17,7 @@
 # Redirect stderr to stdout so all output appears in the HA add-on log panel
 exec 2>&1
 
-# Source the full HA framework (loads all libraries including ha-log.sh)
-# shellcheck source=/usr/local/lib/ha-framework/ha-framework.sh
-source /usr/local/lib/ha-framework/ha-framework.sh
-
-ha::log::init "APP_NAME"
-
-log_info "Starting APP_NAME..."
+bashio::log.info "Starting APP_NAME..."
 
 # ---------------------------------------------------------------------------
 # Read configuration
@@ -31,7 +25,7 @@ log_info "Starting APP_NAME..."
 # ---------------------------------------------------------------------------
 declare log_level
 log_level="$(bashio::config 'log_level' 'info')"
-log_info "Log level: ${log_level}"
+bashio::log.info "Log level: ${log_level}"
 
 # ---------------------------------------------------------------------------
 # Set runtime environment variables
@@ -42,7 +36,7 @@ export APP_LOG_LEVEL="${log_level}"
 
 # APP_PORT is set in the Dockerfile ENV instruction and pre-populated by
 # s6-overlay into the container environment. No assignment needed here.
-log_info "APP_NAME will listen on 0.0.0.0:${APP_PORT}"
+bashio::log.info "APP_NAME will listen on 0.0.0.0:${APP_PORT}"
 
 # ---------------------------------------------------------------------------
 # Change to the application directory

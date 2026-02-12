@@ -11,13 +11,7 @@
 # Redirect stderr to stdout
 exec 2>&1
 
-# Source the HA framework (loads all libraries)
-# shellcheck source=/usr/local/lib/ha-framework/ha-framework.sh
-source /usr/local/lib/ha-framework/ha-framework.sh
-
-ha::log::init "nginx"
-
-log_info "Starting nginx ingress proxy..."
+bashio::log.info "Starting nginx ingress proxy..."
 
 # ---------------------------------------------------------------------------
 # Wait for the backend application to be ready
@@ -26,18 +20,18 @@ readonly backend_host="localhost"
 readonly backend_port="${APP_PORT:-5656}"
 readonly wait_timeout=300
 
-log_info "Waiting for kapowarr backend on ${backend_host}:${backend_port} (timeout: ${wait_timeout}s)..."
+bashio::log.info "Waiting for kapowarr backend on ${backend_host}:${backend_port} (timeout: ${wait_timeout}s)..."
 
 if ! bashio::net.wait_for "${backend_port}" "${backend_host}" "${wait_timeout}"; then
-    log_error "kapowarr backend did not become ready within ${wait_timeout}s"
-    log_error "Check the kapowarr service logs for startup errors"
+    bashio::log.error "kapowarr backend did not become ready within ${wait_timeout}s"
+    bashio::log.error "Check the kapowarr service logs for startup errors"
     exit 1
 fi
 
-log_info "kapowarr backend is ready on ${backend_host}:${backend_port}"
+bashio::log.info "kapowarr backend is ready on ${backend_host}:${backend_port}"
 
 # ---------------------------------------------------------------------------
 # Start nginx in the foreground
 # ---------------------------------------------------------------------------
-log_info "nginx starting in foreground mode"
+bashio::log.info "nginx starting in foreground mode"
 exec nginx

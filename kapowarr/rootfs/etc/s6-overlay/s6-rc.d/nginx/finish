@@ -18,15 +18,9 @@
 
 declare -r exit_code="${1}"
 
-# Source the HA framework (loads all libraries)
-# shellcheck source=/usr/local/lib/ha-framework/ha-framework.sh
-source /usr/local/lib/ha-framework/ha-framework.sh
-
-ha::log::init "nginx"
-
 if [[ "${exit_code}" -ne 0 ]] && [[ "${exit_code}" -ne 256 ]]; then
-    log_error "nginx crashed (exit code ${exit_code}) — stopping add-on"
-    log_error "Check the nginx error log output above for details"
+    bashio::log.error "nginx crashed (exit code ${exit_code}) — stopping add-on"
+    bashio::log.error "Check the nginx error log output above for details"
 
     # Write the exit code so the container returns a non-zero status
     echo "${exit_code}" > /run/s6-linux-init-container-results/exitcode
