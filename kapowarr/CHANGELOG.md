@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.3](https://github.com/rigerc/ha-apps/compare/kapowarr-1.7.2...kapowarr-1.7.3) (2026-02-12)
+
+
+### 🐛 Bug Fixes
+
+* **kapowarr:** pre-seed database with url_base and log_level before startup ([07b2b2e](https://github.com/rigerc/ha-apps/commit/07b2b2e2910021802217aaabb8c5f738990fb967))
+
 ## [1.7.2](https://github.com/rigerc/ha-apps/compare/kapowarr-1.7.1...kapowarr-1.7.2) (2026-02-12)
 
 
