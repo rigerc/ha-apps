@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.2](https://github.com/rigerc/ha-apps/compare/kapowarr-1.7.1...kapowarr-1.7.2) (2026-02-12)
+
+
+### 🐛 Bug Fixes
+
+* **scaffold:** use APP_LOG_LEVEL instead of LOG_LEVEL for consistency ([e9df56f](https://github.com/rigerc/ha-apps/commit/e9df56f4c6204d44e3a09c73fff857f0c24620ef))
+
 ## [1.7.1](https://github.com/rigerc/ha-apps/compare/kapowarr-1.7.0...kapowarr-1.7.1) (2026-02-12)
 
 
