@@ -25,6 +25,9 @@ bashio::log.info "Starting APP_NAME..."
 # ---------------------------------------------------------------------------
 declare log_level
 log_level="$(bashio::config 'log_level' 'info')"
+
+# Set bashio's log level for this service
+bashio::log.level "${log_level}"
 bashio::log.info "Log level: ${log_level}"
 
 # ---------------------------------------------------------------------------
@@ -32,6 +35,7 @@ bashio::log.info "Log level: ${log_level}"
 # CUSTOMIZE: export any environment variables your application needs
 # ---------------------------------------------------------------------------
 export TZ="${TZ:-UTC}"
+# Application log level (if the app supports it)
 export APP_LOG_LEVEL="${log_level}"
 
 # APP_PORT is set in the Dockerfile ENV instruction and pre-populated by

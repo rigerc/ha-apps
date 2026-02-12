@@ -27,7 +27,7 @@ declare timezone
 log_level="$(bashio::config 'log_level' 'info')"
 timezone="$(bashio::config 'timezone' 'UTC')"
 
-# Initialize bashio log level early so debug calls work
+# Set bashio's log level for this script
 bashio::log.level "${log_level}"
 
 bashio::log.debug "log_level = ${log_level}"
@@ -47,10 +47,9 @@ bashio::log.debug "timezone  = ${timezone}"
 printf '%s' "${timezone}" > /var/run/s6/container_environment/TZ
 bashio::log.debug "TZ persisted: ${timezone}"
 
-# Application log level — use APP_LOG_LEVEL, NOT LOG_LEVEL.
-# Bashio reads LOG_LEVEL at init (bashio.sh:35) and expects a numeric value (0-8).
-# Writing a string like "debug" corrupts __BASHIO_LOG_LEVEL, causing
-# "unbound variable" errors in arithmetic comparisons in subsequent services.
+# Application log level for the app itself (not bashio)
+# Persist to container environment so nginx-setup and run scripts can read it.
+# Each service script must call bashio::log.level to set bashio's own logging.
 printf '%s' "${log_level}" > /var/run/s6/container_environment/APP_LOG_LEVEL
 
 # CUSTOMIZE: export additional environment variables here, for example:

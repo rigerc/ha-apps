@@ -50,54 +50,66 @@ bashio::log.info "Ingress path (url_base): ${ingress_path}"
 cd /app || bashio::exit.nok "Could not change to /app directory"
 
 # ---------------------------------------------------------------------------
-# Configure settings in database
-# Kapowarr stores settings in the config table as key/value pairs.
+# Map HA log level string to Python logging integer
 # ---------------------------------------------------------------------------
-
-# Map log level string to Python logging integer
 declare log_level_int
 case "${log_level}" in
-    trace)  log_level_int=5 ;;
-    debug)  log_level_int=10 ;;
-    info)   log_level_int=20 ;;
+    trace)   log_level_int=5 ;;
+    debug)   log_level_int=10 ;;
+    info)    log_level_int=20 ;;
     warning) log_level_int=30 ;;
-    error)  log_level_int=40 ;;
-    *)      log_level_int=20 ;;
+    error)   log_level_int=40 ;;
+    *)       log_level_int=20 ;;
 esac
 
+# ---------------------------------------------------------------------------
+# Pre-seed database with url_base BEFORE starting Kapowarr
+# ---------------------------------------------------------------------------
+# Kapowarr reads url_base from the config table at startup and caches it
+# in a Python Singleton. Direct sqlite3 changes after startup are invisible
+# to the running process. Therefore, the value MUST be in the DB before
+# Kapowarr starts.
+#
+# This works because:
+#   - Kapowarr's setup_db() uses CREATE TABLE IF NOT EXISTS — our
+#     pre-created table is preserved
+#   - Settings._insert_missing_settings() uses INSERT OR IGNORE — our
+#     pre-seeded values are never overwritten by defaults
+#   - Settings._fetch_settings() reads our correct url_base
+#   - SERVER.set_url_base() configures DispatcherMiddleware correctly
+# ---------------------------------------------------------------------------
 declare db_file="/config/data/Kapowarr.db"
 
-# Update settings if database already exists (subsequent starts)
-if [[ -f "${db_file}" ]]; then
-    sqlite3 "${db_file}" \
-        "UPDATE config SET value = ${log_level_int} WHERE key = 'log_level';" \
-        2>/dev/null || true
-    sqlite3 "${db_file}" \
-        "UPDATE config SET value = '${ingress_path}' WHERE key = 'url_base';" \
-        2>/dev/null || true
-    bashio::log.debug "Pre-start DB update: log_level=${log_level} (${log_level_int}), url_base=${ingress_path}"
-fi
+sqlite3 "${db_file}" <<SQL
+CREATE TABLE IF NOT EXISTS config(
+    key VARCHAR(100) PRIMARY KEY,
+    value BLOB
+);
+INSERT OR REPLACE INTO config(key, value) VALUES ('url_base', '${ingress_path}');
+INSERT OR REPLACE INTO config(key, value) VALUES ('log_level', ${log_level_int});
+SQL
+
+bashio::log.info "Database pre-seeded: url_base=${ingress_path}, log_level=${log_level_int}"
 
 # ---------------------------------------------------------------------------
-# Start Kapowarr with database folder for persistent storage
-# Start in background so we can update settings after DB initialization
+# Update PWA manifest with the correct url_base prefix
 # ---------------------------------------------------------------------------
-python3 /app/Kapowarr.py -d /config/data &
-kapowarr_pid=$!
+# Kapowarr's update_manifest() is normally called only when url_base changes
+# via the Settings API. Since we set url_base directly in the DB, we must
+# update the manifest file ourselves.
+python3 -c "
+import json, sys
+url_base = sys.argv[1]
+path = 'frontend/static/json/pwa_manifest.json'
+with open(path, 'r') as f:
+    m = json.load(f)
+m['start_url'] = url_base + '/'
+m['icons'][0]['src'] = url_base + '/static/img/favicon.svg'
+with open(path, 'w') as f:
+    json.dump(m, f, indent=4)
+" "${ingress_path}" 2>/dev/null || bashio::log.warning "Could not update PWA manifest"
 
-# Wait for Kapowarr to initialize the database (first run creates it)
-sleep 3
-
-if [[ -f "${db_file}" ]]; then
-    sqlite3 "${db_file}" \
-        "UPDATE config SET value = ${log_level_int} WHERE key = 'log_level';" \
-        2>/dev/null || true
-    sqlite3 "${db_file}" \
-        "UPDATE config SET value = '${ingress_path}' WHERE key = 'url_base';" \
-        2>/dev/null || true
-    bashio::log.debug "Post-init DB update: log_level=${log_level} (${log_level_int}), url_base=${ingress_path}"
-fi
-
-# Re-foreground the process by waiting for it
-# This replaces the current shell with Kapowarr for proper signal handling
-exec wait $kapowarr_pid
+# ---------------------------------------------------------------------------
+# Start Kapowarr in the foreground with exec for proper signal handling
+# ---------------------------------------------------------------------------
+exec python3 /app/Kapowarr.py -d /config/data
