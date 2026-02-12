@@ -1,5 +1,39 @@
 # Changelog
 
+## [1.7.0](https://github.com/rigerc/ha-apps/compare/kapowarr-1.6.1...kapowarr-1.7.0) (2026-02-11)
+
+
+### ✨ Features
+
+* **kapowarr:** add docker image config and improve log level handling ([e3acc99](https://github.com/rigerc/ha-apps/commit/e3acc9917b962e631fdb608f3dba7bde3d617fc3))
+* **kapowarr:** initial release of Kapowarr add-on with documentation, Dockerfile, and configuration ([84dcfb9](https://github.com/rigerc/ha-apps/commit/84dcfb9dd23097b3e1037f7dcbd8cf02f14fec99))
+* **kapowarr:** migrate to s6-overlay v3 service management ([a6d63b7](https://github.com/rigerc/ha-apps/commit/a6d63b7093073d53a1ed5191b5ee48d3474fd510))
+
+
+### 🐛 Bug Fixes
+
+* **builder:** improve image detection and error handling in healthcheck step ([993cda5](https://github.com/rigerc/ha-apps/commit/993cda562bbc8a39914cf7fa80463b6df35cedbd))
+* **config:** comment out ingress_port in configuration ([e55b9d9](https://github.com/rigerc/ha-apps/commit/e55b9d9891cefb9802afdcf116d6eb067ab657bc))
+* **Dockerfile:** add build dependencies and fixes ([c8385d2](https://github.com/rigerc/ha-apps/commit/c8385d294f86cf7fa38e2f2f8c5454260eb65625))
+* **Dockerfile:** add sqlite3 and reinstall Python dependencies ([874e6e4](https://github.com/rigerc/ha-apps/commit/874e6e43496dd47727f43dd3ba0c4ad637a1ea90))
+* **Dockerfile:** combine cargo and pip install into single RUN command ([72a9525](https://github.com/rigerc/ha-apps/commit/72a95251a9e92141d92dd8bb23c97343c638db01))
+* **Dockerfile:** fix tag case with upstream ([d9ecf81](https://github.com/rigerc/ha-apps/commit/d9ecf81c732ad94dae6d5813dd90fac58eb1c854))
+* fix manifest ([e6aa8e2](https://github.com/rigerc/ha-apps/commit/e6aa8e2a7c1d0ae37befb247301e92f1bba78c95))
+* **ha-log:** sync log level with bashio to enable debug/trace ([b00bc62](https://github.com/rigerc/ha-apps/commit/b00bc6243f0946a9ce93080ddfc4d3b25e97ca6f))
+* **HA:** update HA framework source to single entrypoint ([b00ca47](https://github.com/rigerc/ha-apps/commit/b00ca4786810ab644551b2dce1dd2e134539b9f9))
+* **ingress:** add sub_filter rules for HA ingress compatibility ([c1fc22f](https://github.com/rigerc/ha-apps/commit/c1fc22f87b1229fe42437e46f219128454518b1f))
+* **ingress:** update ingress path to use ingress_entry instead of ingress_path ([1c067de](https://github.com/rigerc/ha-apps/commit/1c067de3f12ef00c21fbbb6f197d499bf7dc54c2))
+* **kapowarr:** refactor ([1de216e](https://github.com/rigerc/ha-apps/commit/1de216e27ee44e809795fcb373dab6a48e2609fb))
+* make shell scripts executable ([afcd9e0](https://github.com/rigerc/ha-apps/commit/afcd9e0c648c198fb5a7d58eb249fd20dab90f10))
+* make shell scripts executable [skip ci] ([520d98e](https://github.com/rigerc/ha-apps/commit/520d98e167f7cdf10efda3aa43ab1e228a35a4e2))
+* make shell scripts executable [skip ci] ([438c6f1](https://github.com/rigerc/ha-apps/commit/438c6f1d81ef153182f0c3dc04880a8038f89bec))
+* **nginx:** add daemon off to nginx config ([82e0935](https://github.com/rigerc/ha-apps/commit/82e0935258e52122ab307a79c0f8fcd057a7cb7c))
+* **nginx:** improve API path rewriting in ingress template ([3a9e8fe](https://github.com/rigerc/ha-apps/commit/3a9e8fe795bb2eb2b98b24b707b601f9cd0bbc38))
+* **nginx:** remove unused sub_filter rewrites for ingress paths and use url_base setting ([c98b16c](https://github.com/rigerc/ha-apps/commit/c98b16ce8ef9c6209c91c82626ad6993be075f24))
+* **nginx:** suppress nginx test output in container init script ([7286810](https://github.com/rigerc/ha-apps/commit/7286810e0534d90165e990e493cff8965ed78a3b))
+* remove unused environment variables and ingress configuration check ([09fe26c](https://github.com/rigerc/ha-apps/commit/09fe26c1752d675aed87759b5f186305ad9b4c22))
+* update ingress port to 9919 ([89bf029](https://github.com/rigerc/ha-apps/commit/89bf029e407fbe4db3ea9367c8eeaddf80d58eb6))
+
 ## [1.6.1](https://github.com/rigerc/ha-apps/compare/kapowarr-1.6.0...kapowarr-1.6.1) (2026-02-11)
 
 
