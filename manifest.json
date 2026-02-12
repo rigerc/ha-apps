@@ -28,7 +28,7 @@
     ],
     "image": "ghcr.io/plexguide/huntarr",
     "tag": "9.1.1",
-    "latest_tag": "9.2.4",
+    "latest_tag": "9.2.4.1",
     "project": "https://github.com/plexguide/Huntarr.io",
     "has_icon": true,
     "ingress": true,
@@ -37,7 +37,7 @@
   },
   {
     "slug": "kapowarr",
-    "version": "1.7.0",
+    "version": "1.7.1",
     "name": "Kapowarr",
     "description": "Comic book library manager with automated downloading, renaming, and conversion.",
     "arch": [
@@ -51,7 +51,7 @@
     "has_icon": true,
     "ingress": true,
     "is_up_to_date": false,
-    "last_release": "kapowarr-1.7.0"
+    "last_release": "kapowarr-1.7.1"
   },
   {
     "slug": "profilarr",
