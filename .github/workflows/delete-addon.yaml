@@ -1,0 +1,147 @@
+name: Delete add-on releases and packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: "Add-on slug (e.g. kapowarr)"
+        required: true
+        type: string
+      dry_run:
+        description: "Dry run — log what would be deleted without making changes"
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  delete-addon:
+    name: "Delete ${{ inputs.slug }}"
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Validate slug and extract packages
+        id: manifest
+        env:
+          SLUG: ${{ inputs.slug }}
+        run: |
+          ENTRY=$(jq -r ".[] | select(.slug == \"$SLUG\")" manifest.json)
+
+          if [ -z "$ENTRY" ] || [ "$ENTRY" = "null" ]; then
+            echo "::error::Slug '$SLUG' not found in manifest.json"
+            echo "Available slugs:"
+            jq -r '.[].slug' manifest.json
+            exit 1
+          fi
+
+          PACKAGES=$(echo "$ENTRY" | jq -r '.packages | join(" ")')
+          echo "packages=$PACKAGES" >> "$GITHUB_OUTPUT"
+          echo "Found packages: $PACKAGES"
+
+      - name: Delete releases and tags
+        env:
+          SLUG: ${{ inputs.slug }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          echo "Fetching releases matching '${SLUG}-'..."
+
+          TAGS=$(gh release list \
+            --repo "${{ github.repository }}" \
+            --json tagName \
+            --limit 1000 \
+            | jq -r --arg prefix "${SLUG}-" '.[] | select(.tagName | startswith($prefix)) | .tagName')
+
+          COUNT=$(echo "$TAGS" | grep -c . || true)
+
+          if [ -z "$TAGS" ]; then
+            echo "No releases found matching '${SLUG}-'"
+            exit 0
+          fi
+
+          echo "Found $COUNT release(s) matching '${SLUG}-'"
+
+          while IFS= read -r TAG; do
+            [ -z "$TAG" ] && continue
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "[DRY RUN] Would delete release: $TAG"
+            else
+              echo "Deleting release: $TAG"
+              gh release delete "$TAG" --cleanup-tag --yes \
+                --repo "${{ github.repository }}"
+            fi
+          done <<< "$TAGS"
+
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "Dry run complete — $COUNT release(s) would be deleted"
+          else
+            echo "Deleted $COUNT release(s)"
+          fi
+
+      - name: Delete GHCR packages
+        env:
+          PACKAGES: ${{ steps.manifest.outputs.packages }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          OWNER_TYPE=$(gh api "/users/$OWNER" --jq '.type')
+          echo "Owner type: $OWNER_TYPE"
+
+          if [ "$OWNER_TYPE" = "Organization" ]; then
+            API_BASE="/orgs/$OWNER"
+          else
+            API_BASE="/users/$OWNER"
+          fi
+
+          # shellcheck disable=SC2153
+          for PKG in $PACKAGES; do
+            ENDPOINT="${API_BASE}/packages/container/${PKG}"
+
+            if [ "$DRY_RUN" = "true" ]; then
+              VERSION_COUNT=$(gh api "${ENDPOINT}/versions" --paginate \
+                --jq '. | length' 2>/dev/null | awk '{s+=$1} END {print s}' || echo "unknown")
+              echo "[DRY RUN] Would delete package: $PKG ($VERSION_COUNT versions)"
+            else
+              echo "Deleting package: $PKG"
+              if gh api -X DELETE "$ENDPOINT" 2>/dev/null; then
+                echo "Deleted package: $PKG"
+              else
+                echo "::warning::Package '$PKG' not found or could not be deleted — skipping"
+              fi
+            fi
+          done
+
+      - name: Summary
+        env:
+          SLUG: ${{ inputs.slug }}
+          PACKAGES: ${{ steps.manifest.outputs.packages }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          PACKAGES_CSV=$(echo "$PACKAGES" | tr ' ' ',')
+
+          if [ "$DRY_RUN" = "true" ]; then
+            {
+              echo "### Dry run complete for add-on: $SLUG"
+              echo ""
+              echo "No changes were made. Re-run with **dry_run = false** to perform deletions."
+              echo ""
+              echo "**Would have deleted:**"
+              echo "- All GitHub releases and git tags matching \`${SLUG}-*\`"
+              echo "- GHCR packages: \`${PACKAGES_CSV}\`"
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo "### Deletion complete for add-on: $SLUG"
+              echo ""
+              echo "**Deleted:**"
+              echo "- All GitHub releases and git tags matching \`${SLUG}-*\`"
+              echo "- GHCR packages: \`${PACKAGES_CSV}\`"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi

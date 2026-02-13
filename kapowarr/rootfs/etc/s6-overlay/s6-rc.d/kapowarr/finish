@@ -11,29 +11,32 @@
 #          256 = app was killed by a signal
 #          N   = app exited with error code N
 #
-# Behaviour implemented here:
-#   - Normal exit (0) or signal kill (256): do nothing, s6 restarts automatically
-#   - Any other exit code: treat as a crash and stop the entire add-on
+# Kapowarr restart codes (since we bypass its subprocess wrapper):
+#   131 = RestartVersion.NORMAL — app requested a normal restart
+#   132 = RestartVersion.HOSTING_CHANGES — hosting settings changed
 #
-# The crash-stop behaviour prevents restart loops that would fill the log and
-# consume resources.  The user must check the logs to diagnose the issue.
+# Behaviour:
+#   - Normal exit (0) or signal kill (256): s6 restarts automatically
+#   - Kapowarr restart codes (131, 132): s6 restarts automatically
+#   - Any other exit code: treat as a crash, stop the add-on
 # ==============================================================================
 
 declare -r exit_code="${1}"
 
 bashio::log.info "Kapowarr exited with code ${exit_code}"
 
-if [[ "${exit_code}" -ne 0 ]] && [[ "${exit_code}" -ne 256 ]]; then
-    bashio::log.error "Kapowarr crashed (exit code ${exit_code}) — stopping add-on to prevent restart loop"
-    bashio::log.error "Check the logs above for the cause of the crash"
-
-    # Write the exit code so the container returns a non-zero status
-    echo "${exit_code}" > /run/s6-linux-init-container-results/exitcode
-
-    # Halt the entire s6 supervision tree (stops the add-on)
-    exec /run/s6/basedir/bin/halt
+# Allow clean exits, signal kills, and Kapowarr restart requests
+if [[ "${exit_code}" -eq 0 ]] \
+    || [[ "${exit_code}" -eq 256 ]] \
+    || [[ "${exit_code}" -eq 131 ]] \
+    || [[ "${exit_code}" -eq 132 ]]; then
+    bashio::log.info "Kapowarr will restart automatically"
+    exit 0
 fi
 
-# Codes 0 and 256 fall through here.
-# s6 will automatically restart the 'run' script after the configured backoff.
-bashio::log.info "Kapowarr will restart automatically"
+# Any other exit code is a crash — stop the add-on
+bashio::log.error "Kapowarr crashed (exit code ${exit_code}) — stopping add-on to prevent restart loop"
+bashio::log.error "Check the logs above for the cause of the crash"
+
+echo "${exit_code}" > /run/s6-linux-init-container-results/exitcode
+exec /run/s6/basedir/bin/halt

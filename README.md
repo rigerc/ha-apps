@@ -30,7 +30,7 @@ Click on the above button or follow the steps below:
 App for [Cleanuparr project](https://github.com/Cleanuparr/Cleanuparr).
 
 [![Version](https://img.shields.io/badge/ha%20app%20version-1.1.0-blue?style=flat-square&logo=homeassistant&logoColor=white)](https://github.com/rigerc/ha-apps/tree/main/cleanuparr)
-&nbsp; [![Current](https://img.shields.io/badge/image%20version-2.5.1-blue?style=flat-square&logo=docker&logoColor=white)](https://github.com/Cleanuparr/Cleanuparr)&nbsp; [![Up to Date](https://img.shields.io/badge/upstream-up%20to%20date-green?style=flat-square)](https://github.com/Cleanuparr/Cleanuparr)
+&nbsp; [![Current](https://img.shields.io/badge/image%20version-2.5.1-blue?style=flat-square&logo=docker&logoColor=white)](https://github.com/Cleanuparr/Cleanuparr)&nbsp; [![Out of Date](https://img.shields.io/badge/upstream-out%20of%20date-yellow?style=flat-square)](https://github.com/Cleanuparr/Cleanuparr)
 &nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational?style=flat-square&logo=linux&logoColor=white)]()
 &nbsp; [![amd64](https://img.shields.io/badge/platform-amd64-informational?style=flat-square&logo=linux&logoColor=white)]()
 
@@ -54,10 +54,10 @@ Whisparr. Continuously searches your media libraries for missing content
 and quality upgrades below your cutoff. Runs continuously while being gentle
 on your indexers, filling the gap that *arr apps don't cover by finding
 content not actively searched through RSS feeds.
-### [Kapowarr](./kapowarr/)
+###  <img src="https://raw.githubusercontent.com/rigerc/ha-apps/main/kapowarr/icon.png" width="16" height="16" style="margin-right: 4px;">[Kapowarr](./kapowarr/)
 App for [Kapowarr project](https://github.com/Casvt/Kapowarr).
 
-[![Version](https://img.shields.io/badge/ha%20app%20version-1.2.0-1-blue?style=flat-square&logo=homeassistant&logoColor=white)](https://github.com/rigerc/ha-apps/tree/main/kapowarr)
+[![Version](https://img.shields.io/badge/ha%20app%20version-1.7.2-blue?style=flat-square&logo=homeassistant&logoColor=white)](https://github.com/rigerc/ha-apps/tree/main/kapowarr)
 &nbsp; [![Current](https://img.shields.io/badge/image%20version-v1.2.0-blue?style=flat-square&logo=docker&logoColor=white)](https://github.com/Casvt/Kapowarr)&nbsp; [![Out of Date](https://img.shields.io/badge/upstream-out%20of%20date-yellow?style=flat-square)](https://github.com/Casvt/Kapowarr)
 &nbsp; [![aarch64](https://img.shields.io/badge/platform-aarch64-informational?style=flat-square&logo=linux&logoColor=white)]()
 &nbsp; [![amd64](https://img.shields.io/badge/platform-amd64-informational?style=flat-square&logo=linux&logoColor=white)]()

@@ -17,32 +17,14 @@ bashio::log.info "Starting Kapowarr..."
 # ---------------------------------------------------------------------------
 declare log_level="${APP_LOG_LEVEL:-info}"
 bashio::log.level "${log_level}"
-bashio::log.info "Log level: ${log_level}"
 
-# ---------------------------------------------------------------------------
-# Set runtime environment variables
-# ---------------------------------------------------------------------------
 export TZ="${TZ:-UTC}"
 
-# Get the port from environment or default to 5656
-declare app_port
-app_port="${APP_PORT:-5656}"
+declare app_port="${APP_PORT:-5656}"
 
-bashio::log.info "Kapowarr will listen on 0.0.0.0:${app_port}"
-
-# ---------------------------------------------------------------------------
-# Resolve HA ingress path for Kapowarr's native url_base setting
-# ---------------------------------------------------------------------------
-# Kapowarr supports a url_base setting that wraps the Flask app with
-# DispatcherMiddleware, making all routes, static assets, API endpoints,
-# and WebSocket paths respect the prefix natively. This eliminates the
-# need for nginx sub_filter rewriting.
-#
-# The ingress path (e.g. /api/hassio_ingress/<token>) is stable across
-# container restarts and only changes on add-on reinstall.
-declare ingress_path
-ingress_path="$(bashio::addon.ingress_entry)"
-bashio::log.info "Ingress path (url_base): ${ingress_path}"
+# Read cached ingress path from s6 environment (set by kapowarr-setup)
+declare ingress_path="${APP_INGRESS_ENTRY}"
+bashio::log.info "Ingress url_base: ${ingress_path}"
 
 # ---------------------------------------------------------------------------
 # Change to the application directory
@@ -89,27 +71,49 @@ INSERT OR REPLACE INTO config(key, value) VALUES ('url_base', '${ingress_path}')
 INSERT OR REPLACE INTO config(key, value) VALUES ('log_level', ${log_level_int});
 SQL
 
-bashio::log.info "Database pre-seeded: url_base=${ingress_path}, log_level=${log_level_int}"
+bashio::log.debug "Database pre-seeded: url_base=${ingress_path}, log_level=${log_level_int}"
 
 # ---------------------------------------------------------------------------
 # Update PWA manifest with the correct url_base prefix
 # ---------------------------------------------------------------------------
 # Kapowarr's update_manifest() is normally called only when url_base changes
 # via the Settings API. Since we set url_base directly in the DB, we must
-# update the manifest file ourselves.
-python3 -c "
-import json, sys
-url_base = sys.argv[1]
-path = 'frontend/static/json/pwa_manifest.json'
-with open(path, 'r') as f:
-    m = json.load(f)
-m['start_url'] = url_base + '/'
-m['icons'][0]['src'] = url_base + '/static/img/favicon.svg'
-with open(path, 'w') as f:
-    json.dump(m, f, indent=4)
-" "${ingress_path}" 2>/dev/null || bashio::log.warning "Could not update PWA manifest"
+# update the manifest file ourselves. Uses sed instead of Python to avoid
+# starting a full interpreter for a trivial JSON edit.
+declare manifest="frontend/static/json/pwa_manifest.json"
+if [[ -f "${manifest}" ]]; then
+    sed -i \
+        -e "s|\"start_url\": \"[^\"]*\"|\"start_url\": \"${ingress_path}/\"|" \
+        -e "s|\"src\": \"[^\"]*favicon.svg\"|\"src\": \"${ingress_path}/static/img/favicon.svg\"|" \
+        "${manifest}"
+fi
 
 # ---------------------------------------------------------------------------
-# Start Kapowarr in the foreground with exec for proper signal handling
+# Start Kapowarr — bypass the subprocess wrapper for faster startup
 # ---------------------------------------------------------------------------
-exec python3 /app/Kapowarr.py -d /config/data
+# Kapowarr normally uses a parent→child subprocess pattern (for internal
+# restart support). The parent process imports ALL modules, then spawns a
+# child via Popen that imports them ALL AGAIN — doubling Python startup time.
+#
+# By setting KAPOWARR_RUN_MAIN=1, we skip the parent process entirely and
+# go straight to _main(). This eliminates one full Python startup cycle
+# (~3-6s savings depending on hardware).
+#
+# Internal restarts (exit codes 131/132) are handled by the finish script,
+# which lets s6 restart this run script instead.
+#
+# Signal handling: Python's default SIGTERM handler terminates without
+# running cleanup. We run Python in the background and trap SIGTERM,
+# forwarding it as SIGINT (which raises KeyboardInterrupt and triggers
+# the try/finally cleanup in _main()).
+# ---------------------------------------------------------------------------
+export KAPOWARR_RUN_MAIN=1
+
+python3 -u /app/Kapowarr.py -d /config/data &
+pid=$!
+
+# Forward SIGTERM as SIGINT for graceful Python shutdown
+trap 'kill -INT ${pid} 2>/dev/null' TERM
+
+wait "${pid}"
+exit $?

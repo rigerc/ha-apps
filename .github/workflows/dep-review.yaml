@@ -86,7 +86,7 @@ jobs:
             # Try to extract image name from manifest.json based on addon
             ADDON_CONFIG=$(jq -r ".[] | select(.slug==\"$ADDON_SLUG\")" manifest.json)
             if [ -n "$ADDON_CONFIG" ] && [ "$ADDON_CONFIG" != "null" ]; then
-              DOCKER_IMAGE=$(echo "$ADDON_CONFIG" | jq -r '.docker_image // empty')
+              DOCKER_IMAGE=$(echo "$ADDON_CONFIG" | jq -r '.upstream_image // empty')
               if [ -n "$DOCKER_IMAGE" ]; then
                 echo "image_name=$DOCKER_IMAGE" >> "$GITHUB_OUTPUT"
               fi

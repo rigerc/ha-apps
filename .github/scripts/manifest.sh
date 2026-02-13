@@ -474,7 +474,7 @@ extract_addon_info() {
   local project
   local from_line
   local image_tag
-  local image
+  local upstream_image
   local tag
   local has_icon
 
@@ -492,6 +492,17 @@ extract_addon_info() {
   name="$(yq -r '.name' "${config_file}")"
   description="$(yq -r '.description' "${config_file}")"
   architectures="$(yq -r '.arch | @json' "${config_file}")"
+
+  # Build packages array from config.yaml image template (e.g., "ghcr.io/rigerc/ha-apps-huntarr-{arch}")
+  image_template="$(yq -r '.image // ""' "${config_file}")"
+  image_template="${image_template#ghcr.io/rigerc/}"
+  packages="[]"
+  if [[ -n "${image_template}" && "${image_template}" == *"{arch}"* ]]; then
+    while IFS= read -r arch_val; do
+      package_name="${image_template//\{arch\}/${arch_val}}"
+      packages="$(jq --arg pkg "${package_name}" '. + [$pkg]' <<< "${packages}")"
+    done < <(echo "${architectures}" | jq -r '.[]')
+  fi
 
   # Extract project from build.yaml if it exists
   project=""
@@ -522,21 +533,21 @@ extract_addon_info() {
   [[ -n "${from_line}" ]] || return 1
 
   image_tag="$(awk '{print $2}' <<< "${from_line}")"
-  image="${image_tag%%:*}"
+  upstream_image="${image_tag%%:*}"
   tag="${image_tag#*:}"
 
   # Get latest version from registry and compare
-  latest_tag=""
+  latest_upstream_tag=""
   is_up_to_date="null"
 
-  if [[ -n "${image}" && -n "${tag}" ]]; then
-    echo "Checking latest version for ${image}..." >&2
-    latest_tag="$(get_latest_version "${image}" "${project}")"
+  if [[ -n "${upstream_image}" && -n "${tag}" ]]; then
+    echo "Checking latest version for ${upstream_image}..." >&2
+    latest_upstream_tag="$(get_latest_version "${upstream_image}" "${project}")"
 
-    if [[ -n "${latest_tag}" ]]; then
+    if [[ -n "${latest_upstream_tag}" ]]; then
       # Remove 'v' prefix if present for comparison
       current_clean="${tag#v}"
-      latest_clean="${latest_tag#v}"
+      latest_clean="${latest_upstream_tag#v}"
 
       # Use version-aware sort for comparison
       highest_version=$(printf '%s\n' "${current_clean}" "${latest_clean}" | sort -V | tail -n 1)
@@ -544,12 +555,12 @@ extract_addon_info() {
       if [[ "${current_clean}" == "${latest_clean}" ]]; then
         is_up_to_date="true"
       elif [[ "${current_clean}" == "${highest_version}" ]]; then
-        # Current version is newer than latest_tag
+        # Current version is newer than latest_upstream_tag
         is_up_to_date="true"
       else
         is_up_to_date="false"
       fi
-      echo "  Current: ${tag}, Latest: ${latest_tag}, Up to date: ${is_up_to_date}" >&2
+      echo "  Current: ${tag}, Latest: ${latest_upstream_tag}, Up to date: ${is_up_to_date}" >&2
     else
       echo "  Could not fetch latest version from registry" >&2
     fi
@@ -572,28 +583,30 @@ extract_addon_info() {
     --arg name "${name}" \
     --arg description "${description}" \
     --argjson architectures "${architectures}" \
-    --arg image "${image}" \
+    --arg upstream_image "${upstream_image}" \
     --arg tag "${tag}" \
-    --arg latest_tag "${latest_tag}" \
+    --arg latest_upstream_tag "${latest_upstream_tag}" \
     --arg project "${project}" \
     --argjson has_icon "${has_icon}" \
     --argjson ingress "${ingress}" \
     --argjson is_up_to_date "${is_up_to_date}" \
     --arg last_release "${last_release}" \
+    --argjson packages "${packages}" \
     '{
       slug: $slug,
       version: $version,
       name: $name,
       description: $description,
       arch: $architectures,
-      image: $image,
+      upstream_image: $upstream_image,
       tag: $tag,
-      latest_tag: $latest_tag,
+      latest_upstream_tag: $latest_upstream_tag,
       project: $project,
       has_icon: $has_icon,
       ingress: $ingress,
       is_up_to_date: $is_up_to_date,
-      last_release: $last_release
+      last_release: $last_release,
+      packages: $packages
     }'
 }
 

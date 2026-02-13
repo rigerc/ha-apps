@@ -21,6 +21,11 @@ printf '%s' "${log_level}" > /var/run/s6/container_environment/APP_LOG_LEVEL
 timezone="$(bashio::config 'timezone' 'UTC')"
 printf '%s' "${timezone}" > /var/run/s6/container_environment/TZ
 
+# Cache the ingress entry path so downstream services (kapowarr/run) don't
+# need to make a redundant Supervisor API call
+ingress_entry="$(bashio::addon.ingress_entry)"
+printf '%s' "${ingress_entry}" > /var/run/s6/container_environment/APP_INGRESS_ENTRY
+
 # ---------------------------------------------------------------------------
 # Prepare persistent data directories
 # ---------------------------------------------------------------------------
