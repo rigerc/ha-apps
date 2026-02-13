@@ -10,11 +10,11 @@
     ],
     "image": "ghcr.io/cleanuparr/cleanuparr",
     "tag": "2.5.1",
-    "latest_tag": "v2.5.1",
+    "latest_tag": "v2.6.0",
     "project": "https://github.com/Cleanuparr/Cleanuparr",
     "has_icon": true,
     "ingress": false,
-    "is_up_to_date": true,
+    "is_up_to_date": false,
     "last_release": "cleanuparr-1.1.0"
   },
   {
