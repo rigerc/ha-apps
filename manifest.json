@@ -10,16 +10,12 @@
     ],
     "upstream_image": "ghcr.io/cleanuparr/cleanuparr",
     "tag": "2.5.1",
-    "latest_upstream_tag": "v2.6.1",
+    "latest_tag": "v2.6.0",
     "project": "https://github.com/Cleanuparr/Cleanuparr",
     "has_icon": true,
     "ingress": false,
     "is_up_to_date": false,
-    "last_release": "cleanuparr-1.1.0",
-    "packages": [
-      "ha-apps-cleanuparr-aarch64",
-      "ha-apps-cleanuparr-amd64"
-    ]
+    "last_release": "cleanuparr-1.1.0"
   },
   {
     "slug": "huntarr",
@@ -45,7 +41,7 @@
   },
   {
     "slug": "kapowarr",
-    "version": "1.7.2",
+    "version": "1.7.3",
     "name": "Kapowarr",
     "description": "Comic book library manager with automated downloading, renaming, and conversion.",
     "arch": [
@@ -59,11 +55,7 @@
     "has_icon": true,
     "ingress": true,
     "is_up_to_date": false,
-    "last_release": "kapowarr-1.7.3",
-    "packages": [
-      "ha-apps-kapowarr-aarch64",
-      "ha-apps-kapowarr-amd64"
-    ]
+    "last_release": "kapowarr-1.7.3"
   },
   {
     "slug": "profilarr",
