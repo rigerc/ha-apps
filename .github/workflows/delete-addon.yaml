@@ -32,6 +32,7 @@ jobs:
         id: manifest
         env:
           SLUG: ${{ inputs.slug }}
+          DRY_RUN: ${{ inputs.dry_run }}
         run: |
           ENTRY=$(jq -r ".[] | select(.slug == \"$SLUG\")" manifest.json)
 
@@ -45,6 +46,17 @@ jobs:
           PACKAGES=$(echo "$ENTRY" | jq -r '.packages | join(" ")')
           echo "packages=$PACKAGES" >> "$GITHUB_OUTPUT"
           echo "Found packages: $PACKAGES"
+
+          {
+            echo "## Delete add-on: \`$SLUG\`"
+            echo ""
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "> **Dry run** — no changes were made. Re-run with **dry_run = false** to perform deletions."
+            else
+              echo "> **Live run** — deletions performed."
+            fi
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Delete releases and tags
         env:
@@ -61,29 +73,43 @@ jobs:
 
           COUNT=$(echo "$TAGS" | grep -c . || true)
 
+          {
+            echo "### Releases & tags (\`${SLUG}-*\`)"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
           if [ -z "$TAGS" ]; then
             echo "No releases found matching '${SLUG}-'"
-            exit 0
-          fi
-
-          echo "Found $COUNT release(s) matching '${SLUG}-'"
-
-          while IFS= read -r TAG; do
-            [ -z "$TAG" ] && continue
-            if [ "$DRY_RUN" = "true" ]; then
-              echo "[DRY RUN] Would delete release: $TAG"
-            else
-              echo "Deleting release: $TAG"
-              gh release delete "$TAG" --cleanup-tag --yes \
-                --repo "${{ github.repository }}"
-            fi
-          done <<< "$TAGS"
-
-          if [ "$DRY_RUN" = "true" ]; then
-            echo "Dry run complete — $COUNT release(s) would be deleted"
+            echo "No releases found." >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "Deleted $COUNT release(s)"
+            echo "Found $COUNT release(s) matching '${SLUG}-'"
+            {
+              echo "| Tag | Status |"
+              echo "|-----|--------|"
+            } >> "$GITHUB_STEP_SUMMARY"
+
+            while IFS= read -r TAG; do
+              [ -z "$TAG" ] && continue
+              if [ "$DRY_RUN" = "true" ]; then
+                echo "[DRY RUN] Would delete release: $TAG"
+                echo "| \`$TAG\` | Would delete |" >> "$GITHUB_STEP_SUMMARY"
+              else
+                echo "Deleting release: $TAG"
+                gh release delete "$TAG" --cleanup-tag --yes \
+                  --repo "${{ github.repository }}"
+                echo "| \`$TAG\` | Deleted |" >> "$GITHUB_STEP_SUMMARY"
+              fi
+            done <<< "$TAGS"
+
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "_$COUNT release(s) would be deleted._" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "_$COUNT release(s) deleted._" >> "$GITHUB_STEP_SUMMARY"
+            fi
           fi
+
+          echo "" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Delete GHCR packages
         env:
@@ -100,6 +126,13 @@ jobs:
             API_BASE="/users/$OWNER"
           fi
 
+          {
+            echo "### GHCR packages"
+            echo ""
+            echo "| Package | Versions | Status |"
+            echo "|---------|----------|--------|"
+          } >> "$GITHUB_STEP_SUMMARY"
+
           # shellcheck disable=SC2153
           for PKG in $PACKAGES; do
             ENDPOINT="${API_BASE}/packages/container/${PKG}"
@@ -108,40 +141,15 @@ jobs:
               VERSION_COUNT=$(gh api "${ENDPOINT}/versions" --paginate \
                 --jq '. | length' 2>/dev/null | awk '{s+=$1} END {print s}' || echo "unknown")
               echo "[DRY RUN] Would delete package: $PKG ($VERSION_COUNT versions)"
+              echo "| \`$PKG\` | $VERSION_COUNT | Would delete |" >> "$GITHUB_STEP_SUMMARY"
             else
               echo "Deleting package: $PKG"
               if gh api -X DELETE "$ENDPOINT" 2>/dev/null; then
                 echo "Deleted package: $PKG"
+                echo "| \`$PKG\` | — | Deleted |" >> "$GITHUB_STEP_SUMMARY"
               else
                 echo "::warning::Package '$PKG' not found or could not be deleted — skipping"
+                echo "| \`$PKG\` | — | Not found (skipped) |" >> "$GITHUB_STEP_SUMMARY"
               fi
             fi
           done
-
-      - name: Summary
-        env:
-          SLUG: ${{ inputs.slug }}
-          PACKAGES: ${{ steps.manifest.outputs.packages }}
-          DRY_RUN: ${{ inputs.dry_run }}
-        run: |
-          PACKAGES_CSV=$(echo "$PACKAGES" | tr ' ' ',')
-
-          if [ "$DRY_RUN" = "true" ]; then
-            {
-              echo "### Dry run complete for add-on: $SLUG"
-              echo ""
-              echo "No changes were made. Re-run with **dry_run = false** to perform deletions."
-              echo ""
-              echo "**Would have deleted:**"
-              echo "- All GitHub releases and git tags matching \`${SLUG}-*\`"
-              echo "- GHCR packages: \`${PACKAGES_CSV}\`"
-            } >> "$GITHUB_STEP_SUMMARY"
-          else
-            {
-              echo "### Deletion complete for add-on: $SLUG"
-              echo ""
-              echo "**Deleted:**"
-              echo "- All GitHub releases and git tags matching \`${SLUG}-*\`"
-              echo "- GHCR packages: \`${PACKAGES_CSV}\`"
-            } >> "$GITHUB_STEP_SUMMARY"
-          fi
