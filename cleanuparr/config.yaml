@@ -14,12 +14,14 @@ arch:
   - amd64
 init: false
 startup: services
+ingress: true
+ingress_port: 11011
 webui: http://[HOST]:[PORT:11011]
 boot: manual
 ports:
   11011/tcp: 11011
 ports_description:
-  11011/tcp: Web UI and API
+  11011/tcp: Web UI and API (optional when using ingress)
 map:
   - share:rw
   - addon_config:rw

@@ -1,6 +1,7 @@
 #!/usr/bin/with-contenv bashio
 # shellcheck shell=bash
 
+set -e
 
 exec 2>&1
 
@@ -14,6 +15,22 @@ PORT=$(bashio::addon.port '11011')
 bashio::log.info "Log level: ${LOG_LEVEL}"
 bashio::log.info "Dry run: ${DRY_RUN}"
 bashio::log.info "Port: ${PORT}"
+
+# Ensure config directory exists
+mkdir -p /config
+
+# Fix configuration persistence: symlink settings.json to persistent /config
+# Cleanuparr stores settings.json in its working directory (/app)
+if [[ ! -L /app/settings.json ]] && [[ -f /app/settings.json ]]; then
+    bashio::log.info "Migrating existing settings.json to persistent storage..."
+    mv /app/settings.json /config/settings.json
+fi
+
+# Create symlink if it doesn't exist
+if [[ ! -L /app/settings.json ]]; then
+    ln -s /config/settings.json /app/settings.json
+    bashio::log.info "Created symlink for configuration persistence"
+fi
 
 # Set environment variables for Cleanuparr
 export ASPNETCORE_URLS="http://0.0.0.0:${PORT}"
