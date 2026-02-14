@@ -7,7 +7,6 @@ on:
     paths:
       - "cleanuparr/**"
       - "huntarr/**"
-      - "kapowarr/**"
       - "profilarr/**"
       - "romm/**"
   workflow_dispatch:
