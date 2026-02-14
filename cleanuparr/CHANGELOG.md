@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.2](https://github.com/rigerc/ha-apps/compare/cleanuparr-1.1.1...cleanuparr-1.1.2) (2026-02-14)
+
+
+### 🐛 Bug Fixes
+
+* **cleanuparr:** finish s6 migration, etc ([18eb389](https://github.com/rigerc/ha-apps/commit/18eb38923c0500a7af20cfa604919ec7b22a21d5))
+* make shell scripts executable [skip ci] ([e01facd](https://github.com/rigerc/ha-apps/commit/e01facda767cb91a8b490b9566ea4b11ffd99ae9))
+
 ## [1.1.1](https://github.com/rigerc/ha-apps/compare/cleanuparr-1.1.0...cleanuparr-1.1.1) (2026-02-14)
 
 

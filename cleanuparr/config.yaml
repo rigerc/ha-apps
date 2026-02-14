@@ -1,5 +1,5 @@
 name: Cleanuparr
-version: 1.1.1
+version: 1.1.2
 slug: cleanuparr
 description: |
   Automated cleanup tool for Sonarr, Radarr, Lidarr, Readarr, and Whisparr
