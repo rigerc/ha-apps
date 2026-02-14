@@ -16,7 +16,6 @@ init: false
 startup: services
 ingress: true
 ingress_port: 11011
-webui: http://[HOST]:[PORT:11011]
 boot: manual
 ports:
   11011/tcp: 11011

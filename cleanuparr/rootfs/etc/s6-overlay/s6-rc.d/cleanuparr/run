@@ -10,7 +10,7 @@ bashio::log.info "Starting Cleanuparr..."
 # Get configuration
 LOG_LEVEL=$(bashio::config 'log_level')
 DRY_RUN=$(bashio::config 'dry_run')
-PORT=$(bashio::addon.port '11011')
+PORT=$(bashio::ingress_port '11011')
 
 bashio::log.info "Log level: ${LOG_LEVEL}"
 bashio::log.info "Dry run: ${DRY_RUN}"

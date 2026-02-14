@@ -15,11 +15,7 @@ COPY --from=app-source /app/libMono.Unix.so /usr/lib/libMono.Unix.so
 COPY --from=app-source /app/libe_sqlite3.so /usr/lib/libe_sqlite3.so
 
 # Copy web UI assets (wwwroot directory) - consolidate in one layer
-COPY --from=app-source /app /app-temp
-
-# Move wwwroot to final location and cleanup
-RUN mv /app-temp/wwwroot /app/wwwroot && \
-    rm -rf /app-temp
+COPY --from=app-source /app /app
 
 # Install runtime dependencies (Debian)
 RUN apt-get update && apt-get install -y --no-install-recommends \
