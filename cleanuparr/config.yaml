@@ -17,10 +17,7 @@ startup: services
 ingress: true
 ingress_port: 11011
 boot: manual
-ports:
-  11011/tcp: 11011
-ports_description:
-  11011/tcp: Web UI and API (optional when using ingress)
+panel_icon: mdi:broom
 map:
   - share:rw
   - addon_config:rw

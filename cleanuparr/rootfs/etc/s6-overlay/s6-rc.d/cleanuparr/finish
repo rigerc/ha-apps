@@ -1,12 +1,17 @@
 #!/usr/bin/with-contenv bashio
 # shellcheck shell=bash
 
-declare APP_EXIT_CODE=${1}
+declare -r exit_code="${1}"
 
-bashio::log.warning "Cleanuparr exited with code ${APP_EXIT_CODE}"
+bashio::log.info "Cleanuparr exited with code ${exit_code}"
 
-# Halt the entire add-on if Cleanuparr crashes
-if [[ "${APP_EXIT_CODE}" -ne 0 ]]; then
-    bashio::log.error "Cleanuparr crashed - stopping add-on"
+if [[ "${exit_code}" -ne 0 ]] && [[ "${exit_code}" -ne 256 ]]; then
+    bashio::log.error "Cleanuparr crashed (exit code ${exit_code}) — stopping add-on to prevent restart loop"
+    bashio::log.error "Check the logs above for the cause of the crash"
+
+    echo "${exit_code}" > /run/s6-linux-init-container-results/exitcode
+
     exec /run/s6/basedir/bin/halt
 fi
+
+bashio::log.info "Cleanuparr will restart automatically"

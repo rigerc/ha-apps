@@ -1,0 +1,33 @@
+#!/usr/bin/with-contenv bashio
+# shellcheck shell=bash
+
+set -e
+
+bashio::log.info "Setting up Cleanuparr..."
+
+declare log_level
+declare dry_run
+
+log_level="$(bashio::config 'log_level' 'Information')"
+dry_run="$(bashio::config 'dry_run' 'false')"
+
+bashio::log.debug "log_level = ${log_level}"
+bashio::log.debug "dry_run   = ${dry_run}"
+
+printf '%s' "${log_level}" > /var/run/s6/container_environment/APP_LOG_LEVEL
+printf '%s' "${dry_run}" > /var/run/s6/container_environment/DRY_RUN
+
+bashio::log.info "--- Directory setup ---"
+
+mkdir -p /config
+
+bashio::log.debug "Data directories ready"
+
+if bashio::addon.ingress; then
+    declare ingress_entry
+    ingress_entry="$(bashio::addon.ingress_entry)"
+    printf '%s' "${ingress_entry}" > /var/run/s6/container_environment/INGRESS_ENTRY
+    bashio::log.info "Ingress base URL: ${ingress_entry}"
+fi
+
+bashio::log.info "Cleanuparr setup complete"

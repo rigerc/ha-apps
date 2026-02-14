@@ -1,0 +1,23 @@
+#!/usr/bin/with-contenv bashio
+# shellcheck shell=bash
+
+exec 2>&1
+
+bashio::log.info "Starting nginx ingress proxy..."
+
+readonly backend_host="localhost"
+readonly backend_port="11011"
+readonly wait_timeout=300
+
+bashio::log.info "Waiting for Cleanuparr backend on ${backend_host}:${backend_port} (timeout: ${wait_timeout}s)..."
+
+if ! bashio::net.wait_for "${backend_port}" "${backend_host}" "${wait_timeout}"; then
+    bashio::log.error "Cleanuparr backend did not become ready within ${wait_timeout}s"
+    bashio::log.error "Check the Cleanuparr service logs for startup errors"
+    exit 1
+fi
+
+bashio::log.info "Cleanuparr backend is ready on ${backend_host}:${backend_port}"
+
+bashio::log.info "nginx starting in foreground mode"
+exec nginx

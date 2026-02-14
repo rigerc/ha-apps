@@ -1,0 +1,12 @@
+#!/usr/bin/with-contenv bashio
+# shellcheck shell=bash
+
+readonly ADDON_DISPLAY_NAME="Cleanuparr"
+
+bashio::log.info "---"
+bashio::log.info "${ADDON_DISPLAY_NAME}"
+bashio::log.info "Initializing add-on..."
+bashio::log.info "---"
+
+_configured_level="$(bashio::config 'log_level' 'Information')"
+bashio::log.info "Log level: ${_configured_level}"

@@ -7,6 +7,3 @@ configuration:
   dry_run:
     name: "Dry Run"
     description: "When enabled, Cleanuparr simulates operations without making actual changes. Useful for testing cleanup rules."
-
-network:
-  11011/tcp: "Cleanuparr web interface and API"

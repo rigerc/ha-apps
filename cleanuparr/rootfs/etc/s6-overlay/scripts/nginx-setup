@@ -1,0 +1,41 @@
+#!/usr/bin/with-contenv bashio
+# shellcheck shell=bash
+
+set -e
+
+bashio::log.level "${APP_LOG_LEVEL:-info}"
+
+bashio::log.info "Configuring nginx ingress..."
+
+declare ingress_interface
+declare ingress_port
+declare app_port
+
+ingress_interface="$(bashio::addon.ip_address)"
+ingress_port="$(bashio::addon.ingress_port)"
+app_port="11011"
+
+bashio::log.debug "ingress_interface = ${ingress_interface}"
+bashio::log.debug "ingress_port      = ${ingress_port}"
+bashio::log.debug "app_port          = ${app_port}"
+
+bashio::log.info "Rendering /etc/nginx/servers/ingress.conf via tempio..."
+
+bashio::var.json \
+    ingress_interface "${ingress_interface}" \
+    ingress_port      "^${ingress_port}" \
+    app_port          "^${app_port}" \
+    | tempio \
+        -template /etc/nginx/templates/ingress.gtpl \
+        -out /etc/nginx/servers/ingress.conf
+
+bashio::log.info "Ingress listening on ${ingress_interface}:${ingress_port} -> 127.0.0.1:${app_port}"
+
+if ! nginx -t >/dev/null 2>&1; then
+    bashio::log.error "nginx configuration test failed — check /etc/nginx/servers/ingress.conf"
+    nginx -t 2>&1 || true
+    exit 1
+fi
+
+bashio::log.info "nginx configuration is valid"
+bashio::log.info "nginx ingress setup complete"
