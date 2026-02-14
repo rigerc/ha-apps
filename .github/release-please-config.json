@@ -25,7 +25,9 @@
       "package-name": "Cleanuparr",
       "component": "cleanuparr",
       "changelog-path": "CHANGELOG.md",
-      "exclude-paths": ["README.md"],
+      "exclude-paths": [
+        "README.md"
+      ],
       "extra-files": [
         {
           "type": "yaml",
@@ -44,7 +46,9 @@
       "package-name": "Huntarr",
       "component": "huntarr",
       "changelog-path": "CHANGELOG.md",
-      "exclude-paths": ["README.md"],
+      "exclude-paths": [
+        "README.md"
+      ],
       "extra-files": [
         {
           "type": "yaml",
@@ -63,7 +67,9 @@
       "package-name": "Profilarr",
       "component": "profilarr",
       "changelog-path": "CHANGELOG.md",
-      "exclude-paths": ["README.md"],
+      "exclude-paths": [
+        "README.md"
+      ],
       "extra-files": [
         {
           "type": "yaml",
@@ -82,7 +88,9 @@
       "package-name": "Romm",
       "component": "romm",
       "changelog-path": "CHANGELOG.md",
-      "exclude-paths": ["README.md"],
+      "exclude-paths": [
+        "README.md"
+      ],
       "extra-files": [
         {
           "type": "yaml",

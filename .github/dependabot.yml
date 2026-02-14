@@ -4,7 +4,6 @@ updates:
     directories:
       - "/cleanuparr"
       - "/huntarr"
-      - "/kapowarr"
       - "/profilarr"
       - "/romm"
     schedule:
