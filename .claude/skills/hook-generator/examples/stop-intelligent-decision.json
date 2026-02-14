@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Evaluate if Claude should stop working.\n\nContext: $ARGUMENTS\n\nAnalyze the conversation:\n1. What did the user ask for? (Find the original request)\n2. Has that been completed? (Check for completion indicators)\n3. Are there unresolved errors? (Look for error messages, failures)\n4. Did the user indicate satisfaction? (Check for 'done', 'thanks', 'good', etc.)\n\nDecision Rules:\n- Stop (approve) if: Task complete AND no errors AND user satisfied\n- Continue (block) if: Task incomplete OR errors present OR user wants more\n\nRespond with ONLY valid JSON (no explanation):\n{\"decision\": \"approve\" (stop) or \"block\" (continue), \"reason\": \"brief explanation\"}",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -56,8 +56,6 @@
     "defaultMode": "default"
   },
   "enableAllProjectMcpServers": true,
-  "disabledMcpjsonServers": [
-    "ref"
-  ],
+  "disabledMcpjsonServers": ["ref"],
   "enabledPlugins": {}
 }
