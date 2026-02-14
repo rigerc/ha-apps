@@ -18,7 +18,7 @@
 name: APP_NAME
 
 # CUSTOMIZE: Version of the HA add-on wrapper (not the upstream app version).
-version: 1.0.0
+version: 1.0.0 # auto generated, do not edit
 
 # CUSTOMIZE: Unique identifier — lowercase letters, digits and underscores only.
 # Used in URLs, file paths, and API calls.  Must be unique within the repository.
@@ -124,7 +124,7 @@ panel_icon: mdi:application
 # Requires `ports` — the [PORT:x] container port must be listed above.
 # [HOST] = HA host address.  [PORT:x] = host port mapped from container port x.
 # [PROTO:option] = https when the named boolean option is true, else http.
-# webui: http://[HOST]:[PORT:APP_PORT]
+# webui: http://[HOST]:[PORT:APP_PORT] # do not use when using ingress.
 
 # Run the container on the host network namespace.
 # All container ports are directly on the host; `ports` mappings are ignored.
