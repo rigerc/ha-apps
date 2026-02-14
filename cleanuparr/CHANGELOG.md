@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.1.1](https://github.com/rigerc/ha-apps/compare/cleanuparr-1.1.0...cleanuparr-1.1.1) (2026-02-14)
+
+
+### 🐛 Bug Fixes
+
+* **cleanuparr:** dockerfile app copy fix, ingress config fix ([c0bdc26](https://github.com/rigerc/ha-apps/commit/c0bdc26242704435c044ba941ae3383b87fcb866))
+* **cleanuparr:** migrate to s3-overlay v3, fix config directory, move to ([f1120f9](https://github.com/rigerc/ha-apps/commit/f1120f94d3c0fe4e602a16812aa1f0f659d5c0d2))
+* **config:** fix config option ([5900fa3](https://github.com/rigerc/ha-apps/commit/5900fa38268b6878deac3196804305e94c41980b))
+* make shell scripts executable [skip ci] ([fbf4fdb](https://github.com/rigerc/ha-apps/commit/fbf4fdb22d0b57a898928a8c7d3b4eedde7b5c12))
+
+
+### 👷 Continuous Integration
+
+* **repo:** update manifest script, workflows, meta ([d1cd84d](https://github.com/rigerc/ha-apps/commit/d1cd84dd1e0e2a289593176aa3acba35d01a75d6))
+
 ## [1.1.0](https://github.com/rigerc/ha-apps/compare/cleanuparr-1.0.0...cleanuparr-1.1.0) (2026-02-07)
 
 
