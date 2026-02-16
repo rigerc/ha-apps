@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 ARG BUILD_FROM
 ARG BUILD_VERSION
-FROM ghcr.io/cleanuparr/cleanuparr:2.5.1 AS app-source
+FROM ghcr.io/cleanuparr/cleanuparr:2.6.2 AS app-source
 
 FROM ${BUILD_FROM}
 
