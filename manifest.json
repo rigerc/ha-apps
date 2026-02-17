@@ -10,7 +10,7 @@
     ],
     "upstream_image": "ghcr.io/cleanuparr/cleanuparr",
     "tag": "2.5.1",
-    "latest_upstream_tag": "v2.6.2",
+    "latest_upstream_tag": "v2.6.3",
     "project": "https://github.com/Cleanuparr/Cleanuparr",
     "has_icon": true,
     "ingress": true,
