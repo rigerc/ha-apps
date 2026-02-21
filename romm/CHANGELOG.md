@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.0](https://github.com/rigerc/ha-apps/compare/romm-1.1.0...romm-1.2.0) (2026-02-14)
+
+
+### ✨ Features
+
+* **romm:** update romm to 4.6.1 and improvements to Dockerfile ([9950096](https://github.com/rigerc/ha-apps/commit/99500969eea0bae6d2c46d575a9a2d9a6d8df75f))
+
+
+### 🐛 Bug Fixes
+
+* **config:** make auth_secret_key optional with auto-generation ([817e9c3](https://github.com/rigerc/ha-apps/commit/817e9c3c4da950a82dcc572ce6b0887d5ae26aaa))
+* **setup:** add error handling and completion signal ([3ce4e3c](https://github.com/rigerc/ha-apps/commit/3ce4e3c1881274392f56ea10785280f98e39f239))
+
 ## [1.1.0](https://github.com/rigerc/ha-apps/compare/romm-1.0.0...romm-1.1.0) (2026-02-07)
 
 
