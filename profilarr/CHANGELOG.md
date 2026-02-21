@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/rigerc/ha-apps/compare/profilarr-1.1.0...profilarr-1.1.1) (2026-02-14)
+
+
+### 🐛 Bug Fixes
+
+* **Dockerfile:** update dependencies and healthcheck for HA base ([d223abf](https://github.com/rigerc/ha-apps/commit/d223abf51032632830f195331a552cbfe1367bcd))
+
 ## [1.1.0](https://github.com/rigerc/ha-apps/compare/profilarr-1.0.0...profilarr-1.1.0) (2026-02-08)
 
 
